@@ -1,20 +1,31 @@
 package com.vietspecialty.security;
 
+import com.vietspecialty.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-public final class SecurityUtils {
+@Component
+public class SecurityUtils {
 
-    private SecurityUtils() {
-        // Utility class
+    private static UserRepository userRepository;
+
+    public SecurityUtils(UserRepository userRepository) {
+        SecurityUtils.userRepository = userRepository;
     }
 
     public static Optional<CustomUserDetails> get() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof CustomUserDetails userDetails) {
-            return Optional.of(userDetails);
+        if (auth != null && auth.isAuthenticated()) {
+            if (auth.getPrincipal() instanceof CustomUserDetails userDetails) {
+                return Optional.of(userDetails);
+            }
+            if (userRepository != null && auth.getName() != null) {
+                return userRepository.findByEmailIgnoreCase(auth.getName())
+                        .map(CustomUserDetails::new);
+            }
         }
         return Optional.empty();
     }
@@ -27,4 +38,3 @@ public final class SecurityUtils {
         return get().isPresent();
     }
 }
-
