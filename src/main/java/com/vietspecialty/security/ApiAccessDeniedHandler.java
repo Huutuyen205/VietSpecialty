@@ -42,7 +42,7 @@ public class ApiAccessDeniedHandler implements AccessDeniedHandler {
             ApiResponse<Void> body = ApiResponse.error("Bạn không có quyền thực hiện thao tác này");
             response.getWriter().write(objectMapper.writeValueAsString(body));
         } else {
-            redirectStrategy.sendRedirect(request, response, "/error/403");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
         }
     }
 }
