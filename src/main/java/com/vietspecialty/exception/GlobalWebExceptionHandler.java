@@ -4,11 +4,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -18,6 +20,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 public class GlobalWebExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleBusinessException(BusinessException ex, HttpServletRequest request, Model model) {
         log.warn("Web business error [{}]: {}", request.getRequestURI(), ex.getMessage());
         model.addAttribute("errorCode", ex.getErrorCode().getCode());
@@ -27,6 +30,7 @@ public class GlobalWebExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public String handleAccessDenied(AccessDeniedException ex, HttpServletRequest request, Model model) {
         log.warn("Web 403 Forbidden [{}]: {}", request.getRequestURI(), ex.getMessage());
         model.addAttribute("requestUri", request.getRequestURI());
@@ -34,6 +38,7 @@ public class GlobalWebExceptionHandler {
     }
 
     @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public String handleNotFound(Exception ex, HttpServletRequest request, Model model) {
         log.debug("Web 404 Not Found: {}", request.getRequestURI());
         model.addAttribute("requestUri", request.getRequestURI());
@@ -41,6 +46,7 @@ public class GlobalWebExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleGeneralException(Exception ex, HttpServletRequest request, Model model) {
         log.error("Web 500 Internal Error on URI [{}]: ", request.getRequestURI(), ex);
         model.addAttribute("errorMessage", "Hệ thống gặp sự cố trong quá trình xử lý, vui lòng tải lại trang.");
