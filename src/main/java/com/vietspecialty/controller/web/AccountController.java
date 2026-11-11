@@ -35,6 +35,11 @@ public class AccountController {
     private final AddressService addressService;
     private final ProvinceRepository provinceRepository;
 
+    @GetMapping("/orders")
+    public String accountOrdersRedirect() {
+        return "redirect:/orders";
+    }
+
     @GetMapping("/profile")
     public String profilePage(Model model) {
         Long userId = SecurityUtils.getUserId().orElseThrow();
