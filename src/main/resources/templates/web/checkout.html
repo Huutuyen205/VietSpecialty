@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layouts/base :: html(
-        pageTitle='Xác nhận đặt hàng & Thanh toán - VietSpecialty',
+        pageTitle='Xác nhận đặt hàng & Thanh toán — VietSpecialty',
         content=~{::#checkoutContent},
         pageMeta=~{},
         extraCss=~{},
@@ -13,11 +13,11 @@
     <!-- BREADCRUMB -->
     <nav class="flex text-xs text-ink-muted" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-2">
-            <li><a th:href="@{/}" class="hover:text-primary-600 flex items-center gap-1"><i data-lucide="home" class="w-3.5 h-3.5"></i> Trang chủ</a></li>
-            <li><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i></li>
-            <li><a th:href="@{/cart}" class="hover:text-primary-600">Giỏ hàng</a></li>
-            <li><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i></li>
-            <li><span class="text-ink font-medium">Đặt hàng & Thanh toán</span></li>
+            <li><a th:href="@{/}" class="hover:text-primary-700 flex items-center gap-1 transition"><i data-lucide="home" class="w-3.5 h-3.5"></i> Trang chủ</a></li>
+            <li><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-line"></i></li>
+            <li><a th:href="@{/cart}" class="hover:text-primary-700 transition">Giỏ hàng</a></li>
+            <li><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-line"></i></li>
+            <li><span class="text-ink font-semibold">Đặt hàng & Thanh toán</span></li>
         </ol>
     </nav>
 
@@ -30,74 +30,83 @@
         <div class="lg:col-span-2 space-y-6">
 
             <!-- 1. ĐỊA CHỈ NHẬN HÀNG -->
-            <div class="bg-surface rounded-2xl p-6 border border-line shadow-sm space-y-4">
+            <div class="bg-surface rounded-3xl p-6 sm:p-7 border border-line shadow-soft space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-line">
                     <div class="flex items-center gap-2">
-                        <i data-lucide="map-pin" class="w-4 h-4 text-primary-600"></i>
-                        <h3 class="font-bold text-sm text-ink">Địa chỉ nhận hàng</h3>
+                        <div class="w-8 h-8 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                        </div>
+                        <h3 class="font-serif font-bold text-base text-ink">Địa chỉ nhận hàng</h3>
                     </div>
-                    <a th:href="@{/account/addresses}" class="text-xs text-primary-700 hover:underline font-semibold flex items-center gap-1">
-                        <i data-lucide="plus" class="w-3 h-3"></i> Thêm địa chỉ mới
+                    <a th:href="@{/account/addresses}" class="text-xs text-primary-700 hover:text-primary-800 font-bold flex items-center gap-1">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm địa chỉ mới
                     </a>
                 </div>
 
-                <div th:if="${addresses != null and !addresses.isEmpty()}" class="space-y-2.5">
+                <div th:if="${addresses != null and !addresses.isEmpty()}" class="space-y-3">
                     <div th:each="addr, iter : ${addresses}"
-                         class="p-3.5 rounded-xl border border-line hover:border-primary-500/50 cursor-pointer flex items-start gap-3 transition">
+                         class="p-4 rounded-2xl border border-line hover:border-primary-500/60 cursor-pointer flex items-start gap-3.5 transition bg-surface hover:bg-surface-muted/30">
                         <input type="radio" name="addressId" th:value="${addr.id}" th:id="'addr-' + ${addr.id}"
                                th:checked="${(preview.selectedAddress != null and preview.selectedAddress.id == addr.id) or (preview.selectedAddress == null and iter.index == 0)}"
                                class="mt-1 text-primary-600 focus:ring-primary-500">
-                        <label th:for="'addr-' + ${addr.id}" class="text-xs flex-1 cursor-pointer space-y-0.5">
+                        <label th:for="'addr-' + ${addr.id}" class="text-xs flex-1 cursor-pointer space-y-1">
                             <div class="flex items-center gap-2">
-                                <span class="font-bold text-ink" th:text="${addr.recipientName}">Nguyễn Văn A</span>
+                                <span class="font-bold text-sm text-ink" th:text="${addr.recipientName}">Nguyễn Văn A</span>
                                 <span class="text-ink-muted" th:text="'(' + ${addr.phone} + ')'">(0912345678)</span>
-                                <span th:if="${addr.isDefault}" class="px-2 py-0.2 rounded-full text-[10px] font-semibold bg-primary-100 text-primary-800">Mặc định</span>
+                                <span th:if="${addr.isDefault}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-100 text-primary-800">Mặc định</span>
                             </div>
-                            <p class="text-ink-muted" th:text="${addr.fullAddress}">Số 123 Đường Láng, Đống Đa, Hà Nội</p>
+                            <p class="text-ink-muted leading-relaxed" th:text="${addr.fullAddress}">Số 123 Đường Láng, Đống Đa, Hà Nội</p>
                         </label>
                     </div>
                 </div>
 
-                <div th:if="${addresses == null or addresses.isEmpty()}" class="p-6 text-center text-xs text-ink-muted bg-surface-muted/40 rounded-xl space-y-2">
+                <div th:if="${addresses == null or addresses.isEmpty()}" class="p-8 text-center text-xs text-ink-muted bg-surface-muted/40 rounded-2xl space-y-3">
+                    <i data-lucide="map-pin-off" class="w-8 h-8 text-ink-muted mx-auto opacity-50"></i>
                     <p>Bạn chưa lưu địa chỉ nhận hàng nào trong tài khoản.</p>
-                    <a th:href="@{/account/addresses}" class="btn btn-primary py-2 px-4 text-xs font-semibold inline-flex items-center gap-1">
+                    <a th:href="@{/account/addresses}" class="btn-primary py-2.5 px-5 text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm địa chỉ nhận hàng ngay
                     </a>
                 </div>
             </div>
 
             <!-- 2. DANH SÁCH MẶT HÀNG PHÂN TÁCH THEO TỪNG GIAN HÀNG -->
-            <div class="bg-surface rounded-2xl p-6 border border-line shadow-sm space-y-4">
+            <div class="bg-surface rounded-3xl p-6 sm:p-7 border border-line shadow-soft space-y-4">
                 <div class="flex items-center gap-2 pb-3 border-b border-line">
-                    <i data-lucide="package-check" class="w-4 h-4 text-primary-600"></i>
-                    <h3 class="font-bold text-sm text-ink">Kiểm tra đơn hàng (Được đóng gói từ từng địa phương)</h3>
+                    <div class="w-8 h-8 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center">
+                        <i data-lucide="package-check" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-serif font-bold text-base text-ink">Kiểm tra kiện hàng đặc sản</h3>
+                        <p class="text-[11px] text-ink-muted">Đóng gói và gửi trực tiếp từ các hợp tác xã / làng nghề địa phương</p>
+                    </div>
                 </div>
 
-                <div class="space-y-6">
-                    <div th:each="sg : ${preview.shopGroups}" class="border border-line rounded-xl overflow-hidden">
+                <div class="space-y-4">
+                    <div th:each="sg : ${preview.shopGroups}" class="border border-line rounded-2xl overflow-hidden shadow-2xs">
                         <!-- Header shop -->
-                        <div class="bg-surface-muted/50 p-3 flex items-center justify-between text-xs border-b border-line">
+                        <div class="bg-surface-muted/60 p-3.5 flex items-center justify-between text-xs border-b border-line">
                             <div class="flex items-center gap-2">
-                                <i data-lucide="store" class="w-3.5 h-3.5 text-primary-600"></i>
+                                <i data-lucide="store" class="w-4 h-4 text-primary-600"></i>
                                 <span class="font-bold text-ink" th:text="${sg.shopName}">Tên gian hàng</span>
                                 <span th:if="${sg.provinceName != null and !sg.provinceName.isEmpty()}"
-                                      class="text-[10px] text-ink-muted" th:text="'(' + ${sg.provinceName} + ')'"></span>
+                                      class="text-[10px] text-ink-muted px-2 py-0.5 rounded-full bg-surface border border-line"
+                                      th:text="${sg.provinceName}"></span>
                             </div>
-                            <span class="text-ink-muted text-[11px]" th:text="'Phí gửi: ' + ${sg.shippingFeeFormatted}">30.000₫</span>
+                            <span class="text-primary-700 font-semibold text-[11px]" th:text="'Phí vận chuyển: ' + ${sg.shippingFeeFormatted}">30.000₫</span>
                         </div>
 
                         <!-- Danh sách sản phẩm của shop -->
-                        <div class="p-3 divide-y divide-line text-xs">
+                        <div class="p-4 divide-y divide-line/70 text-xs">
                             <div th:each="item : ${sg.items}" class="py-2.5 flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-3">
                                     <img th:src="${item.primaryImageUrl != null ? item.primaryImageUrl : '/images/demo/placeholder.svg'}"
-                                         class="w-12 h-12 rounded-lg object-cover border border-line bg-surface-muted flex-shrink-0">
+                                         class="w-12 h-12 rounded-xl object-cover border border-line bg-surface-muted shrink-0">
                                     <div>
                                         <h4 class="font-semibold text-ink line-clamp-1" th:text="${item.productName}">Tên sản phẩm</h4>
                                         <span class="text-[11px] text-ink-muted" th:text="'x' + ${item.quantity} + ' ' + ${item.unit}">x1 Hộp</span>
                                     </div>
                                 </div>
-                                <span class="font-bold text-primary-700" th:text="${item.subtotalFormatted}">185.000₫</span>
+                                <span class="font-serif font-bold text-primary-700 text-sm" th:text="${item.subtotalFormatted}">185.000₫</span>
                             </div>
                         </div>
                     </div>
@@ -105,79 +114,91 @@
             </div>
 
             <!-- 3. PHƯƠNG THỨC VẬN CHUYỂN -->
-            <div class="bg-surface rounded-2xl p-6 border border-line shadow-sm space-y-4">
+            <div class="bg-surface rounded-3xl p-6 sm:p-7 border border-line shadow-soft space-y-4">
                 <div class="flex items-center gap-2 pb-3 border-b border-line">
-                    <i data-lucide="truck" class="w-4 h-4 text-primary-600"></i>
-                    <h3 class="font-bold text-sm text-ink">Hình thức giao hàng</h3>
+                    <div class="w-8 h-8 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center">
+                        <i data-lucide="truck" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-serif font-bold text-base text-ink">Hình thức giao hàng</h3>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <label class="p-4 rounded-xl border border-line hover:border-primary-500 cursor-pointer flex items-start gap-3 transition"
-                           :class="shippingMethod === 'STANDARD' ? 'border-primary-600 bg-primary-50/20' : ''">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                    <label class="p-4 rounded-2xl border border-line hover:border-primary-500 cursor-pointer flex items-start gap-3 transition bg-surface"
+                           th:classappend="${selectedShippingMethod == 'STANDARD'} ? 'border-primary-600 ring-2 ring-primary-500/20 bg-primary-50/20' : ''">
                         <input type="radio" name="shippingMethod" value="STANDARD"
                                th:checked="${selectedShippingMethod == 'STANDARD'}"
                                onchange="updateShipping(this.value)"
                                class="mt-0.5 text-primary-600 focus:ring-primary-500">
                         <div>
                             <div class="font-bold text-ink">Giao hàng tiêu chuẩn (3-5 ngày)</div>
-                            <p class="text-ink-muted text-[11px] mt-0.5">30.000₫ / gian hàng (Miễn phí cho đơn shop từ 500.000₫)</p>
+                            <p class="text-ink-muted text-[11px] mt-0.5 leading-relaxed">30.000₫ / gian hàng (Freeship cho đơn shop từ 500.000₫)</p>
                         </div>
                     </label>
 
-                    <label class="p-4 rounded-xl border border-line hover:border-primary-500 cursor-pointer flex items-start gap-3 transition">
+                    <label class="p-4 rounded-2xl border border-line hover:border-primary-500 cursor-pointer flex items-start gap-3 transition bg-surface"
+                           th:classappend="${selectedShippingMethod == 'EXPRESS'} ? 'border-primary-600 ring-2 ring-primary-500/20 bg-primary-50/20' : ''">
                         <input type="radio" name="shippingMethod" value="EXPRESS"
                                th:checked="${selectedShippingMethod == 'EXPRESS'}"
                                onchange="updateShipping(this.value)"
                                class="mt-0.5 text-primary-600 focus:ring-primary-500">
                         <div>
                             <div class="font-bold text-ink">Giao hàng hỏa tốc (1-2 ngày)</div>
-                            <p class="text-ink-muted text-[11px] mt-0.5">50.000₫ / gian hàng</p>
+                            <p class="text-ink-muted text-[11px] mt-0.5 leading-relaxed">50.000₫ / gian hàng (Ưu tiên đặc sản tươi sống)</p>
                         </div>
                     </label>
                 </div>
             </div>
 
             <!-- 4. PHƯƠNG THỨC THANH TOÁN -->
-            <div class="bg-surface rounded-2xl p-6 border border-line shadow-sm space-y-4">
+            <div class="bg-surface rounded-3xl p-6 sm:p-7 border border-line shadow-soft space-y-4">
                 <div class="flex items-center gap-2 pb-3 border-b border-line">
-                    <i data-lucide="credit-card" class="w-4 h-4 text-primary-600"></i>
-                    <h3 class="font-bold text-sm text-ink">Phương thức thanh toán</h3>
+                    <div class="w-8 h-8 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center">
+                        <i data-lucide="credit-card" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-serif font-bold text-base text-ink">Phương thức thanh toán</h3>
                 </div>
 
                 <div class="space-y-3 text-xs">
                     <!-- VNPay Online -->
-                    <label class="p-4 rounded-xl border border-line hover:border-primary-500 cursor-pointer flex items-center justify-between gap-3 transition bg-surface">
+                    <label class="p-4 rounded-2xl border border-line hover:border-primary-500 cursor-pointer flex items-center justify-between gap-3 transition bg-surface shadow-2xs">
                         <div class="flex items-center gap-3">
                             <input type="radio" name="paymentMethod" value="VNPAY" checked
                                    class="text-primary-600 focus:ring-primary-500">
                             <div>
                                 <div class="font-bold text-ink flex items-center gap-2">
                                     <span>Cổng thanh toán điện tử VNPAY</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary-100 text-primary-800">Khuyên dùng</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-100 text-primary-800">Khuyên dùng</span>
                                 </div>
                                 <p class="text-ink-muted text-[11px] mt-0.5">Hỗ trợ VNPAY-QR, Thẻ ATM 40+ ngân hàng nội địa, Visa/Mastercard</p>
                             </div>
                         </div>
-                        <img th:src="@{/static/images/demo/vnpay-logo.svg}" alt="VNPay" class="h-6 w-auto">
+                        <div class="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-extrabold text-xs">
+                            VNPAY-QR
+                        </div>
                     </label>
 
                     <!-- COD Tiền mặt -->
-                    <label class="p-4 rounded-xl border border-line hover:border-primary-500 cursor-pointer flex items-center gap-3 transition bg-surface">
-                        <input type="radio" name="paymentMethod" value="COD"
-                               class="text-primary-600 focus:ring-primary-500">
-                        <div>
-                            <div class="font-bold text-ink">Thanh toán khi nhận hàng (COD)</div>
-                            <p class="text-ink-muted text-[11px] mt-0.5">Thanh toán tiền mặt trực tiếp cho nhân viên bưu tá khi nhận kiện hàng</p>
+                    <label class="p-4 rounded-2xl border border-line hover:border-primary-500 cursor-pointer flex items-center justify-between gap-3 transition bg-surface shadow-2xs">
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="paymentMethod" value="COD"
+                                   class="text-primary-600 focus:ring-primary-500">
+                            <div>
+                                <div class="font-bold text-ink">Thanh toán khi nhận hàng (COD)</div>
+                                <p class="text-ink-muted text-[11px] mt-0.5">Thanh toán tiền mặt trực tiếp cho nhân viên bưu tá khi nhận kiện hàng</p>
+                            </div>
+                        </div>
+                        <div class="px-2.5 py-1 rounded-lg bg-surface-muted border border-line text-ink font-bold text-xs">
+                            Tiền mặt
                         </div>
                     </label>
                 </div>
             </div>
 
             <!-- Ghi chú đơn hàng -->
-            <div class="bg-surface rounded-2xl p-4 border border-line shadow-sm">
-                <label class="block text-xs font-semibold text-ink mb-1.5">Ghi chú cho các gian hàng / Người vận chuyển:</label>
-                <input type="text" name="note" placeholder="Ví dụ: Giao vào giờ hành chính, gọi trước khi giao 15 phút..."
-                       class="w-full px-3.5 py-2.5 rounded-xl border border-line text-xs focus:ring-1 focus:ring-primary-500 focus:outline-none">
+            <div class="bg-surface rounded-2xl p-4 sm:p-5 border border-line shadow-soft">
+                <label class="block text-xs font-bold text-ink mb-2">Ghi chú cho gian hàng / Shipper:</label>
+                <input type="text" name="note" placeholder="Ví dụ: Giao giờ hành chính, gọi trước 15 phút, quà biếu đóng hộp đẹp..."
+                       class="w-full px-4 py-2.5 rounded-xl border border-line text-xs focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:outline-none">
             </div>
 
         </div>
@@ -186,58 +207,58 @@
         <div class="lg:col-span-1 space-y-4 lg:sticky lg:top-24">
             
             <!-- Mã giảm giá toàn sàn -->
-            <div class="bg-surface rounded-2xl p-5 border border-line shadow-sm space-y-3">
+            <div class="bg-surface rounded-3xl p-5 border border-line shadow-soft space-y-3">
                 <div class="flex items-center gap-2 text-xs font-bold text-ink">
                     <i data-lucide="ticket" class="w-4 h-4 text-primary-600"></i>
-                    <span>Mã giảm giá VietSpecialty</span>
+                    <span>Mã ưu đãi VietSpecialty</span>
                 </div>
                 <div class="flex gap-2 text-xs">
                     <input type="text" id="voucherInput" th:value="${selectedSystemVoucher}" placeholder="Nhập mã voucher..."
-                           class="flex-1 px-3 py-2 rounded-xl border border-line focus:outline-none focus:ring-1 focus:ring-primary-500 uppercase">
-                    <button type="button" onclick="applyVoucher()" class="btn btn-outline py-2 px-3 text-xs">Áp dụng</button>
+                           class="flex-1 px-3 py-2 rounded-xl border border-line text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 uppercase">
+                    <button type="button" onclick="applyVoucher()" class="btn btn-outline py-2 px-3.5 text-xs font-bold">Áp dụng</button>
                 </div>
             </div>
 
             <!-- Bảng tính tiền -->
-            <div class="bg-surface rounded-2xl p-6 border border-line shadow-sm space-y-4">
-                <h3 class="font-bold text-sm text-ink pb-3 border-b border-line">Chi tiết thanh toán</h3>
+            <div class="bg-surface rounded-3xl p-6 border border-line shadow-soft space-y-5">
+                <h3 class="font-serif font-bold text-base text-ink pb-3 border-b border-line">Chi tiết thanh toán</h3>
 
-                <div class="space-y-2.5 text-xs">
+                <div class="space-y-3 text-xs">
                     <div class="flex items-center justify-between">
                         <span class="text-ink-muted">Tạm tính tiền hàng:</span>
-                        <span class="font-semibold text-ink" th:text="${preview.subtotalFormatted}">370.000₫</span>
+                        <strong class="text-ink font-serif" th:text="${preview.subtotalFormatted}">370.000₫</strong>
                     </div>
 
                     <div class="flex items-center justify-between">
                         <span class="text-ink-muted">Tổng phí vận chuyển:</span>
-                        <span class="font-semibold text-ink" th:text="${preview.totalShippingFeeFormatted}">30.000₫</span>
+                        <strong class="text-ink" th:text="${preview.totalShippingFeeFormatted}">30.000₫</strong>
                     </div>
 
                     <div th:if="${preview.systemDiscount.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
-                         class="flex items-center justify-between text-success">
+                         class="flex items-center justify-between text-primary-700">
                         <span>Giảm giá sàn:</span>
-                        <span class="font-semibold" th:text="'-' + ${preview.systemDiscountFormatted}">-20.000₫</span>
+                        <strong th:text="'-' + ${preview.systemDiscountFormatted}">-20.000₫</strong>
                     </div>
 
                     <div th:if="${preview.totalShopDiscount.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
-                         class="flex items-center justify-between text-success">
+                         class="flex items-center justify-between text-primary-700">
                         <span>Giảm giá từ shop:</span>
-                        <span class="font-semibold" th:text="'-' + ${preview.totalShopDiscountFormatted}">-15.000₫</span>
+                        <strong th:text="'-' + ${preview.totalShopDiscountFormatted}">-15.000₫</strong>
                     </div>
                 </div>
 
-                <div class="pt-3 border-t border-line flex items-baseline justify-between">
+                <div class="pt-4 border-t border-line flex items-baseline justify-between">
                     <div>
                         <span class="text-xs font-bold text-ink block">Tổng thanh toán:</span>
                         <span class="text-[10px] text-ink-muted">(Đã gồm phí vận chuyển)</span>
                     </div>
-                    <span class="text-xl sm:text-2xl font-extrabold text-primary-700" th:text="${preview.grandTotalFormatted}">380.000₫</span>
+                    <span class="text-2xl font-serif font-extrabold text-primary-700" th:text="${preview.grandTotalFormatted}">380.000₫</span>
                 </div>
 
                 <!-- Nút Đặt hàng -->
                 <button type="submit" :disabled="submitting"
-                        class="btn btn-primary w-full py-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-sm disabled:opacity-50">
-                    <span x-show="!submitting">Xác nhận đặt hàng</span>
+                        class="btn-accent w-full py-4 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-50 transition active:scale-95">
+                    <span x-show="!submitting">Xác nhận đặt hàng ngay</span>
                     <span x-show="submitting" style="display: none;" class="flex items-center gap-2">
                         <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
                         Đang kết nối thanh toán...
@@ -245,7 +266,7 @@
                 </button>
 
                 <p class="text-[11px] text-ink-muted text-center leading-relaxed">
-                    Bằng việc bấm xác nhận, bạn đồng ý với Điều khoản dịch vụ và Quy chế bảo mật của VietSpecialty.
+                    Bằng việc bấm xác nhận, bạn đồng ý với Điều khoản dịch vụ và Quy chế bảo mật của sàn đặc sản VietSpecialty.
                 </p>
             </div>
 
@@ -277,4 +298,3 @@
 </th:block>
 
 </html>
-

@@ -4,8 +4,15 @@
 
 @layer base {
   body {
-    @apply bg-cream text-ink font-sans antialiased;
+    @apply bg-cream text-ink font-sans antialiased selection:bg-primary-100 selection:text-primary-700;
     background-color: #FFFCF5;
+    background-image: radial-gradient(#E8E2D6 0.75px, transparent 0.75px);
+    background-size: 24px 24px;
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: 'Lora', Georgia, serif;
   }
 }
 
@@ -15,13 +22,16 @@
     @apply inline-flex items-center justify-center font-medium rounded-xl transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
   }
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-soft active:scale-[0.98];
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-soft active:scale-[0.98] hover:shadow-md;
   }
   .btn-secondary {
-    @apply btn bg-secondary-400 text-ink hover:bg-secondary-500 focus:ring-secondary-400 active:scale-[0.98];
+    @apply btn bg-secondary-400 text-ink hover:bg-secondary-500 focus:ring-secondary-400 active:scale-[0.98] font-semibold;
+  }
+  .btn-accent {
+    @apply btn bg-accent-500 text-white hover:bg-accent-600 focus:ring-accent-500 shadow-soft active:scale-[0.98] hover:shadow-md;
   }
   .btn-outline {
-    @apply btn border border-line bg-surface text-ink hover:bg-surface-muted focus:ring-primary-500 active:scale-[0.98];
+    @apply btn border border-line bg-surface text-ink hover:bg-surface-muted hover:border-primary-500/40 focus:ring-primary-500 active:scale-[0.98];
   }
   .btn-ghost {
     @apply btn bg-transparent text-ink hover:bg-surface-muted focus:ring-primary-500;
@@ -32,18 +42,39 @@
 
   /* Form Inputs */
   .input-field {
-    @apply w-full rounded-xl border-line bg-surface px-4 py-2.5 text-ink placeholder-ink-muted focus:border-primary-500 focus:ring-primary-500 transition duration-150;
+    @apply w-full rounded-xl border-line bg-surface px-4 py-2.5 text-ink placeholder-ink-muted focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition duration-150;
   }
   .input-error {
     @apply border-danger focus:border-danger focus:ring-danger text-danger;
   }
 
-  /* Cards */
+  /* Heritage Cards */
   .card {
     @apply bg-surface rounded-2xl border border-line shadow-soft transition-all duration-300;
   }
   .card-hover {
-    @apply hover:shadow-lift hover:-translate-y-1;
+    @apply hover:shadow-lift hover:-translate-y-1 hover:border-primary-500/30;
+  }
+  .card-heritage {
+    @apply bg-surface/95 backdrop-blur-xs rounded-2xl border border-line/80 shadow-soft transition-all duration-300 hover:shadow-lift hover:-translate-y-1.5;
+  }
+
+  /* Regional Badges & Seals */
+  .badge-seal-ocop {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-ink shadow-sm tracking-wide;
+  }
+
+  .badge-region-bac {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#0F9D8A] shadow-xs;
+  }
+  .badge-region-trung {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#E9A21F] shadow-xs;
+  }
+  .badge-region-taynguyen {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#8B5E3C] shadow-xs;
+  }
+  .badge-region-nam {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#E8704A] shadow-xs;
   }
 
   /* Status Chips */
@@ -69,30 +100,67 @@
 
 /* Animations & Keyframes */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulseSlow {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.05); }
+  50% { opacity: 0.9; transform: scale(1.03); }
 }
 
 @keyframes floatGentle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes shimmerEffect {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-pulse-slow {
-  animation: pulseSlow 4s infinite ease-in-out;
+  animation: pulseSlow 3.5s infinite ease-in-out;
 }
 
 .animate-float {
-  animation: floatGentle 5s infinite ease-in-out;
+  animation: floatGentle 4s infinite ease-in-out;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmerEffect 2.5s infinite;
+}
+
+/* Heritage Pattern Overlays */
+.bg-heritage-pattern {
+  background-color: #FFFCF5;
+  background-image: radial-gradient(#2F9E55 0.7px, transparent 0.7px), radial-gradient(#D9583B 0.7px, #FFFCF5 0.7px);
+  background-size: 28px 28px;
+  background-position: 0 0, 14px 14px;
+}
+
+.bg-pattern-woven {
+  background-color: #F7F3EA;
+  background-image: repeating-linear-gradient(45deg, #E8E2D6 0, #E8E2D6 1px, transparent 0, transparent 50%);
+  background-size: 10px 10px;
+}
+
+/* Smooth reveal utility */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Accessibility: Reduced Motion */
@@ -104,4 +172,3 @@
     scroll-behavior: auto !important;
   }
 }
-

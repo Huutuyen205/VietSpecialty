@@ -67,4 +67,5 @@ class ToastManager {
 }
 
 window.toast = new ToastManager();
+window.Toast = window.toast;
 

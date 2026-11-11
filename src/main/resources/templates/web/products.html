@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layouts/base :: html(
-        pageTitle=${pageTitle} + ' - VietSpecialty',
+        pageTitle=${pageTitle} + ' — VietSpecialty',
         content=~{::#mainContent},
         pageMeta=~{::#metaBlock},
         extraCss=~{},
@@ -18,18 +18,57 @@
     <nav class="flex text-xs text-ink-muted" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-2">
             <li class="inline-flex items-center">
-                <a th:href="@{/}" class="hover:text-primary-600 flex items-center gap-1">
-                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Trang chủ
+                <a th:href="@{/}" class="hover:text-primary-700 flex items-center gap-1 transition">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                    <span>Trang chủ</span>
                 </a>
             </li>
             <li>
                 <div class="flex items-center">
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
-                    <span class="ml-1 text-ink font-medium" th:text="${pageTitle}">Đặc sản vùng miền</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-line"></i>
+                    <span class="ml-1 text-ink font-semibold" th:text="${pageTitle}">Đặc sản vùng miền</span>
                 </div>
             </li>
         </ol>
     </nav>
+
+    <!-- Thanh Lọc Nhanh Bằng Chip (Quick Pills) -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+        <a th:href="@{/products}"
+           class="px-3.5 py-1.5 rounded-full border transition whitespace-nowrap font-medium"
+           th:classappend="${filter.regionSlug == null and filter.categorySlug == null and (filter.hasOcop == null or !filter.hasOcop)} ? 'bg-primary-600 text-white border-primary-600 shadow-xs' : 'bg-surface text-ink border-line hover:bg-surface-muted'">
+            🌾 Tất cả đặc sản
+        </a>
+        <a th:href="@{/products?hasOcop=true}"
+           class="px-3.5 py-1.5 rounded-full border transition whitespace-nowrap font-medium"
+           th:classappend="${filter.hasOcop == true} ? 'bg-secondary-400 text-ink border-secondary-400 font-bold shadow-xs' : 'bg-surface text-ink border-line hover:bg-surface-muted'">
+            ★ Chuẩn OCOP
+        </a>
+        <a th:href="@{/regions/mien-bac}"
+           class="px-3.5 py-1.5 rounded-full border transition whitespace-nowrap font-medium flex items-center gap-1.5"
+           th:classappend="${filter.regionSlug == 'mien-bac'} ? 'bg-[#0F9D8A] text-white border-[#0F9D8A] shadow-xs' : 'bg-surface text-ink border-line hover:bg-surface-muted'">
+            <span class="w-2 h-2 rounded-full bg-[#0F9D8A]"></span>
+            <span>Miền Bắc</span>
+        </a>
+        <a th:href="@{/regions/mien-trung}"
+           class="px-3.5 py-1.5 rounded-full border transition whitespace-nowrap font-medium flex items-center gap-1.5"
+           th:classappend="${filter.regionSlug == 'mien-trung'} ? 'bg-[#E9A21F] text-white border-[#E9A21F] shadow-xs' : 'bg-surface text-ink border-line hover:bg-surface-muted'">
+            <span class="w-2 h-2 rounded-full bg-[#E9A21F]"></span>
+            <span>Miền Trung</span>
+        </a>
+        <a th:href="@{/regions/tay-nguyen}"
+           class="px-3.5 py-1.5 rounded-full border transition whitespace-nowrap font-medium flex items-center gap-1.5"
+           th:classappend="${filter.regionSlug == 'tay-nguyen'} ? 'bg-[#8B5E3C] text-white border-[#8B5E3C] shadow-xs' : 'bg-surface text-ink border-line hover:bg-surface-muted'">
+            <span class="w-2 h-2 rounded-full bg-[#8B5E3C]"></span>
+            <span>Tây Nguyên</span>
+        </a>
+        <a th:href="@{/regions/mien-nam}"
+           class="px-3.5 py-1.5 rounded-full border transition whitespace-nowrap font-medium flex items-center gap-1.5"
+           th:classappend="${filter.regionSlug == 'mien-nam'} ? 'bg-[#E8704A] text-white border-[#E8704A] shadow-xs' : 'bg-surface text-ink border-line hover:bg-surface-muted'">
+            <span class="w-2 h-2 rounded-full bg-[#E8704A]"></span>
+            <span>Miền Nam</span>
+        </a>
+    </div>
 
     <!-- Layout 2 cột: Sidebar bộ lọc + Lưới sản phẩm -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start" x-data="{ mobileFilterOpen: false }">
@@ -37,11 +76,11 @@
         <!-- Nút mở bộ lọc trên Mobile -->
         <div class="lg:hidden flex items-center justify-between pb-3 border-b border-line">
             <button type="button" @click="mobileFilterOpen = !mobileFilterOpen"
-                    class="btn btn-outline py-2 px-3 text-xs flex items-center gap-1.5">
-                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
-                <span>Bộ lọc tìm kiếm</span>
+                    class="btn btn-outline py-2 px-3 text-xs flex items-center gap-1.5 shadow-2xs">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4 text-primary-600"></i>
+                <span class="font-semibold">Bộ lọc đặc sản</span>
             </button>
-            <span class="text-xs text-ink-muted" th:text="${productPage.totalElements} + ' đặc sản'">0 đặc sản</span>
+            <span class="text-xs text-ink-muted" th:text="${productPage.totalElements} + ' đặc sản tìm thấy'">0 đặc sản</span>
         </div>
 
         <!-- SIDEBAR BỘ LỌC (Desktop & Drawer Mobile) -->
@@ -49,14 +88,15 @@
                class="lg:col-span-1">
             
             <form th:action="@{/products}" method="GET" id="filterForm"
-                  class="bg-surface rounded-2xl p-5 border border-line shadow-sm space-y-6 w-full max-w-xs lg:max-w-none overflow-y-auto max-h-[90vh] lg:max-h-none">
+                  class="bg-surface rounded-2xl p-5 border border-line shadow-soft space-y-6 w-full max-w-xs lg:max-w-none overflow-y-auto max-h-[90vh] lg:max-h-none">
                 
                 <!-- Tiêu đề bộ lọc trên mobile có nút đóng -->
                 <div class="flex items-center justify-between pb-3 border-b border-line">
                     <h3 class="font-bold text-sm text-ink flex items-center gap-2">
-                        <i data-lucide="filter" class="w-4 h-4 text-primary-600"></i> Bộ lọc đặc sản
+                        <i data-lucide="filter" class="w-4 h-4 text-primary-600"></i>
+                        <span>Bộ lọc đặc sản</span>
                     </h3>
-                    <button type="button" class="lg:hidden text-ink-muted hover:text-ink" @click="mobileFilterOpen = false">
+                    <button type="button" class="lg:hidden text-ink-muted hover:text-ink p-1" @click="mobileFilterOpen = false">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -67,19 +107,22 @@
 
                 <!-- 1. Vùng miền -->
                 <div>
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Vùng miền</h4>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5 flex items-center gap-1.5">
+                        <i data-lucide="map" class="w-3.5 h-3.5 text-primary-600"></i>
+                        <span>Vùng miền</span>
+                    </h4>
                     <div class="space-y-1.5 text-xs">
-                        <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
+                        <label class="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
                             <input type="radio" name="regionSlug" value="" th:checked="${filter.regionSlug == null or filter.regionSlug.isEmpty()}"
                                    class="text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
-                            <span class="text-ink">Tất cả vùng miền</span>
+                            <span class="text-ink font-medium">Tất cả vùng miền</span>
                         </label>
                         <th:block th:each="r : ${regions}">
-                            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
+                            <label class="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
                                 <input type="radio" name="regionSlug" th:value="${r.slug}" th:checked="${filter.regionSlug == r.slug}"
                                        class="text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
-                                <span class="w-2.5 h-2.5 rounded-full" th:style="'background-color: ' + ${r.colorHex}"></span>
-                                <span class="text-ink" th:text="${r.name}">Miền Bắc</span>
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs" th:style="'background-color: ' + ${r.colorHex}"></span>
+                                <span class="text-ink font-medium" th:text="${r.name}">Miền Bắc</span>
                             </label>
                         </th:block>
                     </div>
@@ -87,18 +130,21 @@
 
                 <!-- 2. Danh mục đặc sản -->
                 <div class="pt-4 border-t border-line">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Danh mục</h4>
-                    <div class="space-y-1.5 text-xs max-h-48 overflow-y-auto pr-1">
-                        <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5 flex items-center gap-1.5">
+                        <i data-lucide="grid" class="w-3.5 h-3.5 text-primary-600"></i>
+                        <span>Danh mục ẩm thực</span>
+                    </h4>
+                    <div class="space-y-1.5 text-xs max-h-52 overflow-y-auto pr-1">
+                        <label class="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
                             <input type="radio" name="categorySlug" value="" th:checked="${filter.categorySlug == null or filter.categorySlug.isEmpty()}"
                                    class="text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
-                            <span class="text-ink">Tất cả danh mục</span>
+                            <span class="text-ink font-medium">Tất cả danh mục</span>
                         </label>
                         <th:block th:each="c : ${categories}">
-                            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
+                            <label class="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
                                 <input type="radio" name="categorySlug" th:value="${c.slug}" th:checked="${filter.categorySlug == c.slug}"
                                        class="text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
-                                <span class="text-ink" th:text="${c.name}">Trà & Cà phê</span>
+                                <span class="text-ink font-medium" th:text="${c.name}">Trà & Cà phê</span>
                             </label>
                         </th:block>
                     </div>
@@ -106,49 +152,60 @@
 
                 <!-- 3. Tiêu chuẩn OCOP -->
                 <div class="pt-4 border-t border-line">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Chứng nhận chất lượng</h4>
-                    <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition text-xs">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5 flex items-center gap-1.5">
+                        <i data-lucide="award" class="w-3.5 h-3.5 text-secondary-500"></i>
+                        <span>Chứng nhận OCOP</span>
+                    </h4>
+                    <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-amber-50/50 border border-amber-200/60 hover:bg-amber-100/50 transition text-xs">
                         <input type="checkbox" name="hasOcop" value="true" th:checked="${filter.hasOcop == true}"
-                               class="rounded text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
-                        <div class="flex items-center gap-1 font-semibold text-secondary-600">
-                            <i data-lucide="award" class="w-4 h-4"></i>
-                            <span>Sản phẩm đạt chuẩn OCOP (3-5★)</span>
+                                class="rounded text-secondary-500 focus:ring-secondary-400" onchange="this.form.submit()">
+                        <div class="flex items-center gap-1 font-bold text-amber-900">
+                            <span>Sản phẩm OCOP (3-5★)</span>
                         </div>
                     </label>
                 </div>
 
                 <!-- 4. Khoảng giá -->
                 <div class="pt-4 border-t border-line">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Khoảng giá (₫)</h4>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5 flex items-center gap-1.5">
+                        <i data-lucide="coins" class="w-3.5 h-3.5 text-primary-600"></i>
+                        <span>Khoảng giá (₫)</span>
+                    </h4>
                     <div class="grid grid-cols-2 gap-2 text-xs mb-2.5">
                         <input type="number" name="minPrice" th:value="${filter.minPrice}" placeholder="Từ 0"
-                               class="w-full px-2.5 py-1.5 rounded-lg border border-line focus:ring-1 focus:ring-primary-500 focus:outline-none">
+                               class="w-full px-2.5 py-1.5 rounded-lg border border-line bg-surface text-ink text-xs focus:ring-1 focus:ring-primary-500 focus:outline-none">
                         <input type="number" name="maxPrice" th:value="${filter.maxPrice}" placeholder="Đến..."
-                               class="w-full px-2.5 py-1.5 rounded-lg border border-line focus:ring-1 focus:ring-primary-500 focus:outline-none">
+                               class="w-full px-2.5 py-1.5 rounded-lg border border-line bg-surface text-ink text-xs focus:ring-1 focus:ring-primary-500 focus:outline-none">
                     </div>
-                    <button type="submit" class="btn btn-outline w-full py-1.5 text-xs">Áp dụng giá</button>
+                    <button type="submit" class="btn btn-outline w-full py-1.5 text-xs font-semibold hover:border-primary-500">
+                        Áp dụng khoảng giá
+                    </button>
                 </div>
 
                 <!-- 5. Đánh giá khách hàng -->
                 <div class="pt-4 border-t border-line">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Đánh giá</h4>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5 flex items-center gap-1.5">
+                        <i data-lucide="star" class="w-3.5 h-3.5 text-amber-500"></i>
+                        <span>Đánh giá sao</span>
+                    </h4>
                     <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition text-xs">
                         <input type="checkbox" name="minRating4" value="true" th:checked="${filter.minRating4 == true}"
                                class="rounded text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
-                        <div class="flex items-center text-amber-500">
+                        <div class="flex items-center text-amber-400">
                             <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
                             <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
                             <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
                             <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
-                            <span class="text-ink ml-1 font-medium">Từ 4 sao trở lên</span>
+                            <span class="text-ink ml-1.5 font-semibold text-xs">Từ 4 sao trở lên</span>
                         </div>
                     </label>
                 </div>
 
                 <!-- Nút đặt lại bộ lọc -->
                 <div class="pt-4 border-t border-line">
-                    <a th:href="@{/products}" class="btn btn-ghost w-full py-2 text-xs text-ink-muted hover:text-danger">
-                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1"></i> Xóa tất cả bộ lọc
+                    <a th:href="@{/products}" class="btn btn-ghost w-full py-2 text-xs text-ink-muted hover:text-danger flex items-center justify-center gap-1">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>Xóa tất cả bộ lọc</span>
                     </a>
                 </div>
 
@@ -156,12 +213,12 @@
         </aside>
 
         <!-- CỘT CHÍNH: THANH CÔNG CỤ & LƯỚI SẢN PHẨM -->
-        <main class="lg:col-span-3 space-y-4">
+        <main class="lg:col-span-3 space-y-5">
             
             <!-- Toolbar: Tiêu đề, số lượng & Sắp xếp -->
-            <div class="bg-surface rounded-2xl p-4 border border-line shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="bg-surface rounded-2xl p-4 sm:p-5 border border-line shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                    <h1 class="font-bold text-base sm:text-lg text-ink" th:text="${pageTitle}">Danh mục đặc sản</h1>
+                    <h1 class="font-serif font-bold text-lg sm:text-xl text-ink" th:text="${pageTitle}">Danh mục đặc sản</h1>
                     <p class="text-xs text-ink-muted mt-0.5" th:text="'Hiển thị ' + ${productPage.numberOfElements} + ' trên tổng số ' + ${productPage.totalElements} + ' đặc sản'">
                         Hiển thị 16 trên tổng số 120 đặc sản
                     </p>
@@ -169,9 +226,9 @@
 
                 <!-- Bộ chọn sắp xếp -->
                 <div class="flex items-center gap-2 self-end sm:self-auto text-xs">
-                    <span class="text-ink-muted hidden sm:inline">Sắp xếp:</span>
+                    <span class="text-ink-muted font-medium hidden sm:inline">Sắp xếp theo:</span>
                     <select onchange="updateSort(this.value)"
-                            class="px-3 py-1.5 rounded-lg border border-line bg-surface text-ink text-xs focus:ring-1 focus:ring-primary-500 focus:outline-none">
+                            class="px-3 py-1.5 rounded-xl border border-line bg-surface text-ink text-xs font-semibold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:outline-none shadow-2xs">
                         <option value="newest" th:selected="${filter.sort == 'newest'}">Mới nhất</option>
                         <option value="best_seller" th:selected="${filter.sort == 'best_seller'}">Bán chạy nhất</option>
                         <option value="price_asc" th:selected="${filter.sort == 'price_asc'}">Giá: Thấp đến Cao</option>
@@ -183,7 +240,7 @@
 
             <!-- Lưới sản phẩm (Grid) -->
             <div th:if="${productPage.totalElements > 0}"
-                 class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                 class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
                 <th:block th:each="p : ${productPage.content}">
                     <div th:replace="~{fragments/product-card :: productCard(p=${p})}"></div>
                 </th:block>
@@ -191,29 +248,30 @@
 
             <!-- Empty State nếu không có sản phẩm nào -->
             <div th:if="${productPage.totalElements == 0}"
-                 class="bg-surface rounded-2xl p-12 border border-line text-center space-y-4 my-8">
-                <div class="w-16 h-16 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center mx-auto">
+                 class="bg-surface rounded-3xl p-12 border border-line text-center space-y-4 my-8 shadow-soft">
+                <div class="w-16 h-16 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center mx-auto border border-primary-100">
                     <i data-lucide="package-search" class="w-8 h-8"></i>
                 </div>
-                <div class="space-y-1">
-                    <h3 class="text-base font-bold text-ink">Không tìm thấy đặc sản phù hợp</h3>
-                    <p class="text-xs text-ink-muted max-w-md mx-auto">
-                        Hãy thử điều chỉnh lại bộ lọc vùng miền, danh mục hoặc khoảng giá để tìm được đặc sản mong muốn bạn nhé.
+                <div class="space-y-1.5">
+                    <h3 class="text-lg font-serif font-bold text-ink">Không tìm thấy đặc sản phù hợp</h3>
+                    <p class="text-xs text-ink-muted max-w-md mx-auto leading-relaxed">
+                        Hãy thử điều chỉnh lại bộ lọc vùng miền, khoảng giá hoặc từ khóa tìm kiếm để khám phá thêm nhiều món ngon khác nhé.
                     </p>
                 </div>
-                <div>
-                    <a th:href="@{/products}" class="btn btn-primary py-2 px-5 text-xs">
-                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 mr-1.5"></i> Xem tất cả đặc sản
+                <div class="pt-2">
+                    <a th:href="@{/products}" class="btn-primary py-2.5 px-6 text-xs font-semibold inline-flex items-center gap-1.5 shadow-md">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Xem tất cả đặc sản</span>
                     </a>
                 </div>
             </div>
 
             <!-- Phân trang chuẩn đẹp -->
-            <div th:if="${productPage.totalPages > 1}" class="flex items-center justify-center gap-1 pt-6">
+            <div th:if="${productPage.totalPages > 1}" class="flex items-center justify-center gap-1.5 pt-8">
                 <!-- Nút Trước -->
                 <a th:if="${productPage.hasPrevious()}"
                    th:href="@{/products(keyword=${filter.keyword}, regionSlug=${filter.regionSlug}, categorySlug=${filter.categorySlug}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, minRating4=${filter.minRating4}, hasOcop=${filter.hasOcop}, sort=${filter.sort}, page=${productPage.number - 1})}"
-                   class="btn btn-outline p-2 text-xs rounded-lg" aria-label="Trang trước">
+                   class="btn btn-outline p-2 text-xs rounded-xl shadow-2xs hover:bg-surface-muted" aria-label="Trang trước">
                     <i data-lucide="chevron-left" class="w-4 h-4"></i>
                 </a>
 
@@ -222,8 +280,8 @@
                     <a th:if="${pageNum >= productPage.number - 2 and pageNum <= productPage.number + 2}"
                        th:href="@{/products(keyword=${filter.keyword}, regionSlug=${filter.regionSlug}, categorySlug=${filter.categorySlug}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, minRating4=${filter.minRating4}, hasOcop=${filter.hasOcop}, sort=${filter.sort}, page=${pageNum})}"
                        th:text="${pageNum + 1}"
-                       th:classappend="${pageNum == productPage.number} ? 'btn-primary' : 'btn-outline'"
-                       class="btn w-9 h-9 p-0 text-xs rounded-lg font-semibold">
+                       th:classappend="${pageNum == productPage.number} ? 'btn-primary shadow-sm' : 'btn-outline bg-surface hover:bg-surface-muted'"
+                       class="btn w-9 h-9 p-0 text-xs rounded-xl font-semibold">
                         1
                     </a>
                 </th:block>
@@ -231,7 +289,7 @@
                 <!-- Nút Sau -->
                 <a th:if="${productPage.hasNext()}"
                    th:href="@{/products(keyword=${filter.keyword}, regionSlug=${filter.regionSlug}, categorySlug=${filter.categorySlug}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, minRating4=${filter.minRating4}, hasOcop=${filter.hasOcop}, sort=${filter.sort}, page=${productPage.number + 1})}"
-                   class="btn btn-outline p-2 text-xs rounded-lg" aria-label="Trang kế tiếp">
+                   class="btn btn-outline p-2 text-xs rounded-xl shadow-2xs hover:bg-surface-muted" aria-label="Trang kế tiếp">
                     <i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </a>
             </div>
@@ -253,4 +311,3 @@
 </th:block>
 
 </html>
-

@@ -34,7 +34,12 @@ public class LoginFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
         log.warn("Login failed for IP {}: {}", request.getRemoteAddr(), exception.getMessage());
         String encodedMessage = URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
-        setDefaultFailureUrl("/login?error=" + encodedMessage);
+        String email = request.getParameter("email");
+        StringBuilder failureUrl = new StringBuilder("/login?error=").append(encodedMessage);
+        if (email != null && !email.isBlank()) {
+            failureUrl.append("&email=").append(URLEncoder.encode(email.trim(), StandardCharsets.UTF_8));
+        }
+        setDefaultFailureUrl(failureUrl.toString());
         super.onAuthenticationFailure(request, response, exception);
     }
 }

@@ -54,25 +54,35 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
                 }
             }
 
-            // Kiểm tra SavedRequest (vd: người dùng đang checkout thì bị bắt login)
-            SavedRequest savedRequest = requestCache.getRequest(request, response);
-            if (savedRequest != null) {
-                String targetUrl = savedRequest.getRedirectUrl();
-                clearAuthenticationAttributes(request);
-                getRedirectStrategy().sendRedirect(request, response, targetUrl);
+            clearAuthenticationAttributes(request);
+            Role role = userDetails.getRole();
+
+            // Admin và Seller luôn ưu tiên điều hướng về trang quản trị tương ứng
+            if (role == Role.ADMIN) {
+                requestCache.removeRequest(request, response);
+                getRedirectStrategy().sendRedirect(request, response, "/admin/dashboard");
+                return;
+            }
+            if (role == Role.SELLER) {
+                requestCache.removeRequest(request, response);
+                getRedirectStrategy().sendRedirect(request, response, "/seller/dashboard");
                 return;
             }
 
-            // Nếu không có SavedRequest, điều hướng theo vai trò người dùng
-            clearAuthenticationAttributes(request);
-            Role role = userDetails.getRole();
-            if (role == Role.ADMIN) {
-                getRedirectStrategy().sendRedirect(request, response, "/admin/dashboard");
-            } else if (role == Role.SELLER) {
-                getRedirectStrategy().sendRedirect(request, response, "/seller/dashboard");
-            } else {
-                getRedirectStrategy().sendRedirect(request, response, "/");
+            // Với Khách mua hàng (USER): kiểm tra SavedRequest hợp lệ (loại trừ API và auth)
+            SavedRequest savedRequest = requestCache.getRequest(request, response);
+            if (savedRequest != null) {
+                String targetUrl = savedRequest.getRedirectUrl();
+                if (targetUrl != null && !targetUrl.contains("/api/") && !targetUrl.contains("/login")
+                        && !targetUrl.contains("/register") && !targetUrl.contains("/error")) {
+                    requestCache.removeRequest(request, response);
+                    getRedirectStrategy().sendRedirect(request, response, targetUrl);
+                    return;
+                }
             }
+
+            // Mặc định chuyển về trang chủ
+            getRedirectStrategy().sendRedirect(request, response, "/");
         } else {
             super.onAuthenticationSuccess(request, response, authentication);
         }

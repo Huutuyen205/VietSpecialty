@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title layout:title-pattern="$CONTENT_TITLE — VietSpecialty">VietSpecialty — Đặc Sản Vùng Miền Việt Nam</title>
+    <title layout:title-pattern="$CONTENT_TITLE — VietSpecialty">VietSpecialty — Sàn Đặc Sản Vùng Miền Việt Nam</title>
 
     <!-- CSRF Meta Tags -->
     <meta name="_csrf" th:content="${_csrf?.token}"/>
     <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo.svg}">
+
     <!-- Google Fonts: Be Vietnam Pro & Lora -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS (compiled) -->
     <link rel="stylesheet" th:href="@{/css/app.css}">
@@ -29,11 +32,14 @@
 </head>
 <body class="bg-cream text-ink min-h-screen flex flex-col antialiased selection:bg-primary-100 selection:text-primary-700">
 
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
     <!-- Header Fragment -->
     <div th:replace="~{fragments/header :: header}"></div>
 
     <!-- Main Content Area -->
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div layout:fragment="content"></div>
     </main>
 
@@ -53,4 +59,3 @@
     </script>
 </body>
 </html>
-

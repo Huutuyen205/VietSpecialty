@@ -15,7 +15,10 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -57,7 +60,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+        requestCache.setRequestMatcher(new NegatedRequestMatcher(new AntPathRequestMatcher("/api/**")));
+
         http
+            .requestCache(cache -> cache.requestCache(requestCache))
             // CSRF bảo vệ toàn diện, ngoại trừ Webhook IPN từ VNPay và Chatbot API
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/payment/vnpay/ipn", "/api/chat/**")

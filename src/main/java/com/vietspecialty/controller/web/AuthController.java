@@ -26,6 +26,7 @@ public class AuthController {
     @GetMapping("/login")
     public String loginPage(
             @RequestParam(value = "error", required = false) String error,
+            @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "logout", required = false) String logout,
             @RequestParam(value = "registered", required = false) String registered,
             Model model
@@ -36,6 +37,9 @@ public class AuthController {
 
         if (error != null) {
             model.addAttribute("errorMessage", error);
+        }
+        if (email != null && !email.isBlank()) {
+            model.addAttribute("email", email.trim());
         }
         if (logout != null) {
             model.addAttribute("successMessage", "Bạn đã đăng xuất thành công");

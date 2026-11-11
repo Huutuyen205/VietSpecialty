@@ -88,3 +88,33 @@ const api = {
 
 window.api = api;
 
+/**
+ * Thao tác thêm nhanh vào giỏ hàng dùng chung toàn sàn
+ */
+window.quickAddToCart = async function(productId, quantity = 1) {
+    if (!productId) return;
+    try {
+        const response = await api.post('/api/cart/items', {
+            productId: Number(productId),
+            quantity: quantity
+        });
+        if (response && response.success) {
+            if (window.toast) {
+                window.toast.success(response.message || 'Đã thêm đặc sản vào giỏ hàng!');
+            }
+            window.dispatchEvent(new CustomEvent('cart-updated'));
+        }
+    } catch (err) {
+        if (err && err.status === 401) {
+            return;
+        }
+        if (window.toast) {
+            window.toast.error(err.message || 'Không thể thêm sản phẩm vào giỏ hàng');
+        }
+    }
+};
+
+window.refreshCartBadge = function() {
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+};
+

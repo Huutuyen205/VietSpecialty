@@ -32,6 +32,9 @@ public final class ProductSpecification {
             Long shopId
     ) {
         return (root, query, cb) -> {
+            if (query != null && !Long.class.equals(query.getResultType()) && !long.class.equals(query.getResultType())) {
+                query.distinct(true);
+            }
             List<Predicate> predicates = new ArrayList<>();
 
             // 1. Chỉ hiển thị sản phẩm ACTIVE và Gian hàng APPROVED
