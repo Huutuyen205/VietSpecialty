@@ -114,8 +114,8 @@ public class SecurityConfig {
                     "/api/notifications/**"
                 ).hasRole("USER")
 
-                // Mọi yêu cầu còn lại bắt buộc đăng nhập
-                .anyRequest().authenticated()
+                // Mọi yêu cầu còn lại (bao gồm các trang không tồn tại) cho phép hiển thị trang 404 thân thiện
+                .anyRequest().permitAll()
             )
             // Form Login (Session-based)
             .formLogin(form -> form

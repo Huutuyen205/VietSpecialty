@@ -36,5 +36,9 @@ public record ProductDetailResponse(
     public record ProvinceResponse(Integer id, String name, String slug) {}
     public record RegionResponse(Integer id, String name, String slug, String colorHex) {}
     public record CategoryResponse(Integer id, String name, String slug) {}
+
+    public String priceFormatted() {
+        return formattedPrice != null ? formattedPrice : (price != null ? price.toString() + "₫" : "0₫");
+    }
 }
 

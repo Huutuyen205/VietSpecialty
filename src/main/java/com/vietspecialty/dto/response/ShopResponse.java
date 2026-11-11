@@ -23,5 +23,17 @@ public record ShopResponse(
     public Double avgRating() {
         return 5.0;
     }
+
+    public String hotline() {
+        return phone != null ? phone : "";
+    }
+
+    public String ownerName() {
+        return name;
+    }
+
+    public String ownerEmail() {
+        return "";
+    }
 }
 

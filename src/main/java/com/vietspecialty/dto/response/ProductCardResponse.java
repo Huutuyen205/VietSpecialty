@@ -25,5 +25,8 @@ public record ProductCardResponse(
         String shopName,
         String shopSlug
 ) {
+    public String priceFormatted() {
+        return formattedPrice != null ? formattedPrice : (price != null ? price.toString() + "₫" : "0₫");
+    }
 }
 

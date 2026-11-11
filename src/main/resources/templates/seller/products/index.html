@@ -84,7 +84,7 @@
 
                         <!-- Giá bán -->
                         <td class="py-3 px-4 font-bold text-primary-700">
-                            <span th:text="${p.priceFormatted}">185.000₫</span>
+                            <span th:text="${p.formattedPrice != null ? p.formattedPrice : p.priceFormatted}">185.000₫</span>
                             <span class="text-[10px] text-ink-muted block font-normal" th:text="'/' + ${p.unit}">/Hộp 500g</span>
                         </td>
 
