@@ -1,69 +1,52 @@
 -- =====================================================================
--- VietSpecialty - V3 Migration: Bổ sung tỉnh thành đặc sản & chuẩn hóa dữ liệu
+-- VietSpecialty - V3 Migration: Chuẩn hóa xuất xứ 30 đặc sản & hình ảnh
+-- Đảm bảo giữ đúng 34 tỉnh/thành theo đề tài sắp xếp hành chính 2025
 -- =====================================================================
 
--- 1. Thêm các tỉnh thành sản sinh đặc sản OCOP trọng điểm chưa có trong V2
-INSERT INTO provinces (region_id, name, slug)
-SELECT 4, 'Bến Tre', 'ben-tre'
-WHERE NOT EXISTS (SELECT 1 FROM provinces WHERE slug = 'ben-tre');
-
-INSERT INTO provinces (region_id, name, slug)
-SELECT 4, 'Sóc Trăng', 'soc-trang'
-WHERE NOT EXISTS (SELECT 1 FROM provinces WHERE slug = 'soc-trang');
-
-INSERT INTO provinces (region_id, name, slug)
-SELECT 4, 'Kiên Giang', 'kien-giang'
-WHERE NOT EXISTS (SELECT 1 FROM provinces WHERE slug = 'kien-giang');
-
-INSERT INTO provinces (region_id, name, slug)
-SELECT 1, 'Hà Giang', 'ha-giang'
-WHERE NOT EXISTS (SELECT 1 FROM provinces WHERE slug = 'ha-giang');
-
-INSERT INTO provinces (region_id, name, slug)
-SELECT 1, 'Hải Dương', 'hai-duong'
-WHERE NOT EXISTS (SELECT 1 FROM provinces WHERE slug = 'hai-duong');
-
--- 2. Cập nhật lại tỉnh thành chính xác cho 30 đặc sản
+-- 1. Cập nhật tỉnh thành & nơi xuất xứ chi tiết làng nghề (origin_detail)
 -- Miền Bắc
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'ha-giang' LIMIT 1)
+UPDATE products SET province_id = 4, origin_detail = 'Đồng Văn, Hà Giang'
 WHERE slug = 'mat-ong-rung-hoa-bac-ha';
 
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'cao-bang' LIMIT 1)
-WHERE slug IN ('mien-dong-phia-den-cao-bang', 'lap-xuong-gac-bep-hun-khoi-mia');
+UPDATE products SET province_id = 4, origin_detail = 'Phia Đén, Nguyên Bình, Cao Bằng'
+WHERE slug = 'mien-dong-phia-den-cao-bang';
 
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'dien-bien' LIMIT 1)
+UPDATE products SET province_id = 4, origin_detail = 'Bảo Lạc, Cao Bằng'
+WHERE slug = 'lap-xuong-gac-bep-hun-khoi-mia';
+
+UPDATE products SET province_id = 7, origin_detail = 'Mường Thanh, Điện Biên'
 WHERE slug = 'gao-nep-nuong-dien-bien';
 
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'hai-duong' LIMIT 1)
+UPDATE products SET province_id = 2, origin_detail = 'Cẩm Giàng, Hải Dương'
 WHERE slug = 'banh-dau-xanh-rong-vang';
 
 -- Miền Trung
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'da-nang' LIMIT 1)
+UPDATE products SET province_id = 21, origin_detail = 'Làng Nam Ô, Liên Chiểu, Đà Nẵng'
 WHERE slug = 'nuoc-mam-nam-o-ca-com-than';
 
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'ha-tinh' LIMIT 1)
+UPDATE products SET province_id = 18, origin_detail = 'Hương Sơn, Hà Tĩnh'
 WHERE slug = 'keo-cu-do-ha-tinh';
 
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'thanh-hoa' LIMIT 1)
+UPDATE products SET province_id = 16, origin_detail = 'TP. Thanh Hóa'
 WHERE slug = 'nem-chua-thanh-hoa';
 
 -- Miền Nam
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'ben-tre' LIMIT 1)
+UPDATE products SET province_id = 31, origin_detail = 'Châu Thành, Bến Tre'
 WHERE slug IN ('keo-dua-sau-rieng-ben-tre', 'buoi-da-xanh-ben-tre');
 
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'soc-trang' LIMIT 1)
+UPDATE products SET province_id = 30, origin_detail = 'Vũng Thơm, Sóc Trăng'
 WHERE slug = 'banh-pia-soc-trang-dau-xanh';
 
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'an-giang' LIMIT 1)
+UPDATE products SET province_id = 33, origin_detail = 'Châu Đốc, An Giang'
 WHERE slug = 'mam-ca-linh-chau-doc';
 
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'tay-ninh' LIMIT 1)
+UPDATE products SET province_id = 29, origin_detail = 'Gò Dầu, Tây Ninh'
 WHERE slug = 'muoi-tom-tay-ninh-thuong-hang';
 
-UPDATE products SET province_id = (SELECT id FROM provinces WHERE slug = 'kien-giang' LIMIT 1)
+UPDATE products SET province_id = 34, origin_detail = 'Đảo Ngọc Phú Quốc'
 WHERE slug = 'tieu-chin-phu-quoc';
 
--- 3. Cập nhật hình ảnh đặc sản khớp đúng món ẩm thực thực tế
+-- 2. Cập nhật hình ảnh đặc sản chính xác món ẩm thực thực tế
 UPDATE product_images SET image_url = 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800&auto=format&fit=crop&q=80'
 WHERE product_id IN (SELECT id FROM products WHERE slug = 'keo-dua-sau-rieng-ben-tre');
 
