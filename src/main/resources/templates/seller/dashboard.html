@@ -67,7 +67,7 @@
                 <span>Đánh giá gian hàng</span>
                 <i data-lucide="star" class="w-4 h-4 text-amber-500 fill-amber-400"></i>
             </div>
-            <div class="text-xl font-bold text-ink" th:text="${shop.avgRating} + ' / 5.0'">4.9 / 5.0</div>
+            <div class="text-xl font-bold text-ink" th:text="(${stats.avgRating != null ? stats.avgRating : '5.0'}) + ' / 5.0'">4.9 / 5.0</div>
             <p class="text-[11px] text-ink-muted">Dựa trên nhận xét thực tế</p>
         </div>
 

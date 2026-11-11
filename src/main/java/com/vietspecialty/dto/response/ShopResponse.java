@@ -19,5 +19,9 @@ public record ShopResponse(
     public String pickupAddress() {
         return addressDetail != null ? addressDetail : provinceName;
     }
+
+    public Double avgRating() {
+        return 5.0;
+    }
 }
 
