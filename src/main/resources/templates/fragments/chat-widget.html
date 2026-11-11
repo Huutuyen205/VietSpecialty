@@ -1,0 +1,328 @@
+<div th:fragment="chatWidget" id="chatbot-container" class="fixed bottom-6 right-6 z-50">
+    <!-- Nút bật/tắt Chatbot -->
+    <button id="chatbot-toggle-btn"
+            type="button"
+            class="relative flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 text-white shadow-xl hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-emerald-300">
+        <!-- Icon Chat -->
+        <svg id="chat-icon-open" class="w-7 h-7 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <!-- Icon Đóng -->
+        <svg id="chat-icon-close" class="w-7 h-7 hidden transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <!-- Badge trợ lý AI -->
+        <span class="absolute -top-1 -right-1 flex h-4 w-4">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-4 w-4 bg-amber-500 border-2 border-white"></span>
+        </span>
+    </button>
+
+    <!-- Hộp thoại Chatbot -->
+    <div id="chatbot-window"
+         class="hidden absolute bottom-16 right-0 w-[380px] sm:w-[420px] h-[580px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden transition-all duration-300 transform origin-bottom-right">
+
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 px-4 py-3.5 text-white flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-white/20 p-1 flex items-center justify-center backdrop-blur-sm">
+                    <span class="text-xl">🌿</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm tracking-wide flex items-center gap-1.5">
+                        Trợ lý AI VietSpecialty
+                        <span class="text-[10px] bg-amber-400 text-stone-900 font-bold px-1.5 py-0.5 rounded-full">Gemini</span>
+                    </h3>
+                    <p class="text-[11px] text-emerald-100 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                        Tư vấn đặc sản & tra cứu đơn hàng
+                    </p>
+                </div>
+            </div>
+            <button id="chatbot-close-btn" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Tin nhắn gợi ý nhanh -->
+        <div class="bg-stone-50 px-3 py-2 border-b border-stone-200 flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
+            <button class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
+                🍵 Trà Thái Nguyên biếu tết
+            </button>
+            <button class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
+                📦 Tra cứu đơn hàng
+            </button>
+            <button class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
+                🛡️ Chính sách đổi trả
+            </button>
+        </div>
+
+        <!-- Khung hiển thị tin nhắn -->
+        <div id="chatbot-messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-stone-50/50 text-sm">
+            <!-- Tin nhắn chào mừng ban đầu -->
+            <div class="flex items-start space-x-2.5">
+                <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0 text-sm font-bold shadow-xs">
+                    🌿
+                </div>
+                <div class="bg-white border border-stone-200 p-3 rounded-2xl rounded-tl-none shadow-xs text-stone-800 max-w-[85%] space-y-1.5">
+                    <p>Xin chào quý khách! Tôi là trợ lý AI của Sàn Đặc Sản <strong>VietSpecialty</strong> 🇻🇳.</p>
+                    <p class="text-xs text-stone-600">Tôi có thể giúp bạn:</p>
+                    <ul class="text-xs text-stone-600 list-disc list-inside space-y-0.5">
+                        <li>Gợi ý đặc sản OCOP 3 miền làm quà biếu, sử dụng gia đình.</li>
+                        <li>Tra cứu tình trạng vận chuyển đơn hàng bằng mã đơn.</li>
+                        <li>Giải đáp chính sách đổi trả, hoàn tiền, thanh toán VNPay.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Khung gõ tin nhắn -->
+        <div class="p-3 bg-white border-t border-stone-200">
+            <form id="chatbot-form" class="flex items-center gap-2">
+                <input id="chatbot-input"
+                       type="text"
+                       placeholder="Hỏi về đặc sản, nhập mã đơn..."
+                       class="flex-1 px-3.5 py-2 text-sm border border-stone-300 rounded-xl focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+                       autocomplete="off" />
+                <button type="submit"
+                        id="chatbot-send-btn"
+                        class="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition shadow-xs disabled:opacity-50">
+                    <svg class="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const container = document.getElementById('chatbot-container');
+    if (!container) return;
+
+    const toggleBtn = document.getElementById('chatbot-toggle-btn');
+    const closeBtn = document.getElementById('chatbot-close-btn');
+    const chatWindow = document.getElementById('chatbot-window');
+    const iconOpen = document.getElementById('chat-icon-open');
+    const iconClose = document.getElementById('chat-icon-close');
+    const form = document.getElementById('chatbot-form');
+    const input = document.getElementById('chatbot-input');
+    const messages = document.getElementById('chatbot-messages');
+    const sendBtn = document.getElementById('chatbot-send-btn');
+
+    let conversationHistory = [];
+
+    function toggleChat() {
+        const isHidden = chatWindow.classList.contains('hidden');
+        if (isHidden) {
+            chatWindow.classList.remove('hidden');
+            iconOpen.classList.add('hidden');
+            iconClose.classList.remove('hidden');
+            input.focus();
+        } else {
+            chatWindow.classList.add('hidden');
+            iconOpen.classList.remove('hidden');
+            iconClose.classList.add('hidden');
+        }
+    }
+
+    toggleBtn.addEventListener('click', toggleChat);
+    closeBtn.addEventListener('click', toggleChat);
+
+    // Xử lý gợi ý nhanh
+    document.querySelectorAll('.quick-suggest').forEach(btn => {
+        btn.addEventListener('click', () => {
+            input.value = btn.innerText.replace(/^[^\s]+\s/, '');
+            form.dispatchEvent(new Event('submit'));
+        });
+    });
+
+    function appendUserMessage(text) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex justify-end';
+        msgDiv.innerHTML = `
+            <div class="bg-emerald-600 text-white p-3 rounded-2xl rounded-tr-none shadow-xs max-w-[85%] text-sm">
+                ${escapeHtml(text)}
+            </div>
+        `;
+        messages.appendChild(msgDiv);
+        scrollToBottom();
+    }
+
+    function appendBotMessage(data) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex items-start space-x-2.5';
+
+        let productsHtml = '';
+        if (data.recommendedProducts && data.recommendedProducts.length > 0) {
+            productsHtml = `
+                <div class="mt-3 space-y-2 border-t border-stone-200 pt-2">
+                    <p class="text-xs font-semibold text-stone-700">Sản phẩm gợi ý cho bạn:</p>
+                    <div class="grid grid-cols-1 gap-2">
+                        ${data.recommendedProducts.map(p => `
+                            <a href="/products/${p.slug}" target="_blank" class="flex items-center gap-2 p-2 bg-stone-50 hover:bg-emerald-50 rounded-lg border border-stone-200 transition group">
+                                <img src="${p.thumbnail || '/images/default-product.png'}" class="w-12 h-12 object-cover rounded-md border border-stone-200">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-xs font-medium text-stone-900 truncate group-hover:text-emerald-700">${escapeHtml(p.name)}</h4>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="text-xs font-bold text-amber-600">${formatCurrency(p.minPrice)}</span>
+                                        ${p.ocopRating ? `<span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-1 rounded">OCOP ${p.ocopRating}⭐</span>` : ''}
+                                    </div>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        let followUpsHtml = '';
+        if (data.followUpSuggestions && data.followUpSuggestions.length > 0) {
+            followUpsHtml = `
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                    ${data.followUpSuggestions.map(q => `
+                        <button type="button" class="bot-follow-up text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full transition">
+                            ${escapeHtml(q)}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        msgDiv.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0 text-sm font-bold shadow-xs">
+                🌿
+            </div>
+            <div class="bg-white border border-stone-200 p-3 rounded-2xl rounded-tl-none shadow-xs text-stone-800 max-w-[85%] space-y-2">
+                <div class="prose prose-sm leading-relaxed">${formatMarkdown(data.reply)}</div>
+                ${productsHtml}
+                ${followUpsHtml}
+            </div>
+        `;
+        messages.appendChild(msgDiv);
+
+        // Gắn sự kiện cho các câu hỏi follow-up
+        msgDiv.querySelectorAll('.bot-follow-up').forEach(btn => {
+            btn.addEventListener('click', () => {
+                input.value = btn.innerText;
+                form.dispatchEvent(new Event('submit'));
+            });
+        });
+
+        scrollToBottom();
+    }
+
+    function appendLoading() {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'chat-loading-indicator';
+        loadingDiv.className = 'flex items-start space-x-2.5';
+        loadingDiv.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0 text-sm font-bold">
+                🌿
+            </div>
+            <div class="bg-white border border-stone-200 px-4 py-3 rounded-2xl rounded-tl-none shadow-xs flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-bounce"></span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.2s]"></span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.4s]"></span>
+            </div>
+        `;
+        messages.appendChild(loadingDiv);
+        scrollToBottom();
+    }
+
+    function removeLoading() {
+        const loader = document.getElementById('chat-loading-indicator');
+        if (loader) loader.remove();
+    }
+
+    function scrollToBottom() {
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatCurrency(amount) {
+        if (!amount) return '0đ';
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    }
+
+    function formatMarkdown(text) {
+        if (!text) return '';
+        // Định dạng markdown cơ bản: bold, line breaks
+        let safe = escapeHtml(text);
+        safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        safe = safe.replace(/\n/g, '<br/>');
+        return safe;
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendUserMessage(text);
+        input.value = '';
+        input.disabled = true;
+        sendBtn.disabled = true;
+        appendLoading();
+
+        try {
+            const resp = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: text,
+                    history: conversationHistory
+                })
+            });
+
+            removeLoading();
+
+            if (!resp.ok) {
+                throw new Error('Không thể kết nối đến máy chủ AI');
+            }
+
+            const apiRes = await resp.json();
+            if (apiRes.success && apiRes.data) {
+                appendBotMessage(apiRes.data);
+                // Cập nhật conversation history
+                conversationHistory.push({ role: 'user', content: text });
+                conversationHistory.push({ role: 'assistant', content: apiRes.data.reply });
+                if (conversationHistory.length > 10) {
+                    conversationHistory = conversationHistory.slice(-10);
+                }
+            } else {
+                appendBotMessage({
+                    reply: apiRes.message || 'Hệ thống AI tạm thời bận, xin quý khách thử lại sau ít phút.',
+                    recommendedProducts: [],
+                    followUpSuggestions: []
+                });
+            }
+        } catch (err) {
+            removeLoading();
+            appendBotMessage({
+                reply: 'Rất tiếc, đã có lỗi kết nối đến trợ lý ảo. Quý khách vui lòng thử lại sau.',
+                recommendedProducts: [],
+                followUpSuggestions: []
+            });
+        } finally {
+            input.disabled = false;
+            sendBtn.disabled = false;
+            input.focus();
+        }
+    });
+})();
+</script>

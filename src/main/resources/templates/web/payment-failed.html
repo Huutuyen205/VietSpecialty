@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: html(
+        pageTitle='Thanh toán chưa thành công - VietSpecialty',
+        content=~{::#failedContent},
+        pageMeta=~{},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<div id="failedContent" class="max-w-xl mx-auto py-12 space-y-6">
+
+    <div class="bg-surface rounded-3xl p-8 border border-line shadow-sm text-center space-y-4">
+        
+        <div class="w-20 h-20 rounded-full bg-danger/10 text-danger flex items-center justify-center mx-auto">
+            <i data-lucide="alert-octagon" class="w-10 h-10"></i>
+        </div>
+
+        <div class="space-y-1.5">
+            <h1 class="text-xl sm:text-2xl font-extrabold text-ink">Thanh toán chưa thành công</h1>
+            <p class="text-xs text-ink-muted max-w-sm mx-auto leading-relaxed">
+                Giao dịch của bạn đã bị hủy hoặc không thể hoàn tất qua cổng VNPay. Xin đừng lo lắng, tiền trong tài khoản của bạn chưa bị trừ.
+            </p>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-surface-muted/50 border border-line text-xs text-left space-y-2">
+            <div class="flex justify-between" th:if="${groupCode != null}">
+                <span class="text-ink-muted">Mã giao dịch:</span>
+                <span class="font-bold text-ink" th:text="${groupCode}">GRP-123456</span>
+            </div>
+            <div class="flex justify-between" th:if="${responseCode != null}">
+                <span class="text-ink-muted">Mã phản hồi cổng thanh toán:</span>
+                <span class="font-semibold text-danger" th:text="${responseCode}">24 (Khách hàng hủy)</span>
+            </div>
+        </div>
+
+        <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a th:href="@{/cart}" class="btn btn-outline py-2.5 px-6 text-xs w-full sm:w-auto font-semibold">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-1.5"></i> Quay lại giỏ hàng
+            </a>
+            <a th:href="@{/checkout}" class="btn btn-primary py-2.5 px-6 text-xs w-full sm:w-auto font-semibold">
+                <i data-lucide="refresh-cw" class="w-4 h-4 mr-1.5"></i> Thử thanh toán lại
+            </a>
+        </div>
+
+    </div>
+
+</div>
+</html>
+

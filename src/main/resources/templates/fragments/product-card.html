@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body>
+<!-- Product Card Fragment -->
+<div th:fragment="productCard(p)" class="card card-hover group flex flex-col h-full overflow-hidden bg-surface relative">
+
+    <!-- Ảnh sản phẩm -->
+    <div class="relative w-full aspect-square bg-surface-muted overflow-hidden">
+        <a th:href="@{'/products/' + ${p.slug}}" class="block w-full h-full">
+            <img th:src="${p.primaryImageUrl != null ? p.primaryImageUrl : '/images/demo/placeholder.svg'}"
+                 th:alt="${p.name}"
+                 loading="lazy"
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                 th:classappend="${p.stock <= 0} ? 'opacity-60 grayscale' : ''">
+        </a>
+
+        <!-- Chip vùng miền góc trên bên trái -->
+        <div class="absolute top-2.5 left-2.5">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold text-white shadow-sm"
+                  th:style="'background-color: ' + (${p.regionColorHex != null ? p.regionColorHex : '#0F9D8A'})"
+                  th:text="${p.regionName}">
+                Miền Bắc
+            </span>
+        </div>
+
+        <!-- Huy hiệu OCOP góc trên bên phải (nếu có) -->
+        <div th:if="${p.ocopRating != null and p.ocopRating > 0}" class="absolute top-2.5 right-2.5">
+            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-secondary-400 text-ink shadow-sm">
+                <i data-lucide="award" class="w-3 h-3 text-ink"></i>
+                <span th:text="${p.ocopRating} + '★ OCOP'">4★ OCOP</span>
+            </span>
+        </div>
+
+        <!-- Nhãn Tạm hết hàng nếu stock <= 0 -->
+        <div th:if="${p.stock <= 0}" class="absolute inset-0 flex items-center justify-center bg-ink/30 backdrop-blur-[1px]">
+            <span class="bg-surface/90 text-ink font-semibold text-xs px-3 py-1 rounded-full shadow-sm">
+                Tạm hết hàng
+            </span>
+        </div>
+    </div>
+
+    <!-- Nội dung thẻ sản phẩm -->
+    <div class="p-3.5 flex flex-col flex-1 justify-between gap-2">
+        <div>
+            <!-- Xuất xứ tỉnh thành -->
+            <div class="flex items-center gap-1 text-[11px] text-ink-muted mb-1">
+                <i data-lucide="map-pin" class="w-3 h-3 text-primary-600"></i>
+                <span th:text="${p.provinceName != null ? p.provinceName : p.originDetail}">Thái Nguyên</span>
+            </div>
+
+            <!-- Tên sản phẩm (tối đa 2 dòng) -->
+            <h4 class="text-xs sm:text-sm font-semibold text-ink line-clamp-2 leading-snug group-hover:text-primary-600 transition">
+                <a th:href="@{'/products/' + ${p.slug}}" th:text="${p.name}">
+                    Chè Thái Nguyên Tân Cương Thượng Hạng Hộp 500g
+                </a>
+            </h4>
+        </div>
+
+        <div>
+            <!-- Đánh giá sao & Số lượng đã bán -->
+            <div class="flex items-center gap-1.5 text-[11px] text-ink-muted mb-1.5">
+                <div class="flex items-center text-amber-500">
+                    <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
+                    <span class="ml-1 font-semibold text-ink" th:text="${p.avgRating}">4.8</span>
+                </div>
+                <span>•</span>
+                <span th:text="'Đã bán ' + ${p.soldCount}">Đã bán 120</span>
+            </div>
+
+            <!-- Giá tiền & Nút thêm nhanh vào giỏ -->
+            <div class="flex items-center justify-between pt-1 border-t border-line/60">
+                <div>
+                    <span class="text-sm sm:text-base font-bold text-primary-700"
+                          th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'POINT')} + '₫'">
+                        185.000₫
+                    </span>
+                    <span class="text-[10px] text-ink-muted block" th:text="'/' + ${p.unit}">/Hộp 500g</span>
+                </div>
+
+                <!-- Nút thêm vào giỏ nhanh -->
+                <button th:if="${p.stock > 0}"
+                        type="button"
+                        th:onclick="'quickAddToCart(' + ${p.id} + ')'"
+                        class="w-8 h-8 rounded-full bg-primary-50 text-primary-700 hover:bg-primary-600 hover:text-white flex items-center justify-center transition shadow-sm active:scale-95"
+                        aria-label="Thêm vào giỏ">
+                    <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

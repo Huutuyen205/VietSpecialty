@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>404 — Không tìm thấy trang | VietSpecialty</title>
+</head>
+<body>
+<div layout:fragment="content" class="py-16 text-center max-w-xl mx-auto space-y-6">
+    <div class="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-600 border border-amber-200 shadow-soft">
+        <span class="text-4xl">🌾</span>
+    </div>
+
+    <div class="space-y-2">
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 uppercase">Lỗi 404</span>
+        <h1 class="font-serif text-3xl font-bold text-stone-900">Món đặc sản này đã đổi đường đi mất rồi!</h1>
+        <p class="text-sm text-stone-600 leading-relaxed max-w-md mx-auto">
+            Trang hoặc đặc sản bạn đang tìm kiếm có thể đã tạm thời hết mùa vụ, đổi tên hoặc không còn tồn tại trên Sàn VietSpecialty.
+        </p>
+    </div>
+
+    <div class="p-4 bg-white rounded-2xl border border-stone-200 shadow-xs text-xs text-stone-600 max-w-md mx-auto space-y-2">
+        <p class="font-semibold text-stone-800">Bạn có thể thử các hướng dẫn sau:</p>
+        <ul class="text-left list-disc list-inside space-y-1 text-stone-600">
+            <li>Dùng khung tìm kiếm ở đầu trang để tìm tên đặc sản hoặc làng nghề.</li>
+            <li>Bấm vào biểu tượng <strong>Trợ lý AI Gemini</strong> ở góc phải để được gợi ý tức thì.</li>
+            <li>Liên hệ hotline hỗ trợ: <strong>1900 6868</strong> (8:00 - 21:00).</li>
+        </ul>
+    </div>
+
+    <div class="flex items-center justify-center gap-3 pt-2">
+        <a th:href="@{/}" class="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-xs">
+            Về Trang Chủ
+        </a>
+        <a th:href="@{/products}" class="px-6 py-2.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-xl text-xs font-bold transition">
+            Khám Phá Đặc Sản 3 Miền
+        </a>
+    </div>
+</div>
+</body>
+</html>

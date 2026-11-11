@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-base :: html(
+        pageTitle='Quản Lý Gian Hàng - Quản Trị Sàn',
+        content=~{::#adminShopsContent},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<div id="adminShopsContent" class="space-y-6">
+
+    <!-- Header bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-stone-900">Danh Sách Gian Hàng Đặc Sản</h1>
+            <p class="text-xs text-stone-500">Phê duyệt hồ sơ đăng ký mở gian hàng và quản lý hoạt động kinh doanh OCOP</p>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex items-center gap-2 border-b border-stone-200 overflow-x-auto pb-1 text-xs">
+        <a th:href="@{/admin/shops}"
+           class="px-3.5 py-2 font-semibold rounded-lg transition whitespace-nowrap"
+           th:classappend="${currentStatus == null} ? 'bg-amber-500 text-slate-900' : 'text-stone-600 hover:bg-stone-100'">
+            Tất cả gian hàng
+        </a>
+        <a th:href="@{/admin/shops(status='PENDING')}"
+           class="px-3.5 py-2 font-semibold rounded-lg transition whitespace-nowrap"
+           th:classappend="${currentStatus != null and currentStatus.name() == 'PENDING'} ? 'bg-amber-500 text-slate-900' : 'text-stone-600 hover:bg-stone-100'">
+            Chờ phê duyệt
+        </a>
+        <a th:href="@{/admin/shops(status='APPROVED')}"
+           class="px-3.5 py-2 font-semibold rounded-lg transition whitespace-nowrap"
+           th:classappend="${currentStatus != null and currentStatus.name() == 'APPROVED'} ? 'bg-amber-500 text-slate-900' : 'text-stone-600 hover:bg-stone-100'">
+            Đang hoạt động
+        </a>
+        <a th:href="@{/admin/shops(status='SUSPENDED')}"
+           class="px-3.5 py-2 font-semibold rounded-lg transition whitespace-nowrap"
+           th:classappend="${currentStatus != null and currentStatus.name() == 'SUSPENDED'} ? 'bg-amber-500 text-slate-900' : 'text-stone-600 hover:bg-stone-100'">
+            Tạm dừng
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-2xl border border-stone-200 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-stone-700">
+                <thead class="bg-stone-50 border-b border-stone-200 text-stone-500 font-semibold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-4">Gian hàng</th>
+                        <th class="py-3 px-4">Chủ cơ sở</th>
+                        <th class="py-3 px-4">Tỉnh thành</th>
+                        <th class="py-3 px-4">Đánh giá</th>
+                        <th class="py-3 px-4">Trạng thái</th>
+                        <th class="py-3 px-4 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    <tr th:each="shop : ${shops.content}" class="hover:bg-stone-50/50 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-3">
+                                <img th:src="${shop.logoUrl != null ? shop.logoUrl : '/images/default-shop.png'}"
+                                     class="w-10 h-10 rounded-xl object-cover border border-stone-200">
+                                <div>
+                                    <div class="font-bold text-stone-900" th:text="${shop.name}">HTX Nông Sản</div>
+                                    <div class="text-[11px] text-stone-500" th:text="'Hotline: ' + ${shop.hotline}">0912345678</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-medium text-stone-900" th:text="${shop.ownerName}">Nguyễn Văn A</div>
+                            <div class="text-[11px] text-stone-500" th:text="${shop.ownerEmail}">owner@example.com</div>
+                        </td>
+                        <td class="py-3.5 px-4 font-medium" th:text="${shop.provinceName}">Thái Nguyên</td>
+                        <td class="py-3.5 px-4">
+                            <span class="inline-flex items-center gap-1 font-bold text-amber-600">
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-500"></i>
+                                <span th:text="${shop.avgRating}">5.0</span>
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span th:if="${shop.status.name() == 'PENDING'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                                Chờ duyệt
+                            </span>
+                            <span th:if="${shop.status.name() == 'APPROVED'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                Hoạt động
+                            </span>
+                            <span th:if="${shop.status.name() == 'SUSPENDED'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                                Tạm khóa
+                            </span>
+                            <span th:if="${shop.status.name() == 'REJECTED'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-700">
+                                Từ chối
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <form th:if="${shop.status.name() == 'PENDING'}"
+                                      th:action="@{/admin/shops/{id}/approve(id=${shop.id})}" method="post">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition">
+                                        Phê duyệt
+                                    </button>
+                                </form>
+
+                                <form th:if="${shop.status.name() == 'APPROVED'}"
+                                      th:action="@{/admin/shops/{id}/suspend(id=${shop.id})}" method="post"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn tạm khóa gian hàng này?');">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg font-semibold text-xs transition">
+                                        Khóa
+                                    </button>
+                                </form>
+
+                                <form th:if="${shop.status.name() == 'SUSPENDED'}"
+                                      th:action="@{/admin/shops/{id}/approve(id=${shop.id})}" method="post">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg font-semibold text-xs transition">
+                                        Mở lại
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${shops.totalElements == 0}">
+                        <td colspan="6" class="text-center py-8 text-stone-400">Không có gian hàng nào trong danh sách.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</html>
+

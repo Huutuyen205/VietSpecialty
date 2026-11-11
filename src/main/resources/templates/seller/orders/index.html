@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/seller-base :: html(
+        pageTitle='Quản lý đơn hàng - Kênh người bán',
+        content=~{::#sellerOrdersContent},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<div id="sellerOrdersContent" class="space-y-6">
+
+    <!-- Tiêu đề và Thống kê nhanh -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-ink tracking-tight">Quản lý đơn hàng</h1>
+            <p class="text-xs text-ink-muted mt-1">Theo dõi, chuẩn bị hàng và cập nhật vận đơn cho các đơn đặt đặc sản</p>
+        </div>
+    </div>
+
+    <!-- Thông báo nếu có flash message -->
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-success/10 border border-success/30 text-success text-xs font-semibold flex items-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4"></i>
+        <span th:text="${successMessage}">Thành công</span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-danger/10 border border-danger/30 text-danger text-xs font-semibold flex items-center gap-2">
+        <i data-lucide="alert-circle" class="w-4 h-4"></i>
+        <span th:text="${errorMessage}">Lỗi</span>
+    </div>
+
+    <!-- Thanh Tabs lọc trạng thái -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-line text-xs font-semibold">
+        <a th:href="@{/seller/orders}"
+           class="px-4 py-2 rounded-xl whitespace-nowrap transition-colors"
+           th:classappend="${selectedStatus == 'ALL' ? 'bg-primary-600 text-white shadow-sm' : 'text-ink-muted hover:text-ink hover:bg-surface'}">
+            Tất cả đơn
+        </a>
+        <a th:each="st : ${statuses}"
+           th:href="@{/seller/orders(status=${st.name()})}"
+           class="px-4 py-2 rounded-xl whitespace-nowrap transition-colors"
+           th:classappend="${selectedStatus == st.name() ? 'bg-primary-600 text-white shadow-sm' : 'text-ink-muted hover:text-ink hover:bg-surface'}"
+           th:text="${st.description}">
+            Chờ xác nhận
+        </a>
+    </div>
+
+    <!-- Form tìm kiếm -->
+    <form method="get" th:action="@{/seller/orders}" class="flex items-center gap-3">
+        <input type="hidden" name="status" th:if="${selectedStatus != 'ALL'}" th:value="${selectedStatus}">
+        <div class="relative flex-1 max-w-md">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"></i>
+            <input type="text" name="search" th:value="${search}" placeholder="Tìm theo mã đơn, tên khách, số điện thoại..."
+                   class="input pl-9 text-xs w-full">
+        </div>
+        <button type="submit" class="btn btn-outline py-2 px-4 text-xs font-semibold">
+            Tìm kiếm
+        </button>
+    </form>
+
+    <!-- Bảng danh sách đơn hàng -->
+    <div class="bg-surface rounded-2xl border border-line shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-ink">
+                <thead class="bg-surface-muted/60 text-ink-muted font-bold uppercase text-[10px] tracking-wider border-b border-line">
+                    <tr>
+                        <th class="px-5 py-3.5">Mã đơn</th>
+                        <th class="px-5 py-3.5">Khách hàng</th>
+                        <th class="px-5 py-3.5">Sản phẩm</th>
+                        <th class="px-5 py-3.5 text-right">Tổng tiền</th>
+                        <th class="px-5 py-3.5 text-center">Trạng thái</th>
+                        <th class="px-5 py-3.5">Ngày đặt</th>
+                        <th class="px-5 py-3.5 text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line/60">
+                    <tr th:if="${orderPage != null and !orderPage.isEmpty()}"
+                        th:each="ord : ${orderPage.content}"
+                        class="hover:bg-surface-muted/30 transition-colors">
+
+                        <!-- Mã đơn -->
+                        <td class="px-5 py-4 font-bold text-primary-700">
+                            <a th:href="@{'/seller/orders/' + ${ord.code}}" class="hover:underline" th:text="${ord.code}">VS261111ABCDE</a>
+                        </td>
+
+                        <!-- Khách hàng -->
+                        <td class="px-5 py-4">
+                            <span class="font-medium text-ink block" th:text="${ord.shopName}">Khách hàng</span>
+                        </td>
+
+                        <!-- Sản phẩm tóm tắt -->
+                        <td class="px-5 py-4 max-w-xs">
+                            <div class="space-y-1">
+                                <div th:each="it, stat : ${ord.items}" th:if="${stat.index < 2}" class="truncate text-ink-muted">
+                                    <span class="font-medium text-ink" th:text="${it.productName}">Chè Tân Cương</span>
+                                    <span th:text="' &times; ' + ${it.quantity}"> &times; 1</span>
+                                </div>
+                                <div th:if="${ord.items.size() > 2}" class="text-[10px] text-primary-600 font-semibold"
+                                     th:text="'+ ' + ${ord.items.size() - 2} + ' đặc sản khác'">+ 1 đặc sản khác</div>
+                            </div>
+                        </td>
+
+                        <!-- Tổng tiền -->
+                        <td class="px-5 py-4 text-right font-extrabold text-ink" th:text="${ord.formattedTotalAmount}">
+                            370.000₫
+                        </td>
+
+                        <!-- Trạng thái -->
+                        <td class="px-5 py-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold"
+                                  th:classappend="${ord.status.name() == 'DELIVERED' ? 'bg-success/10 text-success' : (ord.status.name() == 'CANCELLED' ? 'bg-danger/10 text-danger' : 'bg-primary-50 text-primary-700')}"
+                                  th:text="${ord.statusDescription}">
+                                Chờ xác nhận
+                            </span>
+                        </td>
+
+                        <!-- Ngày đặt -->
+                        <td class="px-5 py-4 text-ink-muted whitespace-nowrap" th:text="${#temporals.format(ord.createdAt, 'dd/MM/yyyy HH:mm')}">
+                            11/11/2026 10:30
+                        </td>
+
+                        <!-- Thao tác nhanh -->
+                        <td class="px-5 py-4 text-center whitespace-nowrap">
+                            <a th:href="@{'/seller/orders/' + ${ord.code}}" class="btn btn-outline py-1.5 px-3 text-[11px] font-semibold">
+                                Chi tiết
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Trạng thái trống -->
+                    <tr th:if="${orderPage == null or orderPage.isEmpty()}">
+                        <td colspan="7" class="px-5 py-12 text-center text-ink-muted space-y-2">
+                            <i data-lucide="inbox" class="w-8 h-8 mx-auto text-ink-muted/60 mb-2"></i>
+                            <p class="font-semibold text-xs">Không có đơn hàng nào phù hợp với điều kiện tìm kiếm</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Phân trang -->
+        <div th:if="${orderPage != null and orderPage.totalPages > 1}" class="px-5 py-4 border-t border-line flex items-center justify-between text-xs">
+            <span class="text-ink-muted" th:text="'Hiển thị trang ' + ${orderPage.number + 1} + ' / ' + ${orderPage.totalPages}">Trang 1 / 3</span>
+            <div class="flex items-center gap-2">
+                <a th:if="${orderPage.hasPrevious()}"
+                   th:href="@{/seller/orders(page=${orderPage.number - 1}, status=${selectedStatus != 'ALL' ? selectedStatus : null}, search=${search})}"
+                   class="btn btn-outline px-3 py-1.5 text-xs">Trước</a>
+                <a th:if="${orderPage.hasNext()}"
+                   th:href="@{/seller/orders(page=${orderPage.number + 1}, status=${selectedStatus != 'ALL' ? selectedStatus : null}, search=${search})}"
+                   class="btn btn-outline px-3 py-1.5 text-xs">Sau</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+</html>
+

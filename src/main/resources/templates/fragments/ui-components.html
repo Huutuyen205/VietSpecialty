@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body>
+
+<!-- Rating Stars Fragment -->
+<div th:fragment="ratingStars(rating)" class="flex items-center text-amber-400">
+    <template th:each="i : ${#numbers.sequence(1, 5)}">
+        <i data-lucide="star" class="w-4 h-4"
+           th:classappend="${rating >= i} ? 'fill-amber-400 text-amber-400' : 'text-gray-300'"></i>
+    </template>
+</div>
+
+<!-- Pagination Fragment -->
+<nav th:fragment="pagination(page, baseUrl)" th:if="${page != null and page.totalPages > 1}" class="flex items-center justify-center space-x-1.5 my-8">
+    <!-- Nút Trước -->
+    <a th:if="${!page.first}"
+       th:href="@{${baseUrl}(page=${page.number - 1})}"
+       class="btn-outline px-3 py-1.5 text-xs">
+        &larr; Trước
+    </a>
+
+    <!-- Danh sách số trang -->
+    <th:block th:each="pageNum : ${#numbers.sequence(0, page.totalPages - 1)}">
+        <a th:if="${pageNum >= page.number - 2 and pageNum <= page.number + 2}"
+           th:href="@{${baseUrl}(page=${pageNum})}"
+           th:text="${pageNum + 1}"
+           class="px-3 py-1.5 rounded-xl text-xs font-semibold transition"
+           th:classappend="${pageNum == page.number} ? 'bg-primary-600 text-white shadow-sm' : 'bg-surface border border-line text-ink hover:bg-surface-muted'">
+            1
+        </a>
+    </th:block>
+
+    <!-- Nút Sau -->
+    <a th:if="${!page.last}"
+       th:href="@{${baseUrl}(page=${page.number + 1})}"
+       class="btn-outline px-3 py-1.5 text-xs">
+        Sau &rarr;
+    </a>
+</nav>
+
+<!-- Breadcrumbs Fragment -->
+<nav th:fragment="breadcrumbs(items)" class="flex items-center space-x-2 text-xs text-ink-muted mb-4 overflow-x-auto whitespace-nowrap">
+    <a th:href="@{/}" class="hover:text-primary-600 transition flex items-center gap-1">
+        <i data-lucide="home" class="w-3.5 h-3.5"></i>
+        <span>Trang chủ</span>
+    </a>
+    <th:block th:each="item, iterStat : ${items}">
+        <span>/</span>
+        <a th:if="${!iterStat.last}" th:href="@{${item.url}}" th:text="${item.title}" class="hover:text-primary-600 transition">Mục</a>
+        <span th:if="${iterStat.last}" th:text="${item.title}" class="font-semibold text-ink">Mục hiện tại</span>
+    </th:block>
+</nav>
+
+</body>
+</html>
+

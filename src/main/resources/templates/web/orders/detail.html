@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: html(
+        pageTitle=${'Chi tiết đơn hàng #' + order.code + ' - VietSpecialty'},
+        content=~{::#orderDetailContent},
+        pageMeta=~{},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<div id="orderDetailContent" class="max-w-4xl mx-auto py-6 sm:py-8 space-y-6"
+     x-data="{
+        cancelModalOpen: false,
+        cancelReason: '',
+        loading: false,
+        reviewModalOpen: false,
+        reviewOrderItemId: null,
+        reviewProductName: '',
+        reviewRating: 5,
+        reviewContent: '',
+        openReview(orderItemId, productName) {
+            this.reviewOrderItemId = orderItemId;
+            this.reviewProductName = productName;
+            this.reviewRating = 5;
+            this.reviewContent = '';
+            this.reviewModalOpen = true;
+        },
+        async submitReview() {
+            if (!this.reviewContent || this.reviewContent.trim().length < 5) {
+                alert('Vui lòng nhập nhận xét chi tiết ít nhất 5 ký tự');
+                return;
+            }
+            this.loading = true;
+            try {
+                const res = await fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderItemId: this.reviewOrderItemId,
+                        rating: this.reviewRating,
+                        content: this.reviewContent
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Cảm ơn bạn đã gửi đánh giá đặc sản!');
+                    this.reviewModalOpen = false;
+                    location.reload();
+                } else {
+                    alert(data.message || 'Không thể gửi đánh giá');
+                }
+            } catch (e) {
+                alert('Đã xảy ra lỗi, vui lòng thử lại');
+            } finally {
+                this.loading = false;
+            }
+        },
+        async cancelOrder() {
+            if (!this.cancelReason) {
+                alert('Vui lòng chọn hoặc nhập lý do hủy đơn');
+                return;
+            }
+            this.loading = true;
+            try {
+                const res = await fetch('/api/orders/' + [[${order.id}]] + '/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: this.cancelReason })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Không thể hủy đơn hàng');
+                }
+            } catch (e) {
+                alert('Đã xảy ra lỗi, vui lòng thử lại');
+            } finally {
+                this.loading = false;
+            }
+        },
+        async confirmReceived() {
+            if (!confirm('Bạn xác nhận đã nhận được toàn bộ kiện hàng đặc sản đúng như mô tả?')) {
+                return;
+            }
+            this.loading = true;
+            try {
+                const res = await fetch('/api/orders/' + [[${order.id}]] + '/received', {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Không thể xác nhận nhận hàng');
+                }
+            } catch (e) {
+                alert('Đã xảy ra lỗi, vui lòng thử lại');
+            } finally {
+                this.loading = false;
+            }
+        }
+     }">
+
+    <!-- Breadcrumb & Tiêu đề -->
+    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-line">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-ink-muted">
+                <a th:href="@{/orders}" class="hover:text-ink">Đơn hàng của tôi</a>
+                <span>/</span>
+                <span class="text-ink font-medium" th:text="${'#' + order.code}">#VS261111ABCDE</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black text-ink mt-1 flex items-center gap-2">
+                <span>Chi tiết đơn hàng</span>
+                <span class="text-base text-ink-muted font-normal" th:text="'(Mã: ' + ${order.code} + ')'">#VS261111ABCDE</span>
+            </h1>
+        </div>
+
+        <!-- Trạng thái hiện tại -->
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1.5 rounded-full text-xs font-bold"
+                  th:classappend="${order.status.name() == 'DELIVERED' ? 'bg-success/10 text-success' : (order.status.name() == 'CANCELLED' ? 'bg-danger/10 text-danger' : 'bg-primary-50 text-primary-700')}"
+                  th:text="${order.statusDescription}">
+                Chờ xác nhận
+            </span>
+        </div>
+    </div>
+
+    <!-- Timeline Trạng thái Vận chuyển -->
+    <div class="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-4">
+        <h3 class="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="git-commit" class="w-4 h-4 text-primary-600"></i>
+            <span>Hành trình đơn hàng</span>
+        </h3>
+
+        <!-- Danh sách mốc lịch sử -->
+        <div class="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-line">
+            <div th:each="hist, stat : ${order.statusHistories}" class="relative">
+                <!-- Dot icon -->
+                <div class="absolute -left-6 top-0.5 w-4 h-4 rounded-full border-2 border-surface flex items-center justify-center"
+                     th:classappend="${stat.last ? 'bg-primary-600 ring-4 ring-primary-100' : 'bg-ink-muted/50'}">
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-ink" th:text="${hist.toStatusDescription}">Chờ xác nhận</span>
+                        <span class="text-[11px] text-ink-muted" th:text="${#temporals.format(hist.createdAt, 'dd/MM/yyyy HH:mm')}">11/11/2026 10:35</span>
+                    </div>
+                    <p class="text-xs text-ink-muted mt-0.5" th:if="${hist.note != null}" th:text="${hist.note}">Đơn hàng đã được ghi nhận</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin vận đơn nếu có -->
+        <div th:if="${order.carrierName != null or order.trackingCode != null}"
+             class="p-3.5 rounded-xl bg-surface-muted/60 border border-line flex items-center justify-between text-xs">
+            <div class="space-y-0.5">
+                <span class="text-ink-muted block text-[11px]">Đơn vị vận chuyển:</span>
+                <span class="font-bold text-ink" th:text="${order.carrierName != null ? order.carrierName : 'Chưa cập nhật'}">Viettel Post</span>
+            </div>
+            <div class="text-right space-y-0.5">
+                <span class="text-ink-muted block text-[11px]">Mã vận đơn:</span>
+                <span class="font-mono font-bold text-primary-700" th:text="${order.trackingCode != null ? order.trackingCode : '---'}">VT123456789VN</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thông tin người nhận & Địa chỉ giao hàng -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-2">
+            <h3 class="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="map-pin" class="w-4 h-4 text-primary-600"></i>
+                <span>Địa chỉ nhận hàng</span>
+            </h3>
+            <div class="text-xs space-y-1 pt-1">
+                <div class="font-bold text-ink" th:text="${order.receiverName}">Nguyễn Hữu Tuyên</div>
+                <div class="text-ink-muted font-mono" th:text="${order.receiverPhone}">0987654321</div>
+                <div class="text-ink leading-relaxed" th:text="${order.shippingAddress}">Xã Tân Cương, TP Thái Nguyên, Thái Nguyên</div>
+            </div>
+        </div>
+
+        <div class="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-2">
+            <h3 class="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="credit-card" class="w-4 h-4 text-primary-600"></i>
+                <span>Thanh toán & Giao hàng</span>
+            </h3>
+            <div class="text-xs space-y-2 pt-1">
+                <div class="flex justify-between">
+                    <span class="text-ink-muted">Phương thức thanh toán:</span>
+                    <span class="font-bold text-ink" th:text="${order.paymentMethod}">VNPAY</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-ink-muted">Trạng thái thanh toán:</span>
+                    <span class="font-bold"
+                          th:classappend="${order.paymentStatus.name() == 'PAID' ? 'text-success' : 'text-primary-700'}"
+                          th:text="${order.paymentStatus.name() == 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}">
+                        Đã thanh toán
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-ink-muted">Phương thức vận chuyển:</span>
+                    <span class="font-medium text-ink" th:text="${order.shippingMethod.name() == 'EXPRESS' ? 'Hỏa tốc đặc sản' : 'Tiêu chuẩn'}">Tiêu chuẩn</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách sản phẩm của đơn hàng -->
+    <div class="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-line">
+            <div class="flex items-center gap-2">
+                <i data-lucide="store" class="w-4 h-4 text-primary-600"></i>
+                <a th:href="@{'/shops/' + ${order.shopId}}" class="font-bold text-ink text-sm hover:underline" th:text="${order.shopName}">
+                    HTX Chè Tân Cương
+                </a>
+            </div>
+            <a th:href="@{'/shops/' + ${order.shopId}}" class="btn btn-outline py-1 px-3 text-xs">
+                Ghé thăm gian hàng
+            </a>
+        </div>
+
+        <!-- Từng sản phẩm -->
+        <div class="space-y-4">
+            <div th:each="item : ${order.items}" class="flex items-center gap-4 pb-3 border-b border-line/60 last:border-0 last:pb-0">
+                <img th:src="${item.productImageUrl != null ? item.productImageUrl : '/images/placeholder.png'}"
+                     th:alt="${item.productName}"
+                     class="w-20 h-20 rounded-xl object-cover border border-line shrink-0" loading="lazy">
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-bold text-ink" th:text="${item.productName}">Chè Tân Cương Đinh Thượng Hạng</h4>
+                    <div class="text-xs text-ink-muted mt-1">
+                        Đơn giá: <span class="font-semibold text-ink" th:text="${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT') + '₫/' + item.unit}">185.000₫/Hộp</span>
+                        &nbsp;&bull;&nbsp; Số lượng: <span class="font-bold text-ink" th:text="${item.quantity}">2</span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm font-extrabold text-primary-700" th:text="${#numbers.formatDecimal(item.lineTotal, 0, 'COMMA', 0, 'POINT') + '₫'}">370.000₫</div>
+                    <!-- Nút đánh giá nếu đơn đã DELIVERED -->
+                    <div th:if="${order.status.name() == 'DELIVERED'}" class="mt-2">
+                        <button type="button"
+                                @click="openReview([[${item.id}]], [[${item.productName}]])"
+                                class="btn btn-outline py-1 px-2.5 text-[11px] font-semibold text-primary-700 hover:bg-primary-50">
+                            <i data-lucide="star" class="w-3.5 h-3.5 mr-1"></i> Đánh giá
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tóm tắt chi phí thanh toán -->
+    <div class="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-3">
+        <h3 class="text-xs font-bold text-ink uppercase tracking-wider">Chi tiết thanh toán</h3>
+        <div class="space-y-2 text-xs pt-1">
+            <div class="flex justify-between">
+                <span class="text-ink-muted">Tổng tiền hàng:</span>
+                <span class="font-semibold text-ink" th:text="${#numbers.formatDecimal(order.itemsSubtotal, 0, 'COMMA', 0, 'POINT') + '₫'}">370.000₫</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-ink-muted">Phí vận chuyển:</span>
+                <span class="font-semibold text-ink" th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT') + '₫'}">25.000₫</span>
+            </div>
+            <div class="flex justify-between text-success" th:if="${order.shopDiscount != null and order.shopDiscount > 0}">
+                <span>Giảm giá từ gian hàng:</span>
+                <span th:text="${'-' + #numbers.formatDecimal(order.shopDiscount, 0, 'COMMA', 0, 'POINT') + '₫'}">-15.000₫</span>
+            </div>
+            <div class="flex justify-between text-success" th:if="${order.platformDiscount != null and order.platformDiscount > 0}">
+                <span>Giảm giá sàn VietSpecialty:</span>
+                <span th:text="${'-' + #numbers.formatDecimal(order.platformDiscount, 0, 'COMMA', 0, 'POINT') + '₫'}">-20.000₫</span>
+            </div>
+            <div class="flex justify-between text-base font-extrabold text-ink pt-3 border-t border-line">
+                <span>Tổng số tiền:</span>
+                <span class="text-primary-700 text-lg" th:text="${order.formattedTotalAmount}">360.000₫</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Các nút hành động thao tác cho Người mua -->
+    <div class="flex flex-wrap items-center justify-between gap-4 pt-2">
+        <a th:href="@{/orders}" class="btn btn-outline py-2.5 px-5 text-xs font-semibold">
+            <i data-lucide="arrow-left" class="w-4 h-4 mr-1.5"></i> Quay lại danh sách
+        </a>
+
+        <div class="flex items-center gap-3">
+            <!-- Nút Hủy đơn nếu còn ở PENDING_PAYMENT hoặc PENDING_CONFIRM -->
+            <button th:if="${order.status.name() == 'PENDING_PAYMENT' or order.status.name() == 'PENDING_CONFIRM'}"
+                    @click="cancelModalOpen = true"
+                    class="btn btn-outline py-2.5 px-5 text-xs font-semibold text-danger border-danger/30 hover:bg-danger/10">
+                <i data-lucide="x" class="w-4 h-4 mr-1.5"></i> Hủy đơn hàng
+            </button>
+
+            <!-- Nút Xác nhận đã nhận hàng nếu đang ở SHIPPING -->
+            <button th:if="${order.status.name() == 'SHIPPING'}"
+                    @click="confirmReceived()"
+                    :disabled="loading"
+                    class="btn btn-primary py-2.5 px-6 text-xs font-bold">
+                <i data-lucide="check" class="w-4 h-4 mr-1.5"></i> Đã nhận được hàng
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal hủy đơn hàng -->
+    <div x-show="cancelModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+
+        <div class="bg-surface rounded-3xl max-w-md w-full p-6 border border-line shadow-2xl space-y-4"
+             @click.away="cancelModalOpen = false">
+
+            <div class="flex items-center justify-between pb-2 border-b border-line">
+                <h3 class="text-base font-bold text-ink">Hủy đơn hàng</h3>
+                <button @click="cancelModalOpen = false" class="text-ink-muted hover:text-ink">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-ink-muted">
+                Bạn có chắc chắn muốn hủy đơn hàng này? Toàn bộ tồn kho đặc sản và mã giảm giá đã áp dụng sẽ được hoàn trả.
+            </p>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold text-ink">Lý do hủy đơn:</label>
+                <select x-model="cancelReason" class="input text-xs w-full">
+                    <option value="">-- Chọn lý do hủy --</option>
+                    <option value="Muốn thay đổi địa chỉ nhận hàng">Muốn thay đổi địa chỉ nhận hàng</option>
+                    <option value="Muốn đổi phương thức thanh toán">Muốn đổi phương thức thanh toán</option>
+                    <option value="Tìm thấy giá rẻ hơn ở nơi khác">Tìm thấy giá rẻ hơn ở nơi khác</option>
+                    <option value="Đổi ý, không muốn mua nữa">Đổi ý, không muốn mua nữa</option>
+                    <option value="Đặt nhầm sản phẩm / số lượng">Đặt nhầm sản phẩm / số lượng</option>
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-line">
+                <button @click="cancelModalOpen = false" class="btn btn-outline py-2 px-4 text-xs font-semibold">
+                    Đóng
+                </button>
+                <button @click="cancelOrder()"
+                        :disabled="loading"
+                        class="btn btn-primary py-2 px-5 text-xs font-bold bg-danger hover:bg-danger/90 border-danger">
+                    <span x-show="!loading">Xác nhận hủy</span>
+                    <span x-show="loading">Đang xử lý...</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal gửi đánh giá sản phẩm -->
+    <div x-show="reviewModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+
+        <div class="bg-surface rounded-3xl max-w-lg w-full p-6 border border-line shadow-2xl space-y-4"
+             @click.away="reviewModalOpen = false">
+
+            <div class="flex items-center justify-between pb-2 border-b border-line">
+                <h3 class="text-base font-bold text-ink">Đánh giá đặc sản</h3>
+                <button @click="reviewModalOpen = false" class="text-ink-muted hover:text-ink">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-3 rounded-xl bg-surface-muted/60 border border-line text-xs font-semibold text-ink"
+                 x-text="reviewProductName">
+                Tên sản phẩm
+            </div>
+
+            <!-- Chọn số sao -->
+            <div class="space-y-1.5 text-center py-2">
+                <span class="block text-xs font-semibold text-ink-muted">Chất lượng sản phẩm:</span>
+                <div class="flex items-center justify-center gap-2">
+                    <template x-for="star in 5">
+                        <button type="button" @click="reviewRating = star" class="p-1 focus:outline-none transition-transform hover:scale-125">
+                            <i data-lucide="star" class="w-8 h-8"
+                               :class="star <= reviewRating ? 'text-accent-500 fill-accent-500' : 'text-line'"></i>
+                        </button>
+                    </template>
+                </div>
+                <div class="text-xs font-bold text-primary-700 mt-1"
+                     x-text="reviewRating === 5 ? 'Tuyệt vời (5 sao)' : (reviewRating === 4 ? 'Hài lòng (4 sao)' : (reviewRating === 3 ? 'Bình thường (3 sao)' : (reviewRating === 2 ? 'Không hài lòng (2 sao)' : 'Rất tệ (1 sao)')))">
+                </div>
+            </div>
+
+            <!-- Nhận xét chi tiết -->
+            <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-ink">Cảm nhận của bạn về hương vị, bao bì, hạn sử dụng:</label>
+                <textarea x-model="reviewContent" rows="4" required
+                          placeholder="Chia sẻ trải nghiệm thưởng thức đặc sản này để cộng đồng cùng biết nhé..."
+                          class="input text-xs w-full"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-line">
+                <button type="button" @click="reviewModalOpen = false" class="btn btn-outline py-2 px-4 text-xs font-semibold">
+                    Đóng
+                </button>
+                <button type="button" @click="submitReview()"
+                        :disabled="loading"
+                        class="btn btn-primary py-2 px-6 text-xs font-bold">
+                    <span x-show="!loading">Gửi đánh giá</span>
+                    <span x-show="loading">Đang gửi...</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: html(
+        pageTitle=${shop.name} + ' - Gian hàng đặc sản VietSpecialty',
+        content=~{::#mainContent},
+        pageMeta=~{::#metaBlock},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<th:block id="metaBlock">
+    <meta name="description" th:content="${shop.description != null ? shop.description : 'Gian hàng đặc sản ' + shop.name + ' trên sàn VietSpecialty.'}">
+</th:block>
+
+<div id="mainContent" class="space-y-6">
+
+    <!-- BREADCRUMB -->
+    <nav class="flex text-xs text-ink-muted" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-2">
+            <li><a th:href="@{/}" class="hover:text-primary-600 flex items-center gap-1"><i data-lucide="home" class="w-3.5 h-3.5"></i> Trang chủ</a></li>
+            <li><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i></li>
+            <li><span class="text-ink font-medium" th:text="${shop.name}">Gian hàng</span></li>
+        </ol>
+    </nav>
+
+    <!-- HEADER GIAN HÀNG -->
+    <div class="bg-surface rounded-3xl overflow-hidden border border-line shadow-sm">
+        <!-- Banner bìa -->
+        <div class="h-32 sm:h-44 bg-gradient-to-r from-primary-800 via-primary-700 to-primary-900 relative">
+            <div class="absolute inset-0 bg-black/10"></div>
+        </div>
+
+        <!-- Thông tin gian hàng -->
+        <div class="p-6 relative -mt-12 sm:-mt-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div class="flex items-start sm:items-end gap-4">
+                <img th:src="${shop.logoUrl != null ? shop.logoUrl : '/images/demo/shop-placeholder.svg'}"
+                     th:alt="${shop.name}"
+                     class="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl object-cover border-4 border-surface shadow-md bg-surface">
+                
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg sm:text-2xl font-bold text-ink" th:text="${shop.name}">HTX Chè Tân Cương</h1>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-primary-50 text-primary-700 border border-primary-200">
+                            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Đã xác thực
+                        </span>
+                    </div>
+                    <p class="text-xs text-ink-muted flex items-center gap-1.5" th:if="${shop.pickupAddress != null}">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-primary-600"></i>
+                        <span th:text="${shop.pickupAddress}">Tân Cương, Thái Nguyên</span>
+                    </p>
+                    <p class="text-xs text-ink-muted line-clamp-2 max-w-xl" th:text="${shop.description}">
+                        Chuyên cung cấp các dòng sản phẩm đặc sản vùng miền đạt chuẩn chất lượng OCOP, bảo tồn hương vị truyền thống tinh hoa dân tộc.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Nút hành động & Thống kê nhanh -->
+            <div class="flex items-center gap-4 text-xs border-t md:border-t-0 pt-4 md:pt-0 border-line">
+                <div class="text-center px-4">
+                    <div class="text-base font-bold text-primary-700" th:text="${productPage.totalElements}">18</div>
+                    <div class="text-[11px] text-ink-muted">Sản phẩm</div>
+                </div>
+                <div class="w-px h-8 bg-line"></div>
+                <div class="text-center px-4">
+                    <div class="text-base font-bold text-amber-500 flex items-center justify-center gap-0.5">
+                        <i data-lucide="star" class="w-4 h-4 fill-amber-400"></i>
+                        <span th:text="${shop.avgRating != null ? shop.avgRating : '5.0'}">4.9</span>
+                    </div>
+                    <div class="text-[11px] text-ink-muted">Đánh giá</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH SẢN PHẨM CỦA GIAN HÀNG -->
+    <div class="space-y-4">
+        <div class="bg-surface rounded-2xl p-4 border border-line flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <h3 class="font-bold text-sm text-ink">Tất cả sản phẩm của shop (<span th:text="${productPage.totalElements}">0</span>)</h3>
+
+            <!-- Form tìm kiếm & sắp xếp trong shop -->
+            <form th:action="@{'/shops/' + ${shop.slug}}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
+                <input type="text" name="keyword" th:value="${filter.keyword}" placeholder="Tìm trong shop..."
+                       class="px-3 py-1.5 rounded-lg border border-line text-xs focus:outline-none focus:ring-1 focus:ring-primary-500">
+                <select name="sort" onchange="this.form.submit()"
+                        class="px-3 py-1.5 rounded-lg border border-line text-xs focus:outline-none focus:ring-1 focus:ring-primary-500">
+                    <option value="newest" th:selected="${filter.sort == 'newest'}">Mới nhất</option>
+                    <option value="best_seller" th:selected="${filter.sort == 'best_seller'}">Bán chạy nhất</option>
+                    <option value="price_asc" th:selected="${filter.sort == 'price_asc'}">Giá tăng dần</option>
+                    <option value="price_desc" th:selected="${filter.sort == 'price_desc'}">Giá giảm dần</option>
+                </select>
+                <button type="submit" class="btn btn-outline py-1.5 px-3 text-xs">Tìm</button>
+            </form>
+        </div>
+
+        <!-- Lưới sản phẩm -->
+        <div th:if="${productPage.totalElements > 0}"
+             class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <th:block th:each="p : ${productPage.content}">
+                <div th:replace="~{fragments/product-card :: productCard(p=${p})}"></div>
+            </th:block>
+        </div>
+
+        <!-- Empty state nếu shop chưa có sản phẩm -->
+        <div th:if="${productPage.totalElements == 0}"
+             class="bg-surface rounded-2xl p-12 border border-line text-center space-y-2">
+            <i data-lucide="package-open" class="w-10 h-10 text-ink-muted mx-auto"></i>
+            <h4 class="font-bold text-sm text-ink">Chưa có sản phẩm nào</h4>
+            <p class="text-xs text-ink-muted">Gian hàng hiện đang chuẩn bị nạp thêm các đặc sản mới.</p>
+        </div>
+
+        <!-- Phân trang -->
+        <div th:if="${productPage.totalPages > 1}" class="flex items-center justify-center gap-1 pt-4">
+            <th:block th:each="pageNum : ${#numbers.sequence(0, productPage.totalPages - 1)}">
+                <a th:href="@{'/shops/' + ${shop.slug}(keyword=${filter.keyword}, sort=${filter.sort}, page=${pageNum})}"
+                   th:text="${pageNum + 1}"
+                   th:classappend="${pageNum == productPage.number} ? 'btn-primary' : 'btn-outline'"
+                   class="btn w-8 h-8 p-0 text-xs rounded-lg font-semibold">
+                    1
+                </a>
+            </th:block>
+        </div>
+    </div>
+
+</div>
+</html>
+

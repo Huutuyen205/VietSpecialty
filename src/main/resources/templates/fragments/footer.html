@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body>
+<footer th:fragment="footer" class="bg-surface border-t border-line mt-16 pt-12 pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-line text-sm">
+
+            <!-- Cột 1: Giới thiệu -->
+            <div class="space-y-4">
+                <img th:src="@{/images/logo.svg}" alt="VietSpecialty Logo" class="h-10 w-auto">
+                <p class="text-ink-muted leading-relaxed text-xs">
+                    Sàn thương mại điện tử đặc sản vùng miền Việt Nam — Kết nối trực tiếp cơ sở sản xuất, hợp tác xã và hộ kinh doanh truyền thống tới người tiêu dùng trên mọi miền Tổ quốc.
+                </p>
+                <div class="flex items-center space-x-3 text-xs text-primary-700 font-medium">
+                    <span class="inline-flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-primary-600"></i> Nguồn gốc chuẩn</span>
+                    <span class="inline-flex items-center gap-1"><i data-lucide="award" class="w-3.5 h-3.5 text-secondary-500"></i> Chuẩn OCOP</span>
+                </div>
+            </div>
+
+            <!-- Cột 2: Đặc sản vùng miền -->
+            <div>
+                <h3 class="font-semibold text-ink text-sm uppercase tracking-wider mb-3">Đặc sản 4 Miền</h3>
+                <ul class="space-y-2 text-xs text-ink-muted">
+                    <li><a th:href="@{/regions/mien-bac}" class="hover:text-primary-600 transition">Đặc sản Miền Bắc (Chè, Mứt, Cốm, Nem...)</a></li>
+                    <li><a th:href="@{/regions/mien-trung}" class="hover:text-primary-600 transition">Đặc sản Miền Trung (Mắm, Mè xửng, Tỏi Lý Sơn...)</a></li>
+                    <li><a th:href="@{/regions/tay-nguyen}" class="hover:text-primary-600 transition">Đặc sản Tây Nguyên (Cà phê, Mắc ca, Tiêu...)</a></li>
+                    <li><a th:href="@{/regions/mien-nam}" class="hover:text-primary-600 transition">Đặc sản Miền Nam (Bánh pía, Kẹo dừa, Khô cá...)</a></li>
+                </ul>
+            </div>
+
+            <!-- Cột 3: Chính sách & Hỗ trợ -->
+            <div>
+                <h3 class="font-semibold text-ink text-sm uppercase tracking-wider mb-3">Chính sách & Hỗ trợ</h3>
+                <ul class="space-y-2 text-xs text-ink-muted">
+                    <li><a th:href="@{/}" class="hover:text-primary-600 transition">Chính sách vận chuyển & Giao hàng</a></li>
+                    <li><a th:href="@{/}" class="hover:text-primary-600 transition">Quy định đổi trả & Hoàn tiền</a></li>
+                    <li><a th:href="@{/}" class="hover:text-primary-600 transition">Tiêu chuẩn chất lượng & Kiểm duyệt</a></li>
+                    <li><a th:href="@{/account/shop-registration}" class="hover:text-primary-600 transition">Chính sách mở gian hàng đối tác</a></li>
+                </ul>
+            </div>
+
+            <!-- Cột 4: Phương thức thanh toán -->
+            <div>
+                <h3 class="font-semibold text-ink text-sm uppercase tracking-wider mb-3">Thanh toán an toàn</h3>
+                <p class="text-xs text-ink-muted mb-3 leading-relaxed">
+                    Hỗ trợ thanh toán tiện lợi khi nhận hàng (COD) hoặc thanh toán trực tuyến qua cổng VNPay.
+                </p>
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg border border-line bg-surface-muted text-xs font-semibold text-ink">
+                        COD (Tiền mặt)
+                    </span>
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg border border-line bg-blue-50 text-xs font-bold text-blue-700">
+                        VNPAY-QR
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bản quyền & Đồ án tốt nghiệp -->
+        <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-ink-muted gap-2">
+            <p>© 2026 VietSpecialty — Đồ án tốt nghiệp ngành Công nghệ thông tin (ĐH Nguyễn Trãi).</p>
+            <p>Sinh viên thực hiện: <strong>Nguyễn Hữu Tuyên</strong> (K23CNT1 — 2310900105)</p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
+

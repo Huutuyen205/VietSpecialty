@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" fill="none" class="h-10 w-auto">
+  <!-- Biểu tượng Lá & Giọt phù sa -->
+  <g transform="translate(10, 8)">
+    <circle cx="22" cy="22" r="21" fill="#EEF8F0" stroke="#2F9E55" stroke-width="2"/>
+    <path d="M22 10C16 16 14 24 22 34C30 24 28 16 22 10Z" fill="#23864A"/>
+    <path d="M22 14V30" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="27" cy="18" r="3" fill="#E9A21F"/>
+  </g>
+  <!-- Tên thương hiệu VietSpecialty -->
+  <text x="64" y="32" font-family="'Be Vietnam Pro', system-ui, sans-serif" font-size="22" font-weight="700" fill="#1F2A24" letter-spacing="-0.5">
+    Viet<tspan fill="#23864A">Specialty</tspan>
+  </text>
+  <text x="65" y="46" font-family="'Be Vietnam Pro', system-ui, sans-serif" font-size="9" font-weight="500" fill="#5B6660" letter-spacing="1.2">
+    ĐẶC SẢN VÙNG MIỀN VIỆT NAM
+  </text>
+</svg>
+

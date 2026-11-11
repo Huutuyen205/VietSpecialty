@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+    background-color: #FFFCF5;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center font-medium rounded-xl transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
+  }
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-soft active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply btn bg-secondary-400 text-ink hover:bg-secondary-500 focus:ring-secondary-400 active:scale-[0.98];
+  }
+  .btn-outline {
+    @apply btn border border-line bg-surface text-ink hover:bg-surface-muted focus:ring-primary-500 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink hover:bg-surface-muted focus:ring-primary-500;
+  }
+  .btn-danger {
+    @apply btn bg-danger text-white hover:bg-red-700 focus:ring-red-500 active:scale-[0.98];
+  }
+
+  /* Form Inputs */
+  .input-field {
+    @apply w-full rounded-xl border-line bg-surface px-4 py-2.5 text-ink placeholder-ink-muted focus:border-primary-500 focus:ring-primary-500 transition duration-150;
+  }
+  .input-error {
+    @apply border-danger focus:border-danger focus:ring-danger text-danger;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-surface rounded-2xl border border-line shadow-soft transition-all duration-300;
+  }
+  .card-hover {
+    @apply hover:shadow-lift hover:-translate-y-1;
+  }
+
+  /* Status Chips */
+  .chip-status-pending-pay {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200;
+  }
+  .chip-status-pending-confirm {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200;
+  }
+  .chip-status-preparing {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200;
+  }
+  .chip-status-shipping {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200;
+  }
+  .chip-status-delivered {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200;
+  }
+  .chip-status-cancelled {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200;
+  }
+}
+
+/* Animations & Keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.05); }
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 4s infinite ease-in-out;
+}
+
+.animate-float {
+  animation: floatGentle 5s infinite ease-in-out;
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

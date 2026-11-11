@@ -1,0 +1,17 @@
+spring:
+  jpa:
+    show-sql: false
+  session:
+    cookie:
+      secure: true
+
+logging:
+  level:
+    com.vietspecialty: INFO
+    org.springframework: WARN
+
+app:
+  seed-demo: false
+  vnpay:
+    process-on-return: false
+

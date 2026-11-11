@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: html(
+        pageTitle=${pageTitle} + ' - VietSpecialty',
+        content=~{::#mainContent},
+        pageMeta=~{::#metaBlock},
+        extraCss=~{},
+        extraJs=~{::#pageJs}
+      )}">
+
+<th:block id="metaBlock">
+    <meta name="description" th:content="'Khám phá danh sách ' + ${pageTitle} + ' thơm ngon, chuẩn nguồn gốc xuất xứ tại sàn thương mại điện tử VietSpecialty.'">
+</th:block>
+
+<div id="mainContent" class="space-y-6">
+
+    <!-- Breadcrumb điều hướng -->
+    <nav class="flex text-xs text-ink-muted" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-2">
+            <li class="inline-flex items-center">
+                <a th:href="@{/}" class="hover:text-primary-600 flex items-center gap-1">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Trang chủ
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                    <span class="ml-1 text-ink font-medium" th:text="${pageTitle}">Đặc sản vùng miền</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Layout 2 cột: Sidebar bộ lọc + Lưới sản phẩm -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start" x-data="{ mobileFilterOpen: false }">
+
+        <!-- Nút mở bộ lọc trên Mobile -->
+        <div class="lg:hidden flex items-center justify-between pb-3 border-b border-line">
+            <button type="button" @click="mobileFilterOpen = !mobileFilterOpen"
+                    class="btn btn-outline py-2 px-3 text-xs flex items-center gap-1.5">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                <span>Bộ lọc tìm kiếm</span>
+            </button>
+            <span class="text-xs text-ink-muted" th:text="${productPage.totalElements} + ' đặc sản'">0 đặc sản</span>
+        </div>
+
+        <!-- SIDEBAR BỘ LỌC (Desktop & Drawer Mobile) -->
+        <aside :class="mobileFilterOpen ? 'fixed inset-0 z-50 bg-black/50 p-4 flex justify-end lg:static lg:bg-transparent lg:p-0' : 'hidden lg:block'"
+               class="lg:col-span-1">
+            
+            <form th:action="@{/products}" method="GET" id="filterForm"
+                  class="bg-surface rounded-2xl p-5 border border-line shadow-sm space-y-6 w-full max-w-xs lg:max-w-none overflow-y-auto max-h-[90vh] lg:max-h-none">
+                
+                <!-- Tiêu đề bộ lọc trên mobile có nút đóng -->
+                <div class="flex items-center justify-between pb-3 border-b border-line">
+                    <h3 class="font-bold text-sm text-ink flex items-center gap-2">
+                        <i data-lucide="filter" class="w-4 h-4 text-primary-600"></i> Bộ lọc đặc sản
+                    </h3>
+                    <button type="button" class="lg:hidden text-ink-muted hover:text-ink" @click="mobileFilterOpen = false">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Giữ lại keyword và sort ẩn nếu có -->
+                <input th:if="${filter.keyword != null}" type="hidden" name="keyword" th:value="${filter.keyword}">
+                <input type="hidden" name="sort" th:value="${filter.sort}">
+
+                <!-- 1. Vùng miền -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Vùng miền</h4>
+                    <div class="space-y-1.5 text-xs">
+                        <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
+                            <input type="radio" name="regionSlug" value="" th:checked="${filter.regionSlug == null or filter.regionSlug.isEmpty()}"
+                                   class="text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
+                            <span class="text-ink">Tất cả vùng miền</span>
+                        </label>
+                        <th:block th:each="r : ${regions}">
+                            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
+                                <input type="radio" name="regionSlug" th:value="${r.slug}" th:checked="${filter.regionSlug == r.slug}"
+                                       class="text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
+                                <span class="w-2.5 h-2.5 rounded-full" th:style="'background-color: ' + ${r.colorHex}"></span>
+                                <span class="text-ink" th:text="${r.name}">Miền Bắc</span>
+                            </label>
+                        </th:block>
+                    </div>
+                </div>
+
+                <!-- 2. Danh mục đặc sản -->
+                <div class="pt-4 border-t border-line">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Danh mục</h4>
+                    <div class="space-y-1.5 text-xs max-h-48 overflow-y-auto pr-1">
+                        <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
+                            <input type="radio" name="categorySlug" value="" th:checked="${filter.categorySlug == null or filter.categorySlug.isEmpty()}"
+                                   class="text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
+                            <span class="text-ink">Tất cả danh mục</span>
+                        </label>
+                        <th:block th:each="c : ${categories}">
+                            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition">
+                                <input type="radio" name="categorySlug" th:value="${c.slug}" th:checked="${filter.categorySlug == c.slug}"
+                                       class="text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
+                                <span class="text-ink" th:text="${c.name}">Trà & Cà phê</span>
+                            </label>
+                        </th:block>
+                    </div>
+                </div>
+
+                <!-- 3. Tiêu chuẩn OCOP -->
+                <div class="pt-4 border-t border-line">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Chứng nhận chất lượng</h4>
+                    <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition text-xs">
+                        <input type="checkbox" name="hasOcop" value="true" th:checked="${filter.hasOcop == true}"
+                               class="rounded text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
+                        <div class="flex items-center gap-1 font-semibold text-secondary-600">
+                            <i data-lucide="award" class="w-4 h-4"></i>
+                            <span>Sản phẩm đạt chuẩn OCOP (3-5★)</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- 4. Khoảng giá -->
+                <div class="pt-4 border-t border-line">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Khoảng giá (₫)</h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-2.5">
+                        <input type="number" name="minPrice" th:value="${filter.minPrice}" placeholder="Từ 0"
+                               class="w-full px-2.5 py-1.5 rounded-lg border border-line focus:ring-1 focus:ring-primary-500 focus:outline-none">
+                        <input type="number" name="maxPrice" th:value="${filter.maxPrice}" placeholder="Đến..."
+                               class="w-full px-2.5 py-1.5 rounded-lg border border-line focus:ring-1 focus:ring-primary-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="btn btn-outline w-full py-1.5 text-xs">Áp dụng giá</button>
+                </div>
+
+                <!-- 5. Đánh giá khách hàng -->
+                <div class="pt-4 border-t border-line">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">Đánh giá</h4>
+                    <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-surface-muted transition text-xs">
+                        <input type="checkbox" name="minRating4" value="true" th:checked="${filter.minRating4 == true}"
+                               class="rounded text-primary-600 focus:ring-primary-500" onchange="this.form.submit()">
+                        <div class="flex items-center text-amber-500">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                            <span class="text-ink ml-1 font-medium">Từ 4 sao trở lên</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Nút đặt lại bộ lọc -->
+                <div class="pt-4 border-t border-line">
+                    <a th:href="@{/products}" class="btn btn-ghost w-full py-2 text-xs text-ink-muted hover:text-danger">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1"></i> Xóa tất cả bộ lọc
+                    </a>
+                </div>
+
+            </form>
+        </aside>
+
+        <!-- CỘT CHÍNH: THANH CÔNG CỤ & LƯỚI SẢN PHẨM -->
+        <main class="lg:col-span-3 space-y-4">
+            
+            <!-- Toolbar: Tiêu đề, số lượng & Sắp xếp -->
+            <div class="bg-surface rounded-2xl p-4 border border-line shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg text-ink" th:text="${pageTitle}">Danh mục đặc sản</h1>
+                    <p class="text-xs text-ink-muted mt-0.5" th:text="'Hiển thị ' + ${productPage.numberOfElements} + ' trên tổng số ' + ${productPage.totalElements} + ' đặc sản'">
+                        Hiển thị 16 trên tổng số 120 đặc sản
+                    </p>
+                </div>
+
+                <!-- Bộ chọn sắp xếp -->
+                <div class="flex items-center gap-2 self-end sm:self-auto text-xs">
+                    <span class="text-ink-muted hidden sm:inline">Sắp xếp:</span>
+                    <select onchange="updateSort(this.value)"
+                            class="px-3 py-1.5 rounded-lg border border-line bg-surface text-ink text-xs focus:ring-1 focus:ring-primary-500 focus:outline-none">
+                        <option value="newest" th:selected="${filter.sort == 'newest'}">Mới nhất</option>
+                        <option value="best_seller" th:selected="${filter.sort == 'best_seller'}">Bán chạy nhất</option>
+                        <option value="price_asc" th:selected="${filter.sort == 'price_asc'}">Giá: Thấp đến Cao</option>
+                        <option value="price_desc" th:selected="${filter.sort == 'price_desc'}">Giá: Cao đến Thấp</option>
+                        <option value="rating" th:selected="${filter.sort == 'rating'}">Đánh giá cao nhất</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Lưới sản phẩm (Grid) -->
+            <div th:if="${productPage.totalElements > 0}"
+                 class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                <th:block th:each="p : ${productPage.content}">
+                    <div th:replace="~{fragments/product-card :: productCard(p=${p})}"></div>
+                </th:block>
+            </div>
+
+            <!-- Empty State nếu không có sản phẩm nào -->
+            <div th:if="${productPage.totalElements == 0}"
+                 class="bg-surface rounded-2xl p-12 border border-line text-center space-y-4 my-8">
+                <div class="w-16 h-16 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center mx-auto">
+                    <i data-lucide="package-search" class="w-8 h-8"></i>
+                </div>
+                <div class="space-y-1">
+                    <h3 class="text-base font-bold text-ink">Không tìm thấy đặc sản phù hợp</h3>
+                    <p class="text-xs text-ink-muted max-w-md mx-auto">
+                        Hãy thử điều chỉnh lại bộ lọc vùng miền, danh mục hoặc khoảng giá để tìm được đặc sản mong muốn bạn nhé.
+                    </p>
+                </div>
+                <div>
+                    <a th:href="@{/products}" class="btn btn-primary py-2 px-5 text-xs">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 mr-1.5"></i> Xem tất cả đặc sản
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phân trang chuẩn đẹp -->
+            <div th:if="${productPage.totalPages > 1}" class="flex items-center justify-center gap-1 pt-6">
+                <!-- Nút Trước -->
+                <a th:if="${productPage.hasPrevious()}"
+                   th:href="@{/products(keyword=${filter.keyword}, regionSlug=${filter.regionSlug}, categorySlug=${filter.categorySlug}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, minRating4=${filter.minRating4}, hasOcop=${filter.hasOcop}, sort=${filter.sort}, page=${productPage.number - 1})}"
+                   class="btn btn-outline p-2 text-xs rounded-lg" aria-label="Trang trước">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </a>
+
+                <!-- Các trang số -->
+                <th:block th:each="pageNum : ${#numbers.sequence(0, productPage.totalPages - 1)}">
+                    <a th:if="${pageNum >= productPage.number - 2 and pageNum <= productPage.number + 2}"
+                       th:href="@{/products(keyword=${filter.keyword}, regionSlug=${filter.regionSlug}, categorySlug=${filter.categorySlug}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, minRating4=${filter.minRating4}, hasOcop=${filter.hasOcop}, sort=${filter.sort}, page=${pageNum})}"
+                       th:text="${pageNum + 1}"
+                       th:classappend="${pageNum == productPage.number} ? 'btn-primary' : 'btn-outline'"
+                       class="btn w-9 h-9 p-0 text-xs rounded-lg font-semibold">
+                        1
+                    </a>
+                </th:block>
+
+                <!-- Nút Sau -->
+                <a th:if="${productPage.hasNext()}"
+                   th:href="@{/products(keyword=${filter.keyword}, regionSlug=${filter.regionSlug}, categorySlug=${filter.categorySlug}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, minRating4=${filter.minRating4}, hasOcop=${filter.hasOcop}, sort=${filter.sort}, page=${productPage.number + 1})}"
+                   class="btn btn-outline p-2 text-xs rounded-lg" aria-label="Trang kế tiếp">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+
+        </main>
+    </div>
+
+</div>
+
+<th:block id="pageJs">
+<script>
+    function updateSort(val) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', val);
+        url.searchParams.set('page', '0');
+        window.location.href = url.toString();
+    }
+</script>
+</th:block>
+
+</html>
+

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: html(
+        pageTitle='Trạng thái gian hàng - VietSpecialty',
+        content=~{::#mainContent},
+        pageMeta=~{},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<div id="mainContent" class="space-y-6">
+
+    <!-- BREADCRUMB -->
+    <nav class="flex text-xs text-ink-muted" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-2">
+            <li><a th:href="@{/}" class="hover:text-primary-600 flex items-center gap-1"><i data-lucide="home" class="w-3.5 h-3.5"></i> Trang chủ</a></li>
+            <li><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i></li>
+            <li><a th:href="@{/account/profile}" class="hover:text-primary-600">Tài khoản</a></li>
+            <li><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i></li>
+            <li><span class="text-ink font-medium">Trạng thái gian hàng</span></li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+        
+        <!-- SIDEBAR TÀI KHOẢN -->
+        <div class="md:col-span-1" th:replace="~{account/account-sidebar :: accountSidebar(active='shop-reg')}"></div>
+
+        <!-- CỘT CHÍNH -->
+        <main class="md:col-span-3 bg-surface rounded-2xl p-6 sm:p-8 border border-line shadow-sm space-y-6">
+            
+            <div th:if="${successMessage != null}" class="alert alert-success">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                <span th:text="${successMessage}">Thao tác thành công</span>
+            </div>
+
+            <!-- TRƯỜNG HỢP 1: PENDING -->
+            <div th:if="${shop.status.name() == 'PENDING'}" class="text-center py-8 space-y-4 max-w-lg mx-auto">
+                <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+                    <i data-lucide="clock" class="w-8 h-8"></i>
+                </div>
+                <div class="space-y-1">
+                    <h2 class="text-lg font-bold text-ink">Hồ sơ đang chờ phê duyệt</h2>
+                    <p class="text-xs text-ink-muted leading-relaxed">
+                        Gian hàng <strong class="text-ink" th:text="${shop.name}">Tên Shop</strong> của bạn đã được tiếp nhận. Đội ngũ kiểm duyệt VietSpecialty sẽ liên hệ và xác minh thông tin cơ sở trong vòng 24 - 48 giờ làm việc.
+                    </p>
+                </div>
+                <div class="p-4 rounded-xl bg-surface-muted text-left text-xs space-y-2 border border-line">
+                    <div class="flex justify-between">
+                        <span class="text-ink-muted">Hotline gian hàng:</span>
+                        <span class="font-semibold text-ink" th:text="${shop.hotline}">0912345678</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-ink-muted">Địa chỉ lấy hàng:</span>
+                        <span class="font-semibold text-ink" th:text="${shop.pickupAddress}">Thái Nguyên</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRƯỜNG HỢP 2: APPROVED -->
+            <div th:if="${shop.status.name() == 'APPROVED'}" class="text-center py-8 space-y-4 max-w-lg mx-auto">
+                <div class="w-16 h-16 rounded-full bg-success/10 text-success flex items-center justify-center mx-auto">
+                    <i data-lucide="check-circle-2" class="w-8 h-8"></i>
+                </div>
+                <div class="space-y-1">
+                    <h2 class="text-lg font-bold text-ink">Gian hàng đã được kích hoạt!</h2>
+                    <p class="text-xs text-ink-muted leading-relaxed">
+                        Chúc mừng bạn! Gian hàng <strong class="text-ink" th:text="${shop.name}">Tên Shop</strong> đã được ban quản trị phê duyệt chính thức. Bạn hiện có thể truy cập Kênh Người Bán để đăng tải sản phẩm và quản lý đơn hàng.
+                    </p>
+                </div>
+                <div class="pt-2">
+                    <a th:href="@{/seller/dashboard}" class="btn btn-primary py-2.5 px-6 text-xs inline-flex items-center gap-2">
+                        <i data-lucide="store" class="w-4 h-4"></i>
+                        <span>Truy cập Kênh Người Bán</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- TRƯỜNG HỢP 3: REJECTED -->
+            <div th:if="${shop.status.name() == 'REJECTED'}" class="text-center py-8 space-y-4 max-w-lg mx-auto">
+                <div class="w-16 h-16 rounded-full bg-danger/10 text-danger flex items-center justify-center mx-auto">
+                    <i data-lucide="x-circle" class="w-8 h-8"></i>
+                </div>
+                <div class="space-y-1">
+                    <h2 class="text-lg font-bold text-ink">Hồ sơ chưa được phê duyệt</h2>
+                    <p class="text-xs text-ink-muted leading-relaxed">
+                        Rất tiếc, hồ sơ mở gian hàng chưa đáp ứng đầy đủ tiêu chí của sàn đặc sản. Vui lòng kiểm tra lại thông tin hoặc liên hệ bộ phận hỗ trợ khách hàng.
+                    </p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</div>
+</html>
+

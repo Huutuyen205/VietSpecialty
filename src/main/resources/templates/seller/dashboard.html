@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/seller-base :: html(
+        pageTitle='Tổng quan Gian Hàng - VietSpecialty',
+        content=~{::#sellerDashboardContent},
+        extraCss=~{},
+        extraJs=~{::#sellerDashboardJs}
+      )}">
+
+<div id="sellerDashboardContent" class="space-y-6">
+
+    <!-- Banners chào mừng -->
+    <div class="bg-gradient-to-r from-primary-800 to-primary-700 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-sm">
+        <div class="relative z-10 max-w-xl space-y-2">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm">
+                Chào mừng trở lại!
+            </span>
+            <h1 class="text-xl sm:text-2xl font-extrabold" th:text="${shop.name}">HTX Nông Sản Đặc Sản</h1>
+            <p class="text-xs text-white/80 leading-relaxed">
+                Kênh quản trị gian hàng chính thức. Theo dõi hiệu quả kinh doanh, cập nhật tồn kho và quảng bá tinh hoa đặc sản đến mọi miền tổ quốc.
+            </p>
+            <div class="pt-2 flex items-center gap-3">
+                <a th:href="@{/seller/products/create}" class="btn bg-white text-primary-800 hover:bg-white/90 text-xs font-bold py-2.5 px-5 rounded-xl inline-flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Đăng bán đặc sản mới</span>
+                </a>
+                <a th:href="@{/seller/vouchers/create}" class="btn bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2.5 px-5 rounded-xl inline-flex items-center gap-1.5 border border-white/20">
+                    <i data-lucide="ticket-percent" class="w-4 h-4"></i>
+                    <span>Tạo voucher</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thẻ thống kê chỉ số nhanh -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-ink-muted">
+                <span>Doanh thu gian hàng</span>
+                <i data-lucide="wallet" class="w-4 h-4 text-emerald-600"></i>
+            </div>
+            <div class="text-xl font-bold text-emerald-700" th:text="${#numbers.formatDecimal(stats.totalRevenue, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</div>
+            <p class="text-[11px] text-ink-muted">Doanh số đơn hoàn thành</p>
+        </div>
+
+        <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-ink-muted">
+                <span>Đơn hàng cần xử lý</span>
+                <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+            </div>
+            <div class="text-xl font-bold text-amber-600" th:text="${stats.pendingOrders}">0</div>
+            <p class="text-[11px] text-ink-muted">Đang chờ bạn xác nhận</p>
+        </div>
+
+        <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-ink-muted">
+                <span>Đơn đang giao</span>
+                <i data-lucide="truck" class="w-4 h-4 text-blue-500"></i>
+            </div>
+            <div class="text-xl font-bold text-blue-600" th:text="${stats.shippingOrders}">0</div>
+            <p class="text-[11px] text-ink-muted">Đang trên đường đến khách</p>
+        </div>
+
+        <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-ink-muted">
+                <span>Đánh giá gian hàng</span>
+                <i data-lucide="star" class="w-4 h-4 text-amber-500 fill-amber-400"></i>
+            </div>
+            <div class="text-xl font-bold text-ink" th:text="${shop.avgRating} + ' / 5.0'">4.9 / 5.0</div>
+            <p class="text-[11px] text-ink-muted">Dựa trên nhận xét thực tế</p>
+        </div>
+
+    </div>
+
+    <!-- Biểu đồ Doanh Thu Gian Hàng 7 ngày -->
+    <div class="bg-surface p-6 rounded-2xl border border-line shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-ink text-sm">Biểu Đồ Doanh Thu Gian Hàng (7 ngày gần nhất)</h3>
+                <p class="text-xs text-ink-muted">Thống kê doanh thu thực tế được ghi nhận</p>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 bg-surface-muted text-ink rounded-lg">7 ngày qua</span>
+        </div>
+        <div class="h-64">
+            <canvas id="sellerRevenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 2 Cột: Cảnh báo tồn kho thấp + Sản phẩm bán chạy -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Cảnh báo tồn kho thấp -->
+        <div class="bg-surface rounded-2xl p-6 border border-line shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-line pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+                    <h2 class="text-sm font-bold text-ink">Cảnh Báo Tồn Kho Thấp</h2>
+                </div>
+                <span class="badge bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                      th:text="${lowStockProducts.size()} + ' sản phẩm'">0 sản phẩm</span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(lowStockProducts)}" class="text-center py-8 text-xs text-ink-muted">
+                <i data-lucide="check-circle" class="w-8 h-8 mx-auto mb-2 text-emerald-500 opacity-80"></i>
+                Kho hàng đang ở trạng thái an toàn, không có mặt hàng nào sắp hết.
+            </div>
+
+            <div th:unless="${#lists.isEmpty(lowStockProducts)}" class="space-y-3">
+                <div th:each="p : ${lowStockProducts}" class="flex items-center justify-between p-3 rounded-xl bg-surface-muted border border-line/60">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center font-bold text-xs text-primary-700 border border-line">
+                            <i data-lucide="package" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-xs text-ink truncate max-w-[180px] sm:max-w-xs" th:text="${p.name}">Tên sản phẩm</div>
+                            <div class="text-[11px] text-ink-muted" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT') + 'đ / ' + p.unit}">100.000đ</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-700"
+                              th:text="'Còn ' + ${p.stock}">Còn 2</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sản phẩm bán chạy nhất -->
+        <div class="bg-surface rounded-2xl p-6 border border-line shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-line pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="flame" class="w-4 h-4 text-primary-600"></i>
+                    <h2 class="text-sm font-bold text-ink">Đặc Sản Bán Chạy Nhất</h2>
+                </div>
+                <a th:href="@{/seller/products}" class="text-xs text-primary-700 font-semibold hover:underline">Xem tất cả</a>
+            </div>
+
+            <div th:if="${#lists.isEmpty(topSellingProducts)}" class="text-center py-8 text-xs text-ink-muted">
+                <i data-lucide="package" class="w-8 h-8 mx-auto mb-2 text-ink-muted opacity-50"></i>
+                Chưa có dữ liệu giao dịch sản phẩm.
+            </div>
+
+            <div th:unless="${#lists.isEmpty(topSellingProducts)}" class="space-y-3">
+                <div th:each="p, stat : ${topSellingProducts}" class="flex items-center justify-between p-3 rounded-xl bg-surface-muted border border-line/60">
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 text-center font-extrabold text-sm"
+                              th:classappend="${stat.index == 0 ? 'text-amber-500' : (stat.index == 1 ? 'text-slate-400' : (stat.index == 2 ? 'text-amber-700' : 'text-ink-muted'))}"
+                              th:text="'#' + ${stat.count}">#1</span>
+                        <div>
+                            <div class="font-bold text-xs text-ink truncate max-w-[180px] sm:max-w-xs" th:text="${p.name}">Trà Đinh Nõn</div>
+                            <div class="text-[11px] text-ink-muted" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT') + 'đ'}">250.000đ</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-primary-700" th:text="'Đã bán ' + ${p.soldCount}">Đã bán 120</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<th:block id="sellerDashboardJs">
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/seller/analytics/revenue?days=7');
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const labels = data.data.map(item => item.label);
+                    const revenues = data.data.map(item => item.revenue);
+
+                    const ctx = document.getElementById('sellerRevenueChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Doanh thu (VNĐ)',
+                                data: revenues,
+                                backgroundColor: '#16a34a',
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.raw);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Không thể tải biểu đồ doanh thu gian hàng', err);
+            }
+        });
+    </script>
+</th:block>
+</html>
