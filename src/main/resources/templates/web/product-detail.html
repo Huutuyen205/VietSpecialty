@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layouts/base :: html(
-        pageTitle=${product.name} + ' - VietSpecialty',
+        pageTitle=${product.name} + ' — VietSpecialty',
         content=~{::#mainContent},
         pageMeta=~{::#metaBlock},
         extraCss=~{},
@@ -10,278 +10,292 @@
 
 <th:block id="metaBlock">
     <meta name="description" th:content="${product.shortDescription != null ? product.shortDescription : product.name}">
-    <!-- Open Graph -->
     <meta property="og:title" th:content="${product.name} + ' | VietSpecialty'">
     <meta property="og:description" th:content="${product.shortDescription}">
     <meta property="og:image" th:content="${product.images != null and !product.images.isEmpty() ? product.images[0].imageUrl : ''}">
     <meta property="og:type" content="product">
     
     <!-- JSON-LD Structured Data for Google Rich Snippets -->
-    <script type="application/ld+json" th:inline="javascript">
-    /*<![CDATA[*/
+    <script type="application/ld+json">
     {
       "@context": "https://schema.org/",
       "@type": "Product",
-      "name": /*[[${product.name}]]*/ "",
-      "image": /*[[${product.images != null and !product.images.isEmpty() ? product.images[0].imageUrl : ''}]]*/ "",
-      "description": /*[[${product.shortDescription}]]*/ "",
+      "name": "[(${#strings.replace(product.name, '"', '\"')})]",
+      "description": "[(${#strings.replace(product.shortDescription != null ? product.shortDescription : product.name, '"', '\"')})]",
       "offers": {
         "@type": "Offer",
         "priceCurrency": "VND",
-        "price": /*[[${product.price}]]*/ 0,
-        "availability": /*[[${product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'}]]*/ "https://schema.org/InStock"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": /*[[${product.avgRating}]]*/ 5.0,
-        "reviewCount": /*[[${product.reviewCount > 0 ? product.reviewCount : 1}]]*/ 1
+        "price": [(${product.price})],
+        "availability": "[(${product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'})]"
       }
     }
-    /*]]>*/
     </script>
 </th:block>
 
 <div id="mainContent" class="space-y-8"
+     th:data-img="${product.images != null and !product.images.isEmpty() ? product.images[0].imageUrl : '/images/demo/placeholder.svg'}"
+     th:data-stock="${product.stock}"
      x-data="{
-        activeImg: /*[[${product.images != null and !product.images.isEmpty() ? product.images[0].imageUrl : '/images/demo/placeholder.svg'}]]*/ '',
+        activeImg: '',
         quantity: 1,
-        maxStock: /*[[${product.stock}]]*/ 10,
-        activeTab: 'desc'
+        maxStock: 10,
+        activeTab: 'desc',
+        init() {
+            this.activeImg = this.$el.dataset.img || '';
+            this.maxStock = parseInt(this.$el.dataset.stock) || 0;
+        }
      }">
 
     <!-- Breadcrumb điều hướng -->
     <nav class="flex text-xs text-ink-muted" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-2">
             <li class="inline-flex items-center">
-                <a th:href="@{/}" class="hover:text-primary-600 flex items-center gap-1">
-                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Trang chủ
+                <a th:href="@{/}" class="hover:text-primary-700 flex items-center gap-1 transition">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                    <span>Trang chủ</span>
                 </a>
             </li>
             <li>
                 <div class="flex items-center">
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
-                    <a th:href="@{/products}" class="ml-1 hover:text-primary-600">Đặc sản</a>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-line"></i>
+                    <a th:href="@{/products}" class="ml-1 hover:text-primary-700 transition">Đặc sản</a>
                 </div>
             </li>
             <li th:if="${product.region != null}">
                 <div class="flex items-center">
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
-                    <a th:href="@{'/regions/' + ${product.region.slug}}" th:text="${product.region.name}" class="ml-1 hover:text-primary-600">Miền Bắc</a>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-line"></i>
+                    <a th:href="@{'/regions/' + ${product.region.slug}}" th:text="${product.region.name}" class="ml-1 hover:text-primary-700 transition font-medium">Miền Bắc</a>
                 </div>
             </li>
             <li th:if="${product.category != null}">
                 <div class="flex items-center">
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
-                    <a th:href="@{'/categories/' + ${product.category.slug}}" th:text="${product.category.name}" class="ml-1 hover:text-primary-600">Danh mục</a>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-line"></i>
+                    <a th:href="@{'/categories/' + ${product.category.slug}}" th:text="${product.category.name}" class="ml-1 hover:text-primary-700 transition font-medium">Danh mục</a>
                 </div>
             </li>
             <li aria-current="page">
                 <div class="flex items-center">
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
-                    <span class="ml-1 text-ink font-medium truncate max-w-xs" th:text="${product.name}">Tên sản phẩm</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-line"></i>
+                    <span class="ml-1 text-ink font-semibold truncate max-w-xs" th:text="${product.name}">Tên sản phẩm</span>
                 </div>
             </li>
         </ol>
     </nav>
 
     <!-- Khối tổng quan sản phẩm: 2 cột (Gallery ảnh + Chi tiết thông tin & Mua) -->
-    <div class="bg-surface rounded-3xl p-6 sm:p-8 border border-line shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+    <div class="bg-surface rounded-3xl p-6 sm:p-8 lg:p-10 border border-line shadow-soft grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-start">
         
         <!-- CỘT ẢNH: Gallery -->
         <div class="space-y-4">
-            <!-- Ảnh lớn -->
-            <div class="relative w-full aspect-square bg-surface-muted rounded-2xl overflow-hidden border border-line">
+            <!-- Ảnh lớn trưng bày -->
+            <div class="relative w-full aspect-square bg-surface-muted rounded-2xl overflow-hidden border border-line shadow-2xs group">
                 <img :src="activeImg"
                      th:alt="${product.name}"
-                     class="w-full h-full object-cover transition-all duration-300">
+                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                 
                 <!-- Huy hiệu Miền -->
-                <div th:if="${product.region != null}" class="absolute top-3 left-3">
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold text-white shadow"
-                          th:style="'background-color: ' + (${product.region.colorHex != null ? product.region.colorHex : '#0F9D8A'})"
-                          th:text="${product.region.name}">Miền Bắc</span>
+                <div th:if="${product.region != null}" class="absolute top-3.5 left-3.5 z-10">
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md backdrop-blur-xs"
+                          th:style="'background-color: ' + (${product.region.colorHex != null ? product.region.colorHex : '#0F9D8A'})">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white/90 animate-pulse"></span>
+                        <span th:text="${product.region.name}">Miền Bắc</span>
+                    </span>
                 </div>
 
-                <!-- Huy hiệu OCOP -->
-                <div th:if="${product.ocopRating != null and product.ocopRating > 0}" class="absolute top-3 right-3">
-                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-secondary-400 text-ink shadow">
+                <!-- Huy hiệu OCOP Quốc Gia -->
+                <div th:if="${product.ocopRating != null and product.ocopRating > 0}" class="absolute top-3.5 right-3.5 z-10">
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 text-ink shadow-md">
                         <i data-lucide="award" class="w-4 h-4 text-ink"></i>
-                        <span th:text="${product.ocopRating} + '★ OCOP Quốc gia'">4★ OCOP Quốc gia</span>
+                        <span th:text="${product.ocopRating} + '★ OCOP Quốc Gia'">4★ OCOP Quốc Gia</span>
                     </span>
                 </div>
             </div>
 
             <!-- Hàng thumbnail bên dưới -->
             <div th:if="${product.images != null and !product.images.isEmpty()}"
-                 class="flex items-center gap-3 overflow-x-auto pb-2">
-                <template x-for="(img, idx) in /*[[${product.images}]]*/ []" :key="img.id">
+                 class="flex items-center gap-3 overflow-x-auto pb-1 no-scrollbar">
+                <th:block th:each="img : ${product.images}">
                     <button type="button"
-                            @click="activeImg = img.imageUrl"
-                            :class="activeImg === img.imageUrl ? 'border-primary-600 ring-2 ring-primary-500/20' : 'border-line opacity-70 hover:opacity-100'"
-                            class="w-18 h-18 sm:w-20 sm:h-20 flex-shrink-0 rounded-xl overflow-hidden border bg-surface-muted transition">
-                        <img :src="img.imageUrl" alt="" class="w-full h-full object-cover">
+                            th:data-img="${img.imageUrl}"
+                            @click="activeImg = $el.dataset.img"
+                            :class="activeImg === $el.dataset.img ? 'border-primary-600 ring-2 ring-primary-500/20 shadow-xs' : 'border-line opacity-75 hover:opacity-100'"
+                            class="w-18 h-18 sm:w-20 sm:h-20 flex-shrink-0 rounded-xl overflow-hidden border bg-surface-muted transition duration-200">
+                        <img th:src="${img.imageUrl}" th:alt="${product.name}" class="w-full h-full object-cover">
                     </button>
-                </template>
+                </th:block>
             </div>
         </div>
 
         <!-- CỘT THÔNG TIN: Tên, Giá, Tồn kho, Nút Mua -->
         <div class="space-y-6">
             
-            <!-- Nguồn gốc xuất xứ -->
+            <!-- Nguồn gốc xuất xứ làng nghề -->
             <div class="flex items-center gap-2 text-xs text-ink-muted">
-                <i data-lucide="map-pin" class="w-4 h-4 text-primary-600"></i>
-                <span>Xuất xứ:</span>
-                <span class="font-semibold text-ink"
-                      th:text="${product.originDetail != null ? product.originDetail : (product.province != null ? product.province.name : 'Việt Nam')}">
-                    Tân Cương, Thái Nguyên
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary-50 text-primary-700 font-semibold border border-primary-100">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                    <span th:text="${product.originDetail != null ? product.originDetail : (product.province != null ? product.province.name : 'Việt Nam')}">
+                        Tân Cương, Thái Nguyên
+                    </span>
                 </span>
+                <span th:if="${product.category != null}" class="text-ink-muted">•</span>
+                <span th:if="${product.category != null}" class="text-ink-muted" th:text="${product.category.name}">Trà & Cà phê</span>
             </div>
 
             <!-- Tên sản phẩm -->
-            <h1 class="text-xl sm:text-2xl font-bold text-ink leading-snug" th:text="${product.name}">
+            <h1 class="font-serif text-2xl sm:text-3xl font-bold text-ink leading-snug" th:text="${product.name}">
                 Chè Tân Cương Thái Nguyên Thượng Hạng Hộp 500g
             </h1>
 
-            <!-- Đánh giá sao & Lượt bán -->
-            <div class="flex flex-wrap items-center gap-4 text-xs pb-4 border-b border-line">
-                <div class="flex items-center gap-1.5 text-amber-500 font-semibold">
+            <!-- Đánh giá sao, Lượt bán & Tình trạng kho -->
+            <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs pb-4 border-b border-line">
+                <div class="flex items-center gap-1.5 text-amber-500 font-bold">
                     <div class="flex items-center">
                         <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
                     </div>
-                    <span class="text-sm font-bold text-ink" th:text="${product.avgRating}">4.8</span>
-                    <span class="text-ink-muted underline cursor-pointer"
+                    <span class="text-sm text-ink" th:text="${product.avgRating}">4.8</span>
+                    <span class="text-ink-muted font-normal underline cursor-pointer hover:text-primary-700 transition"
                           @click="activeTab = 'reviews'"
                           th:text="'(' + ${product.reviewCount} + ' đánh giá)'">(36 đánh giá)</span>
                 </div>
-                <div class="w-px h-4 bg-line"></div>
+                <div class="w-px h-3.5 bg-line"></div>
                 <div class="text-ink-muted">
                     <span>Đã bán:</span>
-                    <span class="font-semibold text-ink" th:text="${product.soldCount}">145</span>
+                    <strong class="text-ink ml-1" th:text="${product.soldCount}">145</strong>
                 </div>
-                <div class="w-px h-4 bg-line"></div>
+                <div class="w-px h-3.5 bg-line"></div>
                 <div>
-                    <span th:if="${product.stock > 0}" class="text-success font-semibold flex items-center gap-1">
-                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Còn hàng (<span th:text="${product.stock}">50</span>)
+                    <span th:if="${product.stock > 0}" class="text-primary-700 font-bold flex items-center gap-1">
+                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-primary-600"></i>
+                        <span>Còn hàng (<span th:text="${product.stock}">50</span>)</span>
                     </span>
-                    <span th:if="${product.stock <= 0}" class="text-danger font-semibold flex items-center gap-1">
-                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Tạm hết hàng
+                    <span th:if="${product.stock <= 0}" class="text-danger font-bold flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                        <span>Tạm hết hàng</span>
                     </span>
                 </div>
             </div>
 
-            <!-- Khối Giá bán -->
-            <div class="bg-surface-muted/60 p-4 rounded-2xl flex items-baseline gap-3">
-                <span class="text-2xl sm:text-3xl font-extrabold text-primary-700"
-                      th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT')} + '₫'">
-                    185.000₫
-                </span>
-                <span class="text-xs text-ink-muted" th:text="'/ ' + ${product.unit}">/ Hộp 500g</span>
+            <!-- Khối Giá bán & Khuyến mãi vận chuyển -->
+            <div class="bg-gradient-to-r from-primary-50/60 to-surface-muted/60 p-4 sm:p-5 rounded-2xl border border-primary-100/80 space-y-2">
+                <div class="flex items-baseline gap-3">
+                    <span class="text-3xl sm:text-4xl font-serif font-extrabold text-primary-700 tracking-tight"
+                          th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT')} + '₫'">
+                        185.000₫
+                    </span>
+                    <span class="text-xs text-ink-muted font-medium" th:text="'/ ' + ${product.unit}">/ Hộp 500g</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-[11px] text-primary-800 font-medium pt-1 border-t border-primary-200/50">
+                    <i data-lucide="truck" class="w-3.5 h-3.5 text-primary-600"></i>
+                    <span>Freeship tiêu chuẩn cho đơn từ 500.000₫ tại cùng gian hàng</span>
+                </div>
             </div>
 
-            <!-- Mô tả ngắn -->
-            <div th:if="${product.shortDescription != null}" class="text-xs text-ink-muted leading-relaxed">
+            <!-- Mô tả ngắn nếu có -->
+            <div th:if="${product.shortDescription != null}" class="text-xs sm:text-sm text-ink-muted leading-relaxed">
                 <p th:text="${product.shortDescription}">Hương vị tiền chát hậu ngọt đậm đà, được thu hái thủ công từ đồi chè sạch Tân Cương...</p>
             </div>
 
-            <!-- Thông số nhanh đặc sản -->
-            <div class="grid grid-cols-2 gap-3 text-xs bg-surface-muted/30 p-3 rounded-xl border border-line/60">
+            <!-- Bảng thông số nhanh đặc sản -->
+            <div class="grid grid-cols-2 gap-3 text-xs bg-surface-muted/50 p-4 rounded-2xl border border-line">
                 <div th:if="${product.weightGram != null}">
                     <span class="text-ink-muted">Khối lượng:</span>
-                    <span class="font-semibold text-ink ml-1" th:text="${product.weightGram} + ' g'">500 g</span>
+                    <strong class="text-ink ml-1" th:text="${product.weightGram} + ' g'">500 g</strong>
                 </div>
                 <div th:if="${product.shelfLife != null}">
                     <span class="text-ink-muted">Hạn sử dụng:</span>
-                    <span class="font-semibold text-ink ml-1" th:text="${product.shelfLife}">12 tháng</span>
+                    <strong class="text-ink ml-1" th:text="${product.shelfLife}">12 tháng</strong>
                 </div>
-                <div th:if="${product.storageInstructions != null}" class="col-span-2">
+                <div th:if="${product.storageInstructions != null}" class="col-span-2 pt-1 border-t border-line/60">
                     <span class="text-ink-muted">Bảo quản:</span>
-                    <span class="font-semibold text-ink ml-1" th:text="${product.storageInstructions}">Nơi khô ráo, tránh ánh nắng trực tiếp</span>
+                    <span class="text-ink ml-1" th:text="${product.storageInstructions}">Nơi khô ráo, tránh ánh nắng trực tiếp</span>
                 </div>
             </div>
 
-            <!-- Chọn số lượng & Nút Mua -->
+            <!-- Bộ Chọn Số Lượng & Nút Mua (Thêm giỏ / Mua ngay) -->
             <div th:if="${product.stock > 0}" class="space-y-4 pt-2">
-                <div class="flex items-center gap-3">
-                    <span class="text-xs font-semibold text-ink">Số lượng:</span>
-                    <div class="flex items-center border border-line rounded-lg bg-surface">
+                <div class="flex items-center gap-4">
+                    <span class="text-xs font-bold text-ink">Số lượng:</span>
+                    <div class="flex items-center border border-line rounded-xl bg-surface shadow-2xs">
                         <button type="button" @click="quantity = Math.max(1, quantity - 1)"
-                                class="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-ink transition">
+                                class="w-9 h-9 flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface-muted rounded-l-xl transition">
                             <i data-lucide="minus" class="w-3.5 h-3.5"></i>
                         </button>
                         <input type="number" x-model.number="quantity" min="1" :max="maxStock"
-                               class="w-12 h-8 text-center text-xs font-semibold border-x border-line focus:outline-none">
+                               class="w-14 h-9 text-center text-xs font-bold border-x border-line focus:outline-none bg-transparent">
                         <button type="button" @click="quantity = Math.min(maxStock, quantity + 1)"
-                                class="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-ink transition">
+                                class="w-9 h-9 flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface-muted rounded-r-xl transition">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
-                    <span class="text-[11px] text-ink-muted" th:text="'(Tối đa: ' + ${product.stock} + ')'">Tối đa 50</span>
+                    <span class="text-[11px] text-ink-muted" th:text="'(Có sẵn ' + ${product.stock} + ' sản phẩm)'">Có sẵn 50</span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <!-- Nút Thêm Vào Giỏ -->
                     <button type="button"
                             th:onclick="'addToCartWithQuantity(' + ${product.id} + ')'"
-                            class="btn btn-outline py-3 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
-                        <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                            class="btn btn-outline py-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 border-primary-600/40 text-primary-700 hover:bg-primary-50 shadow-2xs active:scale-95">
+                        <i data-lucide="shopping-cart" class="w-4 h-4 text-primary-600"></i>
                         <span>Thêm vào giỏ</span>
                     </button>
+                    
+                    <!-- Nút Mua Ngay (Vibrant Accent Gốm Sứ) -->
                     <button type="button"
                             th:onclick="'buyNow(' + ${product.id} + ')'"
-                            class="btn btn-primary py-3 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
+                            class="btn-accent py-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95">
                         <i data-lucide="zap" class="w-4 h-4"></i>
-                        <span>Mua ngay</span>
+                        <span>Mua ngay với giá ưu đãi</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Box Thông tin Shop -->
+            <!-- Box Thông tin Hợp tác xã / Gian hàng -->
             <div th:if="${product.shop != null}"
-                 class="pt-5 border-t border-line flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
+                 class="pt-6 border-t border-line flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5">
                     <img th:src="${product.shop.logoUrl != null ? product.shop.logoUrl : '/images/demo/shop-placeholder.svg'}"
                          th:alt="${product.shop.name}"
-                         class="w-12 h-12 rounded-full object-cover border border-line bg-surface-muted">
+                         class="w-12 h-12 rounded-2xl object-cover border border-line bg-surface-muted shadow-2xs">
                     <div>
                         <div class="flex items-center gap-1.5">
                             <h4 class="font-bold text-xs sm:text-sm text-ink" th:text="${product.shop.name}">Hợp tác xã Chè Thái Nguyên</h4>
                             <i data-lucide="badge-check" class="w-4 h-4 text-primary-600 fill-primary-100"></i>
                         </div>
-                        <p class="text-[11px] text-ink-muted" th:text="${product.shop.pickupAddress != null ? product.shop.pickupAddress : 'Gian hàng đặc sản chính hãng'}">
+                        <p class="text-[11px] text-ink-muted mt-0.5" th:text="${product.shop.pickupAddress != null ? product.shop.pickupAddress : 'Gian hàng đặc sản chính hãng'}">
                             Tân Cương, Thái Nguyên
                         </p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <a th:href="@{'/shops/' + ${product.shop.slug}}"
-                       class="btn btn-outline py-1.5 px-3 text-xs">Xem Shop</a>
-                </div>
+                <a th:href="@{'/shops/' + ${product.shop.slug}}"
+                   class="btn btn-outline py-2 px-3.5 text-xs font-semibold hover:border-primary-600 hover:text-primary-700">
+                    Xem gian hàng
+                </a>
             </div>
 
         </div>
     </div>
 
     <!-- KHỐI TABS CHI TIẾT (Mô tả, Đánh giá, Cam kết) -->
-    <div class="bg-surface rounded-3xl p-6 sm:p-8 border border-line shadow-sm space-y-6">
+    <div class="bg-surface rounded-3xl p-6 sm:p-8 border border-line shadow-soft space-y-6">
         
         <!-- Thanh chọn Tab -->
-        <div class="flex items-center gap-6 border-b border-line text-sm font-semibold">
+        <div class="flex items-center gap-6 sm:gap-8 border-b border-line text-xs sm:text-sm font-bold overflow-x-auto no-scrollbar">
             <button type="button" @click="activeTab = 'desc'"
                     :class="activeTab === 'desc' ? 'text-primary-700 border-b-2 border-primary-600 pb-3' : 'text-ink-muted hover:text-ink pb-3'"
-                    class="transition">
-                Mô tả chi tiết & Câu chuyện đặc sản
+                    class="transition whitespace-nowrap">
+                Mô tả & Câu chuyện đặc sản
             </button>
             <button type="button" @click="activeTab = 'reviews'"
                     :class="activeTab === 'reviews' ? 'text-primary-700 border-b-2 border-primary-600 pb-3' : 'text-ink-muted hover:text-ink pb-3'"
-                    class="transition flex items-center gap-1">
+                    class="transition whitespace-nowrap flex items-center gap-1.5">
                 <span>Đánh giá từ khách hàng</span>
-                <span class="text-xs bg-surface-muted px-2 py-0.5 rounded-full" th:text="${product.reviewCount}">36</span>
+                <span class="text-[11px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-bold" th:text="${product.reviewCount}">36</span>
             </button>
             <button type="button" @click="activeTab = 'policy'"
                     :class="activeTab === 'policy' ? 'text-primary-700 border-b-2 border-primary-600 pb-3' : 'text-ink-muted hover:text-ink pb-3'"
-                    class="transition">
-                Cam kết & Đổi trả
+                    class="transition whitespace-nowrap">
+                Bảo chứng nguồn gốc & Đổi trả
             </button>
         </div>
 
@@ -291,7 +305,7 @@
                 Nội dung mô tả chi tiết sản phẩm đặc sản...
             </div>
             <div th:if="${product.description == null}" class="text-ink-muted">
-                Đặc sản tinh hoa từ vùng đất truyền thống Việt Nam. Đảm bảo vệ sinh an toàn thực phẩm, chuẩn nguồn gốc xuất xứ và hương vị nguyên bản.
+                Đặc sản tinh hoa từ vùng đất truyền thống Việt Nam. Đảm bảo vệ sinh an toàn thực phẩm, chuẩn nguồn gốc xuất xứ và hương vị nguyên bản của làng nghề.
             </div>
         </div>
 
@@ -325,9 +339,9 @@
              class="space-y-6" style="display: none;">
 
             <!-- Tổng quan rating -->
-            <div class="flex flex-col sm:flex-row items-center gap-6 p-5 bg-surface-muted/40 rounded-2xl border border-line">
+            <div class="flex flex-col sm:flex-row items-center gap-6 p-6 bg-surface-muted/50 rounded-2xl border border-line">
                 <div class="text-center sm:text-left space-y-1">
-                    <div class="text-3xl font-extrabold text-primary-700" th:text="${product.avgRating}">4.8</div>
+                    <div class="text-4xl font-serif font-extrabold text-primary-700" th:text="${product.avgRating}">4.8</div>
                     <div class="flex items-center text-amber-500 justify-center sm:justify-start">
                         <i data-lucide="star" class="w-4 h-4 fill-amber-400"></i>
                         <i data-lucide="star" class="w-4 h-4 fill-amber-400"></i>
@@ -335,15 +349,15 @@
                         <i data-lucide="star" class="w-4 h-4 fill-amber-400"></i>
                         <i data-lucide="star-half" class="w-4 h-4 fill-amber-400"></i>
                     </div>
-                    <div class="text-xs text-ink-muted" th:text="${product.reviewCount} + ' lượt đánh giá'">36 lượt đánh giá</div>
+                    <div class="text-xs text-ink-muted" th:text="${product.reviewCount} + ' lượt đánh giá thực tế'">36 lượt đánh giá</div>
                 </div>
                 <div class="text-xs text-ink-muted leading-relaxed sm:border-l sm:border-line sm:pl-6">
-                    Mọi đánh giá đều từ những khách hàng đã thực sự mua và nhận sản phẩm thành công trên sàn VietSpecialty, đảm bảo tính khách quan và tin cậy tuyệt đối.
+                    Mọi đánh giá đều xuất phát từ những khách hàng đã thực sự mua và nhận sản phẩm thành công trên sàn VietSpecialty, đảm bảo tính khách quan và niềm tin người tiêu dùng.
                 </div>
             </div>
 
             <!-- Bộ lọc theo số sao -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold">
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold no-scrollbar">
                 <button type="button" @click="loadReviews(null)"
                         class="px-3.5 py-1.5 rounded-xl border transition-colors"
                         :class="filterRating === null ? 'bg-primary-600 text-white border-primary-600' : 'bg-surface text-ink border-line hover:bg-surface-muted'">
@@ -351,10 +365,10 @@
                 </button>
                 <template x-for="r in [5, 4, 3, 2, 1]">
                     <button type="button" @click="loadReviews(r)"
-                            class="px-3 py-1.5 rounded-xl border transition-colors flex items-center gap-1"
+                            class="px-3.5 py-1.5 rounded-xl border transition-colors flex items-center gap-1"
                             :class="filterRating === r ? 'bg-primary-600 text-white border-primary-600' : 'bg-surface text-ink border-line hover:bg-surface-muted'">
                         <span x-text="r"></span>
-                        <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-current text-amber-400"></i>
                     </button>
                 </template>
             </div>
@@ -362,7 +376,7 @@
             <!-- Danh sách đánh giá -->
             <div class="space-y-4">
                 <template x-for="rev in reviews" :key="rev.id">
-                    <div class="p-4 rounded-2xl bg-surface border border-line space-y-3">
+                    <div class="p-4 sm:p-5 rounded-2xl bg-surface border border-line space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2.5">
                                 <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs uppercase"
@@ -372,7 +386,7 @@
                                     <div class="font-bold text-xs text-ink" x-text="rev.userFullName"></div>
                                     <div class="flex items-center gap-1 text-amber-500 text-[10px]">
                                         <template x-for="i in rev.rating">
-                                            <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                                            <i data-lucide="star" class="w-3 h-3 fill-current text-amber-400"></i>
                                         </template>
                                     </div>
                                 </div>
@@ -404,22 +418,22 @@
             </div>
         </div>
 
-        <!-- Tab 3: Chính sách đổi trả -->
+        <!-- Tab 3: Chính sách đổi trả & Bảo chứng -->
         <div x-show="activeTab === 'policy'" class="space-y-4 text-xs sm:text-sm text-ink leading-relaxed" style="display: none;">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="p-4 rounded-xl border border-line bg-surface-muted/30 space-y-1.5">
-                    <div class="w-8 h-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-bold">1</div>
-                    <h5 class="font-bold text-xs text-ink">100% Nguồn Gốc Rõ Ràng</h5>
+                <div class="p-5 rounded-2xl border border-line bg-surface-muted/40 space-y-2">
+                    <div class="w-9 h-9 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center font-bold">1</div>
+                    <h5 class="font-bold text-sm text-ink">100% Nguồn Gốc Rõ Ràng</h5>
                     <p class="text-xs text-ink-muted">Cam kết sản phẩm đặc sản đúng vùng miền, hợp tác trực tiếp với các HTX và hộ sản xuất uy tín.</p>
                 </div>
-                <div class="p-4 rounded-xl border border-line bg-surface-muted/30 space-y-1.5">
-                    <div class="w-8 h-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-bold">2</div>
-                    <h5 class="font-bold text-xs text-ink">Đổi Trả Trong 48 Giờ</h5>
+                <div class="p-5 rounded-2xl border border-line bg-surface-muted/40 space-y-2">
+                    <div class="w-9 h-9 rounded-xl bg-secondary-100 text-secondary-600 flex items-center justify-center font-bold">2</div>
+                    <h5 class="font-bold text-sm text-ink">Đổi Trả Trong 48 Giờ</h5>
                     <p class="text-xs text-ink-muted">Hoàn tiền hoặc đổi sản phẩm mới ngay nếu hàng bị hỏng, bể vỡ do vận chuyển hoặc không đúng mô tả.</p>
                 </div>
-                <div class="p-4 rounded-xl border border-line bg-surface-muted/30 space-y-1.5">
-                    <div class="w-8 h-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-bold">3</div>
-                    <h5 class="font-bold text-xs text-ink">Bảo Quản Chuẩn Nông Sản</h5>
+                <div class="p-5 rounded-2xl border border-line bg-surface-muted/40 space-y-2">
+                    <div class="w-9 h-9 rounded-xl bg-accent-50 text-accent-500 flex items-center justify-center font-bold">3</div>
+                    <h5 class="font-bold text-sm text-ink">Bảo Quản Chuẩn Nông Sản</h5>
                     <p class="text-xs text-ink-muted">Đóng gói chuyên dụng, hút chân không và giao nhanh để giữ trọn hương vị tươi ngon đặc trưng.</p>
                 </div>
             </div>
@@ -428,10 +442,16 @@
     </div>
 
     <!-- KHỐI ĐẶC SẢN LIÊN QUAN / CÙNG VÙNG MIỀN -->
-    <div th:if="${relatedProducts != null and !relatedProducts.isEmpty()}" class="space-y-4">
+    <div th:if="${relatedProducts != null and !relatedProducts.isEmpty()}" class="space-y-5">
         <div class="flex items-center justify-between">
-            <h3 class="font-bold text-base sm:text-lg text-ink">Đặc sản tương tự bạn có thể thích</h3>
-            <a th:href="@{/products}" class="text-xs text-primary-700 font-semibold hover:underline">Xem thêm</a>
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-primary-700">Gợi Ý Món Ngon</span>
+                <h3 class="font-serif font-bold text-xl text-ink">Đặc Sản Cùng Vùng Miền Có Thể Bạn Thích</h3>
+            </div>
+            <a th:href="@{/products}" class="text-xs text-primary-700 font-bold hover:underline flex items-center gap-1">
+                <span>Xem thêm</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </a>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             <th:block th:each="rp : ${relatedProducts}">
@@ -445,11 +465,11 @@
 <th:block id="pageJs">
 <script>
     function addToCartWithQuantity(productId) {
-        const qty = parseInt(document.querySelector('[x-model\\.number="quantity"]').value) || 1;
+        const qtyInput = document.querySelector('input[x-model\\.number="quantity"]');
+        const qty = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
         if (typeof window.cartAdd === 'function') {
             window.cartAdd(productId, qty);
         } else {
-            // Gọi qua fetch API chuẩn
             api.post('/api/cart/items', { productId: productId, quantity: qty })
                 .then(res => {
                     Toast.success('Đã thêm đặc sản vào giỏ hàng');
@@ -462,7 +482,8 @@
     }
 
     function buyNow(productId) {
-        const qty = parseInt(document.querySelector('[x-model\\.number="quantity"]').value) || 1;
+        const qtyInput = document.querySelector('input[x-model\\.number="quantity"]');
+        const qty = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
         api.post('/api/cart/items', { productId: productId, quantity: qty })
             .then(res => {
                 window.location.href = '/cart';

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="html(pageTitle, content, pageMeta, extraCss, extraJs)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} != null ? ${pageTitle} : 'VietSpecialty — Sàn Đặc Sản Vùng Miền Việt Nam'"></title>
+
+    <!-- CSRF Meta Tags -->
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo.svg}">
+
+    <!-- Google Fonts: Be Vietnam Pro & Lora -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (compiled) -->
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+
+    <!-- Dynamic Meta tags from child templates -->
+    <th:block th:if="${pageMeta != null}">
+        <th:block th:replace="${pageMeta}"></th:block>
+    </th:block>
+
+    <!-- Extra CSS from child templates -->
+    <th:block th:if="${extraCss != null}">
+        <th:block th:replace="${extraCss}"></th:block>
+    </th:block>
+
+    <!-- Vendor Scripts -->
+    <script th:src="@{/vendor/alpine.min.js}" defer></script>
+    <script th:src="@{/vendor/lucide.min.js}"></script>
+
+    <!-- Core App Scripts -->
+    <script th:src="@{/js/core/api.js}"></script>
+    <script th:src="@{/js/core/toast.js}"></script>
+    <script th:src="@{/js/core/format.js}"></script>
+    <script th:src="@{/js/core/reveal.js}"></script>
+</head>
+<body class="bg-cream text-ink min-h-screen flex flex-col antialiased selection:bg-primary-100 selection:text-primary-700">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header Fragment -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <th:block th:replace="${content}"></th:block>
+    </main>
+
+    <!-- Footer Fragment -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- Floating Chatbot Widget -->
+    <div th:replace="~{fragments/chat-widget :: chatWidget}"></div>
+
+    <!-- Extra JS from child templates -->
+    <th:block th:if="${extraJs != null}">
+        <th:block th:replace="${extraJs}"></th:block>
+    </th:block>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

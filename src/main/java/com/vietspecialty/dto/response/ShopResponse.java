@@ -16,5 +16,8 @@ public record ShopResponse(
         ShopStatus status,
         LocalDateTime createdAt
 ) {
+    public String pickupAddress() {
+        return addressDetail != null ? addressDetail : provinceName;
+    }
 }
 
