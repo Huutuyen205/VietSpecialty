@@ -64,87 +64,82 @@ public class SecurityConfig {
         requestCache.setRequestMatcher(new NegatedRequestMatcher(new AntPathRequestMatcher("/api/**")));
 
         http
-            .requestCache(cache -> cache.requestCache(requestCache))
-            // CSRF bảo vệ toàn diện, ngoại trừ Webhook IPN từ VNPay và Chatbot API
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/payment/vnpay/ipn", "/api/chat/**")
-            )
-            // Phân quyền truy cập theo URL
-            .authorizeHttpRequests(auth -> auth
-                // Tài nguyên công khai & Trang xem sản phẩm
-                .requestMatchers(
-                    "/",
-                    "/products/**",
-                    "/shops/**",
-                    "/regions/**",
-                    "/categories/**",
-                    "/search/**",
-                    "/login",
-                    "/register",
-                    "/css/**",
-                    "/js/**",
-                    "/images/**",
-                    "/vendor/**",
-                    "/uploads/**",
-                    "/api/products/**",
-                    "/api/chat/**",
-                    "/api/locations/**",
-                    "/payment/vnpay/return",
-                    "/api/payment/vnpay/ipn",
-                    "/error",
-                    "/error/**"
-                ).permitAll()
+                .requestCache(cache -> cache.requestCache(requestCache))
+                // CSRF bảo vệ toàn diện, ngoại trừ Webhook IPN từ VNPay và Chatbot API
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/payment/vnpay/ipn", "/api/chat/**"))
+                // Phân quyền truy cập theo URL
+                .authorizeHttpRequests(auth -> auth
+                        // Tài nguyên công khai & Trang xem sản phẩm
+                        .requestMatchers(
+                                "/",
+                                "/products/**",
+                                "/shops/**",
+                                "/regions/**",
+                                "/categories/**",
+                                "/search/**",
+                                "/login",
+                                "/register",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/vendor/**",
+                                "/uploads/**",
+                                "/api/products/**",
+                                "/api/chat/**",
+                                "/api/locations/**",
+                                "/payment/vnpay/return",
+                                "/api/payment/vnpay/ipn",
+                                "/error",
+                                "/error/**")
+                        .permitAll()
 
-                // Khu vực Quản trị viên
-                .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                        // Khu vực Quản trị viên
+                        .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
 
-                // Khu vực Kênh người bán
-                .requestMatchers("/seller/**", "/api/seller/**").hasRole("SELLER")
+                        // Khu vực Kênh người bán
+                        .requestMatchers("/seller/**", "/api/seller/**").hasRole("SELLER")
 
-                // Khu vực Người mua / Thành viên
-                .requestMatchers(
-                    "/account/**",
-                    "/cart/**",
-                    "/checkout/**",
-                    "/orders/**",
-                    "/api/cart/**",
-                    "/api/checkout/**",
-                    "/api/orders/**",
-                    "/api/reviews/**",
-                    "/api/notifications/**"
-                ).hasRole("USER")
+                        // Khu vực Người mua / Thành viên
+                        .requestMatchers(
+                                "/account/**",
+                                "/cart/**",
+                                "/checkout/**",
+                                "/orders/**",
+                                "/api/cart/**",
+                                "/api/checkout/**",
+                                "/api/orders/**",
+                                "/api/reviews/**",
+                                "/api/notifications/**")
+                        .hasRole("USER")
 
-                // Mọi yêu cầu còn lại (bao gồm các trang không tồn tại) cho phép hiển thị trang 404 thân thiện
-                .anyRequest().permitAll()
-            )
-            // Form Login (Session-based)
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login")
-                .usernameParameter("email")
-                .passwordParameter("password")
-                .successHandler(loginSuccessHandler)
-                .failureHandler(loginFailureHandler)
-                .permitAll()
-            )
-            // Logout
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll()
-            )
-            // Quản lý phiên làm việc & SessionRegistry
-            .sessionManagement(session -> session
-                .maximumSessions(10)
-                .sessionRegistry(sessionRegistry())
-            )
-            // Xử lý lỗi xác thực & phân quyền (401 JSON cho /api/**, 403 phân nhánh)
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint(apiAuthenticationEntryPoint)
-                .accessDeniedHandler(apiAccessDeniedHandler)
-            );
+                        // Mọi yêu cầu còn lại (bao gồm các trang không tồn tại) cho phép hiển thị trang
+                        // 404 thân thiện
+                        .anyRequest().permitAll())
+                // Form Login (Session-based)
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .successHandler(loginSuccessHandler)
+                        .failureHandler(loginFailureHandler)
+                        .permitAll())
+                // Logout
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll())
+                // Quản lý phiên làm việc & SessionRegistry
+                .sessionManagement(session -> session
+                        .maximumSessions(10)
+                        .sessionRegistry(sessionRegistry()))
+                // Xử lý lỗi xác thực & phân quyền (401 JSON cho /api/**, 403 phân nhánh)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(apiAuthenticationEntryPoint)
+                        .accessDeniedHandler(apiAccessDeniedHandler));
 
         return http.build();
     }

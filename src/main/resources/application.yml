@@ -5,6 +5,8 @@ spring:
     import: "optional:file:.env[.properties]"
   profiles:
     active: dev
+  thymeleaf:
+    cache: false
 
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/vietspecialty?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8}
