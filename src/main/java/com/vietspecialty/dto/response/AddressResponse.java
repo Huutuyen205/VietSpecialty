@@ -11,5 +11,12 @@ public record AddressResponse(
         String fullAddress,
         Boolean isDefault
 ) {
+    public String recipientName() {
+        return receiverName;
+    }
+
+    public String phone() {
+        return receiverPhone;
+    }
 }
 

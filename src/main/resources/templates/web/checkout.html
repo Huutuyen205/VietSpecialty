@@ -51,8 +51,8 @@
                                class="mt-1 text-primary-600 focus:ring-primary-500">
                         <label th:for="'addr-' + ${addr.id}" class="text-xs flex-1 cursor-pointer space-y-1">
                             <div class="flex items-center gap-2">
-                                <span class="font-bold text-sm text-ink" th:text="${addr.recipientName}">Nguyễn Văn A</span>
-                                <span class="text-ink-muted" th:text="'(' + ${addr.phone} + ')'">(0912345678)</span>
+                                <span class="font-bold text-sm text-ink" th:text="${addr.receiverName}">Nguyễn Văn A</span>
+                                <span class="text-ink-muted" th:text="'(' + ${addr.receiverPhone} + ')'">(0912345678)</span>
                                 <span th:if="${addr.isDefault}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-100 text-primary-800">Mặc định</span>
                             </div>
                             <p class="text-ink-muted leading-relaxed" th:text="${addr.fullAddress}">Số 123 Đường Láng, Đống Đa, Hà Nội</p>
@@ -234,13 +234,13 @@
                         <strong class="text-ink" th:text="${preview.totalShippingFeeFormatted}">30.000₫</strong>
                     </div>
 
-                    <div th:if="${preview.systemDiscount.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                    <div th:if="${preview.systemDiscount != null and preview.systemDiscount.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
                          class="flex items-center justify-between text-primary-700">
                         <span>Giảm giá sàn:</span>
                         <strong th:text="'-' + ${preview.systemDiscountFormatted}">-20.000₫</strong>
                     </div>
 
-                    <div th:if="${preview.totalShopDiscount.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                    <div th:if="${preview.totalShopDiscount != null and preview.totalShopDiscount.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
                          class="flex items-center justify-between text-primary-700">
                         <span>Giảm giá từ shop:</span>
                         <strong th:text="'-' + ${preview.totalShopDiscountFormatted}">-15.000₫</strong>
