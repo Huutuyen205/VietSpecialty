@@ -26,6 +26,7 @@
         <div class="mb-5">
             <a th:href="@{/auth/google(mode='login')}"
                id="btn-google-login"
+               onclick="return openGoogleAuthPopup(event, 'login');"
                class="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl bg-white border border-line hover:bg-cream hover:border-primary-300 text-ink text-sm font-semibold shadow-sm transition duration-150">
                 <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -98,5 +99,52 @@
         </div>
     </div>
 </div>
+
+<th:block layout:fragment="extraJs">
+<script>
+    function openGoogleAuthPopup(event, mode) {
+        var width = 480;
+        var height = 660;
+        var dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
+        var dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
+        var outerWidth = window.outerWidth || document.documentElement.clientWidth || screen.width;
+        var outerHeight = window.outerHeight || document.documentElement.clientHeight || screen.height;
+        var left = Math.max(0, Math.round(dualScreenLeft + (outerWidth - width) / 2));
+        var top = Math.max(0, Math.round(dualScreenTop + (outerHeight - height) / 2));
+
+        var popupUrl = '/auth/google?mode=' + encodeURIComponent(mode || 'login') + '&popup=true';
+        var features = 'width=' + width + ',height=' + height + ',left=' + left + ',top=' + top
+            + ',menubar=no,toolbar=no,location=yes,status=no,resizable=yes,scrollbars=yes';
+        var popupWin = window.open(popupUrl, 'VietSpecialtyGoogleAuth', features);
+
+        if (!popupWin) {
+            return true;
+        }
+
+        if (event) {
+            event.preventDefault();
+        }
+        try {
+            popupWin.focus();
+        } catch (e) {}
+        return false;
+    }
+
+    window.addEventListener('message', function (event) {
+        if (event.origin !== window.location.origin) {
+            return;
+        }
+        var data = event.data;
+        if (!data || data.type !== 'GOOGLE_AUTH_COMPLETE') {
+            return;
+        }
+        if (data.success) {
+            window.location.href = data.redirectUrl || '/';
+        } else {
+            window.location.href = data.errorUrl || ('/login?error=' + encodeURIComponent(data.message || 'Xác thực Google thất bại'));
+        }
+    });
+</script>
+</th:block>
 </body>
 </html>

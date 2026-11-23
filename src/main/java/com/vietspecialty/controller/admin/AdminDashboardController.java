@@ -1,6 +1,5 @@
 package com.vietspecialty.controller.admin;
 
-import com.vietspecialty.domain.entity.Order;
 import com.vietspecialty.domain.entity.Province;
 import com.vietspecialty.domain.entity.Region;
 import com.vietspecialty.domain.enums.OrderPaymentStatus;
@@ -93,17 +92,11 @@ public class AdminDashboardController {
             countByRegion.put(r.getId(), 0L);
         }
 
-        List<Order> allOrders = orderRepository.findAll();
-        for (Order o : allOrders) {
-            if (o.getStatus() == OrderStatus.DELIVERED
-                    && o.getShop() != null
-                    && o.getShop().getProvince() != null
-                    && o.getShop().getProvince().getRegion() != null) {
-                Integer regId = o.getShop().getProvince().getRegion().getId();
-                BigDecimal amount = o.getTotalAmount() != null ? o.getTotalAmount() : BigDecimal.ZERO;
-                revByRegion.merge(regId, amount, BigDecimal::add);
-                countByRegion.merge(regId, 1L, Long::sum);
-            }
+        for (Object[] row : orderRepository.sumRevenueByRegion(OrderStatus.DELIVERED)) {
+            Integer regId = ((Number) row[0]).intValue();
+            BigDecimal amount = row[1] instanceof BigDecimal b ? b : new BigDecimal(row[1].toString());
+            revByRegion.merge(regId, amount, BigDecimal::add);
+            countByRegion.merge(regId, ((Number) row[2]).longValue(), Long::sum);
         }
 
         List<RevenueStatResponse> result = new ArrayList<>();

@@ -73,6 +73,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                    "GROUP BY DATE_FORMAT(o.created_at, '%d/%m'), DATE(o.created_at) ORDER BY DATE(o.created_at) ASC", nativeQuery = true)
     List<Object[]> getDailyRevenueByShop(@Param("shopId") Long shopId, @Param("startDate") LocalDateTime startDate);
 
+    @Query("SELECT r.id, COALESCE(SUM(o.totalAmount), 0), COUNT(o) " +
+           "FROM Order o JOIN o.shop s JOIN s.province p JOIN p.region r " +
+           "WHERE o.status = :status GROUP BY r.id")
+    List<Object[]> sumRevenueByRegion(@Param("status") OrderStatus status);
+
     @Query(value = "SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.status = :status", nativeQuery = true)
     java.math.BigDecimal sumTotalRevenuePlatform(@Param("status") String status);
 

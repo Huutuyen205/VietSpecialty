@@ -41,33 +41,57 @@
                     </p>
                 </div>
             </div>
-            <button id="chatbot-close-btn"
-                    type="button"
-                    onclick="window.toggleChatBot && window.toggleChatBot()"
-                    class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            <div class="flex items-center gap-1">
+                <button id="chatbot-reset-btn"
+                        type="button"
+                        title="Làm mới cuộc trò chuyện"
+                        class="text-white/85 hover:text-white px-2 py-1 rounded-lg hover:bg-white/15 transition flex items-center gap-1 text-[11px] font-medium">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span class="hidden sm:inline">Mới</span>
+                </button>
+                <button id="chatbot-close-btn"
+                        type="button"
+                        onclick="window.toggleChatBot && window.toggleChatBot()"
+                        title="Đóng khung chat"
+                        class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <!-- Tin nhắn gợi ý nhanh -->
-        <div class="bg-stone-50 px-3 py-2 border-b border-stone-200 flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
-            <button type="button" class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
-                🍵 Trà Thái Nguyên biếu tết
+        <div id="chatbot-quick-suggests" class="bg-stone-50 px-3 py-2 border-b border-stone-200 flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
+            <button type="button"
+                    data-prompt="Gợi ý mồi nhắm uống bia cuối tuần"
+                    class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
+                🍻 Gợi ý mồi nhắm uống bia cuối tuần
             </button>
-            <button type="button" class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
-                📦 Tra cứu đơn hàng
+            <button type="button"
+                    data-prompt="Tư vấn combo quà biếu dưới 500k"
+                    class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
+                🎁 Tư vấn combo quà biếu dưới 500k
             </button>
-            <button type="button" class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
-                🛡️ Chính sách đổi trả
+            <button type="button"
+                    data-prompt="Săn mã giảm giá đang có trên sàn"
+                    class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
+                🎟️ Săn mã giảm giá đang có trên sàn
+            </button>
+            <button type="button"
+                    data-prompt="Tra cứu đơn hàng của tôi"
+                    class="quick-suggest whitespace-nowrap bg-white border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 px-2.5 py-1 rounded-full text-stone-600 transition shadow-2xs">
+                📦 Tra cứu đơn hàng của tôi
             </button>
         </div>
 
         <!-- Khung hiển thị tin nhắn -->
         <div id="chatbot-messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-stone-50/50 text-sm">
             <!-- Tin nhắn chào mừng ban đầu -->
-            <div class="flex items-start space-x-2.5">
+            <div id="chatbot-welcome-message" class="flex items-start space-x-2.5">
                 <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0 text-sm font-bold shadow-xs">
                     🌿
                 </div>
@@ -75,9 +99,9 @@
                     <p>Xin chào quý khách! Tôi là trợ lý AI của Sàn Đặc Sản <strong>VietSpecialty</strong> 🇻🇳.</p>
                     <p class="text-xs text-stone-600">Tôi có thể giúp bạn:</p>
                     <ul class="text-xs text-stone-600 list-disc list-inside space-y-0.5">
-                        <li>Gợi ý đặc sản OCOP 3 miền làm quà biếu, sử dụng gia đình.</li>
-                        <li>Tra cứu tình trạng vận chuyển đơn hàng bằng mã đơn.</li>
-                        <li>Giải đáp chính sách đổi trả, hoàn tiền, thanh toán VNPay.</li>
+                        <li>Gợi ý đặc sản OCOP 3 miền làm quà biếu, mồi nhắm, bữa cơm gia đình.</li>
+                        <li>Tư vấn cách bảo quản, hạn dùng, tính tổng tiền & săn mã giảm giá.</li>
+                        <li>Tra cứu tình trạng vận chuyển đơn hàng & chính sách đổi trả.</li>
                     </ul>
                 </div>
             </div>
@@ -129,30 +153,87 @@
         function initChatbot() {
             const toggleBtn = document.getElementById('chatbot-toggle-btn');
             const closeBtn = document.getElementById('chatbot-close-btn');
+            const resetBtn = document.getElementById('chatbot-reset-btn');
+            const quickSuggestsContainer = document.getElementById('chatbot-quick-suggests');
             const form = document.getElementById('chatbot-form');
             const input = document.getElementById('chatbot-input');
             const messages = document.getElementById('chatbot-messages');
             const sendBtn = document.getElementById('chatbot-send-btn');
 
-            if (!toggleBtn || !form) return;
+            if (!toggleBtn || !form || !messages) return;
+
+            const welcomeHtml = messages.innerHTML;
+
+            function generateChatKey() {
+                return 'chat_' + Math.random().toString(36).substring(2, 12) + '_' + Date.now().toString(36);
+            }
 
             // Đảm bảo chatKey duy nhất cho mỗi phiên
             let chatKey = window.localStorage.getItem('vs_chat_key');
             if (!chatKey) {
-                chatKey = 'chat_' + Math.random().toString(36).substring(2, 12);
+                chatKey = generateChatKey();
                 window.localStorage.setItem('vs_chat_key', chatKey);
             }
 
-            // Gợi ý nhanh
-            document.querySelectorAll('.quick-suggest').forEach(btn => {
-                btn.onclick = function() {
-                    const text = btn.innerText.replace(/^[^\s]+\s/, '').trim();
-                    if (input) {
-                        input.value = text;
-                        form.dispatchEvent(new Event('submit', { cancelable: true }));
+            // Chip gợi ý thông minh theo ngữ cảnh trang đang xem (Page-Aware Context Chips)
+            if (quickSuggestsContainer && window.location.pathname.startsWith('/products/') && window.location.pathname !== '/products') {
+                const productHeading = document.querySelector('h1');
+                const productName = productHeading ? productHeading.innerText.trim() : '';
+                if (productName) {
+                    const contextChip = document.createElement('button');
+                    contextChip.type = 'button';
+                    contextChip.className = 'quick-suggest whitespace-nowrap bg-amber-50 border border-amber-400 text-amber-900 font-semibold hover:bg-amber-100 hover:border-amber-500 px-3 py-1 rounded-full transition shadow-2xs';
+                    contextChip.setAttribute('data-prompt', `Tư vấn chi tiết & cách bảo quản món ${productName}`);
+                    contextChip.textContent = '✨ Tư vấn chi tiết & cách bảo quản món này';
+                    quickSuggestsContainer.insertBefore(contextChip, quickSuggestsContainer.firstChild);
+                }
+            }
+
+            // Gắn sự kiện click cho tất cả nút gợi ý nhanh
+            function bindQuickSuggests() {
+                document.querySelectorAll('.quick-suggest').forEach(btn => {
+                    btn.onclick = function() {
+                        const promptText = btn.getAttribute('data-prompt')
+                            || btn.innerText.replace(/^[^\s]+\s/, '').trim();
+                        if (input && promptText) {
+                            input.value = promptText;
+                            form.dispatchEvent(new Event('submit', { cancelable: true }));
+                        }
+                    };
+                });
+            }
+            bindQuickSuggests();
+
+            // Nút "Làm mới cuộc trò chuyện" (New Chat / Reset)
+            if (resetBtn) {
+                resetBtn.onclick = async function() {
+                    const oldKey = chatKey;
+                    chatKey = generateChatKey();
+                    window.localStorage.setItem('vs_chat_key', chatKey);
+                    messages.innerHTML = welcomeHtml;
+
+                    try {
+                        const resp = await fetch('/api/chat/reset', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ chatKey: oldKey })
+                        });
+                        if (resp.ok) {
+                            const resData = await resp.json();
+                            if (resData && resData.data && resData.data.chatKey) {
+                                chatKey = resData.data.chatKey;
+                                window.localStorage.setItem('vs_chat_key', chatKey);
+                            }
+                        }
+                    } catch (e) {
+                        // Fallback an toàn với chatKey mới trên client
                     }
+                    if (input) input.focus();
                 };
-            });
+            }
 
             function appendUserMessage(text) {
                 const msgDiv = document.createElement('div');
@@ -179,12 +260,12 @@
                             <div class="grid grid-cols-1 gap-2">
                                 ${products.map(p => `
                                     <div class="flex items-center gap-2 p-2 bg-stone-50 hover:bg-emerald-50 rounded-lg border border-stone-200 transition group">
-                                        <a href="/products/${p.slug}" target="_blank" class="flex-shrink-0">
+                                        <a href="/products/${p.slug}" class="flex-shrink-0">
                                             <img src="${p.primaryImageUrl || p.thumbnail || '/images/default-product.png'}" 
                                                  class="w-12 h-12 object-cover rounded-md border border-stone-200" alt="${escapeHtml(p.name)}">
                                         </a>
                                         <div class="flex-1 min-w-0">
-                                            <a href="/products/${p.slug}" target="_blank" class="block">
+                                            <a href="/products/${p.slug}" class="block">
                                                 <h4 class="text-xs font-medium text-stone-900 truncate group-hover:text-emerald-700">${escapeHtml(p.name)}</h4>
                                             </a>
                                             <div class="flex items-center gap-1.5 mt-0.5">
@@ -211,7 +292,7 @@
                     followUpsHtml = `
                         <div class="mt-2 flex flex-wrap gap-1.5">
                             ${questions.map(q => `
-                                <button type="button" class="bot-follow-up text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full transition">
+                                <button type="button" class="bot-follow-up text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full transition text-left">
                                     ${escapeHtml(q)}
                                 </button>
                             `).join('')}
@@ -224,7 +305,7 @@
                         🌿
                     </div>
                     <div class="bg-white border border-stone-200 p-3 rounded-2xl rounded-tl-none shadow-xs text-stone-800 max-w-[85%] space-y-2">
-                        <div class="prose prose-sm leading-relaxed">${formatMarkdown(data.reply || '')}</div>
+                        <div class="prose prose-sm leading-relaxed space-y-1">${formatMarkdown(data.reply || data.content || '')}</div>
                         ${productsHtml}
                         ${followUpsHtml}
                     </div>
@@ -243,6 +324,38 @@
 
                 scrollToBottom();
             }
+
+            // Tự động khôi phục lịch sử trò chuyện khi chuyển trang
+            async function loadChatHistory() {
+                if (!chatKey) return;
+                try {
+                    const resp = await fetch(`/api/chat/history?chatKey=${encodeURIComponent(chatKey)}`, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (!resp.ok) return;
+                    const apiRes = await resp.json();
+                    if (apiRes.success && Array.isArray(apiRes.data) && apiRes.data.length > 0) {
+                        messages.innerHTML = welcomeHtml;
+                        apiRes.data.forEach(item => {
+                            const role = (item.role || '').toLowerCase();
+                            if (role === 'user') {
+                                appendUserMessage(item.content || item.message || '');
+                            } else {
+                                appendBotMessage({
+                                    reply: item.content || item.reply || '',
+                                    suggestedProducts: item.suggestedProducts || [],
+                                    suggestedQuestions: item.suggestedQuestions || []
+                                });
+                            }
+                        });
+                    }
+                } catch (err) {
+                    // Bỏ qua lỗi mạng khi tải lịch sử ngầm
+                }
+            }
+
+            loadChatHistory();
 
             function appendLoading() {
                 const loadingDiv = document.createElement('div');
@@ -283,13 +396,57 @@
                 return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
             }
 
+            function formatInlineMarkdown(line) {
+                let s = line;
+                s = s.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 bg-stone-100 text-emerald-800 rounded text-xs font-mono">$1</code>');
+                s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-stone-900">$1</strong>');
+                s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+                return s;
+            }
+
             function formatMarkdown(text) {
                 if (!text) return '';
-                let safe = escapeHtml(text);
-                safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
-                safe = safe.replace(/\n/g, '<br/>');
-                return safe;
+                const safe = escapeHtml(text);
+                const lines = safe.split(/\r?\n/);
+                const htmlParts = [];
+
+                for (let i = 0; i < lines.length; i++) {
+                    const rawLine = lines[i];
+                    const trimmed = rawLine.trim();
+
+                    if (!trimmed) {
+                        htmlParts.push('<div class="h-1.5"></div>');
+                        continue;
+                    }
+
+                    // Bullet list: -, *, ●, •
+                    const bulletMatch = trimmed.match(/^([●•\-*])\s+(.+)$/);
+                    if (bulletMatch) {
+                        htmlParts.push(
+                            `<div class="flex items-start gap-1.5 pl-1 my-0.5">` +
+                            `<span class="text-emerald-600 font-bold select-none leading-snug">●</span>` +
+                            `<span class="flex-1">${formatInlineMarkdown(bulletMatch[2])}</span>` +
+                            `</div>`
+                        );
+                        continue;
+                    }
+
+                    // Numbered list: 1. , 2.
+                    const numMatch = trimmed.match(/^(\d+)[\.\)]\s+(.+)$/);
+                    if (numMatch) {
+                        htmlParts.push(
+                            `<div class="flex items-start gap-1.5 pl-1 my-0.5">` +
+                            `<span class="text-emerald-700 font-semibold select-none leading-snug">${numMatch[1]}.</span>` +
+                            `<span class="flex-1">${formatInlineMarkdown(numMatch[2])}</span>` +
+                            `</div>`
+                        );
+                        continue;
+                    }
+
+                    htmlParts.push(`<div>${formatInlineMarkdown(rawLine)}</div>`);
+                }
+
+                return htmlParts.join('');
             }
 
             form.onsubmit = async function(e) {
@@ -324,6 +481,10 @@
 
                     const apiRes = await resp.json();
                     if (apiRes.success && apiRes.data) {
+                        if (apiRes.data.chatKey) {
+                            chatKey = apiRes.data.chatKey;
+                            window.localStorage.setItem('vs_chat_key', chatKey);
+                        }
                         appendBotMessage(apiRes.data);
                     } else {
                         appendBotMessage({

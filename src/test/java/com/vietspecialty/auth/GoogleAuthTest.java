@@ -180,4 +180,62 @@ class GoogleAuthTest {
         assertEquals("Đặng Quốc Bảo", saved.getFullName());
         assertEquals("https://lh3.googleusercontent.com/a/default-user", saved.getAvatarUrl());
     }
+
+    @Test
+    @DisplayName("GET /auth/google?mode=login&popup=true trả về trang popup độc lập auth/google-popup")
+    void testGooglePopupPageRendersStandalone() throws Exception {
+        mockMvc.perform(get("/auth/google").param("mode", "login").param("popup", "true"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("auth/google-popup"))
+                .andExpect(content().string(containsString("Đăng nhập bằng Google")))
+                .andExpect(content().string(containsString("Chọn tài khoản")))
+                .andExpect(content().string(containsString("Xác thực đăng nhập vào VietSpecialty")))
+                .andExpect(content().string(containsString("/auth/google/confirm")));
+
+        mockMvc.perform(get("/auth/google").param("mode", "register").param("popup", "true"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("auth/google-popup"))
+                .andExpect(content().string(containsString("Đăng ký bằng Google")));
+    }
+
+    @Test
+    @DisplayName("POST /auth/google/confirm với popup=true trả về auth/google-popup-complete và tạo session thành công")
+    void testGooglePopupConfirmSuccessAndLockedError() throws Exception {
+        String popupEmail = "popup.google.user@gmail.com";
+
+        mockMvc.perform(post("/auth/google/confirm")
+                        .with(csrf())
+                        .param("email", popupEmail)
+                        .param("fullName", "Nguyễn Minh Châu")
+                        .param("googleId", "google-popup-777")
+                        .param("popup", "true"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("auth/google-popup-complete"))
+                .andExpect(model().attribute("success", true))
+                .andExpect(model().attribute("redirectUrl", "/"))
+                .andExpect(content().string(containsString("GOOGLE_AUTH_COMPLETE")))
+                .andExpect(authenticated().withUsername(popupEmail).withRoles("USER"));
+
+        assertTrue(userRepository.existsByEmailIgnoreCase(popupEmail));
+
+        String lockedPopupEmail = "locked.popup.user@gmail.com";
+        userRepository.save(User.builder()
+                .fullName("Locked Popup User")
+                .email(lockedPopupEmail)
+                .passwordHash("$2a$10$dummyhashforlockedpopupuser1234567890123")
+                .role(Role.USER)
+                .status(UserStatus.LOCKED)
+                .build());
+
+        mockMvc.perform(post("/auth/google/confirm")
+                        .with(csrf())
+                        .param("email", lockedPopupEmail)
+                        .param("fullName", "Locked Popup User")
+                        .param("popup", "true"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("auth/google-popup-complete"))
+                .andExpect(model().attribute("success", false))
+                .andExpect(model().attribute("errorUrl", containsString("/login?error=")))
+                .andExpect(unauthenticated());
+    }
 }
