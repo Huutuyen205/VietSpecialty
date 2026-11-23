@@ -1,0 +1,277 @@
+{
+  "mobile": {
+    "375x812": {
+      "header": {
+        "has_hamburger": true,
+        "desktop_search_hidden": true,
+        "desktop_nav_hidden": true,
+        "drawer_opened": true,
+        "drawer_links_count": 9
+      },
+      "bottom_bar": {
+        "bottom": 92.5,
+        "buttons": [
+          {
+            "displayed": true,
+            "href": "/",
+            "text": "Trang chủ"
+          },
+          {
+            "displayed": true,
+            "href": "/regions",
+            "text": "Vùng miền"
+          },
+          {
+            "displayed": true,
+            "href": "/cart",
+            "text": "Giỏ hàng"
+          },
+          {
+            "displayed": true,
+            "href": "/account/wishlist",
+            "text": "Yêu thích"
+          },
+          {
+            "displayed": true,
+            "href": "/account/profile",
+            "text": "Tài khoản"
+          }
+        ],
+        "buttonsCount": 5,
+        "isFixedAtBottom": false,
+        "position": "fixed",
+        "visible": true,
+        "windowHeight": 660
+      },
+      "chatbot": {
+        "position": {
+          "bottomOffset": 80,
+          "classes": "fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50",
+          "isAboveBottomBar": true,
+          "rightOffset": 31
+        },
+        "window": {
+          "displayed": false,
+          "fitsWithinViewport": true,
+          "hasOverflow": false,
+          "height": 0,
+          "left": 0,
+          "right": 0,
+          "width": 0,
+          "windowHeight": 660,
+          "windowWidth": 504
+        }
+      },
+      "product_grid": {
+        "areColumnsEqual": true,
+        "columnsCount": 3,
+        "gridTemplateColumns": "repeat(2, minmax(0px, 1fr))",
+        "sampleCards": [],
+        "totalCards": 0
+      },
+      "page_horizontal_overflow": {
+        "clientWidth": 489,
+        "hasOverflow": false,
+        "scrollWidth": 489
+      },
+      "images_status": {
+        "brokenCount": 9,
+        "brokenImages": [
+          "https://images.unsplash.com/photo-1536591375315-1b8e7225d827?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80"
+        ],
+        "total": 19
+      }
+    },
+    "390x844": {
+      "header": {
+        "has_hamburger": true,
+        "desktop_search_hidden": true,
+        "desktop_nav_hidden": true,
+        "drawer_opened": true,
+        "drawer_links_count": 9
+      },
+      "bottom_bar": {
+        "bottom": 92.5,
+        "buttons": [
+          {
+            "displayed": true,
+            "href": "/",
+            "text": "Trang chủ"
+          },
+          {
+            "displayed": true,
+            "href": "/regions",
+            "text": "Vùng miền"
+          },
+          {
+            "displayed": true,
+            "href": "/cart",
+            "text": "Giỏ hàng"
+          },
+          {
+            "displayed": true,
+            "href": "/account/wishlist",
+            "text": "Yêu thích"
+          },
+          {
+            "displayed": true,
+            "href": "/account/profile",
+            "text": "Tài khoản"
+          }
+        ],
+        "buttonsCount": 5,
+        "isFixedAtBottom": false,
+        "position": "fixed",
+        "visible": true,
+        "windowHeight": 692
+      },
+      "chatbot": {
+        "position": {
+          "bottomOffset": 80,
+          "classes": "fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50",
+          "isAboveBottomBar": true,
+          "rightOffset": 31
+        },
+        "window": {
+          "displayed": false,
+          "fitsWithinViewport": true,
+          "hasOverflow": false,
+          "height": 0,
+          "left": 0,
+          "right": 0,
+          "width": 0,
+          "windowHeight": 692,
+          "windowWidth": 504
+        }
+      },
+      "product_grid": {
+        "areColumnsEqual": true,
+        "columnsCount": 3,
+        "gridTemplateColumns": "repeat(2, minmax(0px, 1fr))",
+        "sampleCards": [],
+        "totalCards": 0
+      },
+      "page_horizontal_overflow": {
+        "clientWidth": 489,
+        "hasOverflow": false,
+        "scrollWidth": 489
+      },
+      "images_status": {
+        "brokenCount": 9,
+        "brokenImages": [
+          "https://images.unsplash.com/photo-1536591375315-1b8e7225d827?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80"
+        ],
+        "total": 19
+      }
+    }
+  },
+  "tablet": {
+    "grid": {
+      "columnsCount": 3,
+      "gridTemplateColumns": "repeat(2, minmax(0px, 1fr))",
+      "sampleCards": [],
+      "totalCards": 0
+    },
+    "horizontal_overflow": {
+      "clientWidth": 735,
+      "hasOverflow": false,
+      "scrollWidth": 735
+    },
+    "admin_sidebar": {
+      "initial": {
+        "asideHiddenOnLoad": false,
+        "asideRect": null,
+        "toggleVisible": false
+      },
+      "drawer_opened": false
+    },
+    "seller_sidebar": {
+      "initial": {
+        "asideHiddenOnLoad": true,
+        "toggleVisible": true
+      },
+      "drawer_opened": true
+    }
+  },
+  "desktop": {
+    "header": {
+      "bottomBarHidden": true,
+      "hamburgerHidden": true,
+      "megaNavLinks": [
+        "Tất cả đặc sản",
+        "Đặc sản Miền Bắc\n                                    Hương vị trà cổ, gạo nếp nương, cốm làng Vòng",
+        "Đặc sản Miền Trung\n                                    Mạch nha, mè xửng, mắm cá cơm truyền thống",
+        "Đặc sản Tây Nguyên\n                                    Cà phê Robusta, hồ tiêu Chư Sê, mật ong hoa cà phê",
+        "Đặc sản Miền Nam\n                                    Kẹo dừa Bến Tre, bánh pía Sóc Trăng, tôm khô Cà Mau",
+        "Bánh & Mứt",
+        "Trà & Cà phê",
+        "Mắm & Gia vị",
+        "Hải sản khô",
+        "Thịt & Chế biến",
+        "Trái cây & Hạt sấy",
+        "Mật ong & Nông sản",
+        "Rượu & Đồ uống",
+        "Chuẩn OCOP (3-5★)",
+        "Mở gian hàng Hợp Tác Xã"
+      ],
+      "megaNavVisible": true,
+      "searchBarVisible": true,
+      "searchPlaceholder": "Tìm trà Tân Cương, nước mắm Phú Quốc, cà phê Cầu Đất..."
+    },
+    "product_grid_page": {
+      "columnsCount": 3,
+      "gridTemplateColumns": "repeat(2, minmax(0px, 1fr))"
+    },
+    "home_grids": {
+      "catGridCols": 8,
+      "ocopGridCols": 4
+    },
+    "admin_sidebar": {
+      "asidePosition": null,
+      "asideVisible": false,
+      "isStaticLayout": false,
+      "toggleHidden": true
+    },
+    "seller_sidebar": {
+      "asideVisible": true,
+      "isBlockStatic": true,
+      "toggleHidden": true
+    }
+  },
+  "special_pages": {
+    "showroom_dev_ui": {
+      "h1": "Bảng Kiểm Chuẩn Hệ Thống Thiết Kế VietSpecialty",
+      "overflow": false,
+      "sectionsCount": 10,
+      "title": "Hệ Thống Thiết Kế & Thư Viện UI Components — VietSpecialty — VietSpecialty"
+    },
+    "page_404": {
+      "h1": "Món đặc sản này đã đổi đường đi mất rồi!",
+      "hasHomeCta": true,
+      "hasProductsCta": true,
+      "title": "404 — Không tìm thấy trang | VietSpecialty — VietSpecialty"
+    },
+    "page_500": {
+      "h1": "Món đặc sản này đã đổi đường đi mất rồi!",
+      "hasHomeCta": true,
+      "hasReloadBtn": false,
+      "title": "404 — Không tìm thấy trang | VietSpecialty — VietSpecialty"
+    },
+    "empty_cart": {
+      "ctaText": "Tất cả đặc sản",
+      "emptyTitle": null,
+      "hasCtaBtn": true,
+      "overflow": false,
+      "title": "Đăng nhập — VietSpecialty — VietSpecialty"
+    }
+  },
+  "evaluations": []
+}

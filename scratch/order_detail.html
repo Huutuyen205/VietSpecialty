@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Chi tiết đơn hàng #VS261118TPUKNM — VietSpecialty — VietSpecialty</title>
+
+    <!-- CSRF Meta Tags -->
+    <meta name="_csrf" content="oA_Fec9_l9I2an4lyDo8jIjdHX3uHJlt52nMGiY8Bq7RE_UClz2jSvwZrrYbUk4QrRcI7-y8MB-NKatA3lr_KRFYMZnmIpEy"/>
+    <meta name="_csrf_header" content="X-CSRF-TOKEN"/>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+
+    <!-- Google Fonts: Be Vietnam Pro & Lora -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (compiled) -->
+    <link rel="stylesheet" href="/css/app.css">
+
+    <!-- Dynamic Meta tags from child templates -->
+    
+    
+
+    <!-- Extra CSS from child templates -->
+    
+    
+
+    <!-- Vendor Scripts -->
+    <script src="/vendor/alpine.min.js" defer></script>
+    <script src="/vendor/lucide.min.js"></script>
+
+    <!-- Core App Scripts -->
+    <script src="/js/core/api.js"></script>
+    <script src="/js/core/toast.js"></script>
+    <script src="/js/core/format.js"></script>
+    <script src="/js/core/reveal.js"></script>
+    
+</head>
+<body class="bg-cream text-ink min-h-screen flex flex-col antialiased selection:bg-primary-100 selection:text-primary-700">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header Fragment -->
+    <header class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-line shadow-xs transition-all duration-200"
+        x-data="{
+            mobileMenuOpen: false,
+            searchKeyword: '',
+            suggestions: [],
+            openSuggest: false,
+            loadingSuggest: false,
+            notifOpen: false,
+            notifications: [],
+            unreadCount: 0,
+            cartCount: 0,
+            async fetchCounts() {
+                try {
+                    const cartRes = await fetch('/api/cart/count');
+                    if (cartRes.ok) {
+                        const data = await cartRes.json();
+                        if (data.success) this.cartCount = data.data || 0;
+                    }
+                    const notifRes = await fetch('/api/notifications/unread-count');
+                    if (notifRes.ok) {
+                        const nData = await notifRes.json();
+                        if (nData.success) this.unreadCount = nData.data.unreadCount || 0;
+                    }
+                } catch(e) {}
+            },
+            async fetchSuggestions() {
+                if (!this.searchKeyword || this.searchKeyword.trim().length < 2) {
+                    this.suggestions = [];
+                    this.openSuggest = false;
+                    return;
+                }
+                this.loadingSuggest = true;
+                try {
+                    const res = await fetch('/api/products/suggest?keyword=' + encodeURIComponent(this.searchKeyword.trim()));
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.suggestions = data.data || [];
+                        this.openSuggest = this.suggestions.length > 0;
+                    }
+                } catch(e) {
+                    this.suggestions = [];
+                } finally {
+                    this.loadingSuggest = false;
+                }
+            },
+            async openNotifications() {
+                this.notifOpen = !this.notifOpen;
+                if (this.notifOpen) {
+                    try {
+                        const res = await fetch('/api/notifications?page=0&size=5');
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.notifications = data.data?.content || [];
+                        }
+                    } catch(e) {}
+                }
+            },
+            async markAllNotifsRead() {
+                try {
+                    const res = await fetch('/api/notifications/read-all', { method: 'POST' });
+                    if (res.ok) {
+                        this.unreadCount = 0;
+                        this.notifications.forEach(n => n.read = true);
+                    }
+                } catch(e) {}
+            }
+        }"
+        x-init="
+            fetchCounts();
+            window.addEventListener('cart-updated', () => fetchCounts());
+        ">
+
+    <!-- 1. Top Bar: Tinh hoa Đất Việt -->
+    <div class="bg-gradient-to-r from-primary-800 via-primary-700 to-primary-800 text-white text-[11px] sm:text-xs py-1.5 px-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2 truncate">
+                <span class="inline-flex items-center gap-1 font-semibold text-secondary-400">
+                    <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                    <span>Tinh hoa Đất Việt</span>
+                </span>
+                <span class="hidden sm:inline text-primary-200">•</span>
+                <span class="hidden sm:inline text-primary-100">Đặc sản 34 tỉnh thành • 100% nguồn gốc xuất xứ rõ ràng • Chuẩn hóa OCOP</span>
+            </div>
+
+            <div class="flex items-center gap-4 text-primary-100 text-[11px]">
+                <a href="/account/shop-registration" class="hover:text-white transition flex items-center gap-1 font-medium">
+                    <i data-lucide="store" class="w-3.5 h-3.5 text-secondary-400"></i>
+                    <span>Kênh Hợp Tác Xã / Người Bán</span>
+                </a>
+                <span class="text-primary-400 hidden sm:inline">|</span>
+                <span class="hidden md:inline text-primary-200">Hỗ trợ khách hàng: <strong class="text-white">Tư vấn tận tâm</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Header Chính (Main Navigation) -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 sm:h-20 gap-3 sm:gap-6">
+
+            <!-- Nút menu ba gạch mobile -->
+            <button type="button" @click="mobileMenuOpen = true"
+                    class="md:hidden p-2 -ml-2 rounded-xl text-ink hover:bg-surface-muted transition"
+                    aria-label="Mở menu">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+
+            <!-- Logo Thương Hiệu -->
+            <a href="/" class="flex-shrink-0 flex items-center gap-2.5 group transition">
+                <img src="/images/logo.svg" alt="VietSpecialty Logo" class="h-9 sm:h-11 w-auto transition-transform duration-300 group-hover:scale-105">
+                <div class="hidden xl:block">
+                    <span class="font-serif font-bold text-lg text-ink tracking-tight block leading-tight">VietSpecialty</span>
+                    <span class="text-[10px] uppercase font-semibold tracking-wider text-primary-700 block -mt-0.5">Đặc Sản Vùng Miền</span>
+                </div>
+            </a>
+
+            <!-- Thanh Tìm Kiếm Trung Tâm (Desktop) có Autocomplete -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-2 relative" @click.outside="openSuggest = false">
+                <form action="/products" method="GET" class="relative w-full">
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 flex items-center pointer-events-none text-ink-muted">
+                            <i data-lucide="search" class="w-4 h-4 text-primary-600"></i>
+                        </span>
+                        <input type="text" name="keyword"
+                               x-model="searchKeyword"
+                               @input.debounce.300ms="fetchSuggestions()"
+                               @focus="if(suggestions.length > 0) openSuggest = true"
+                               placeholder="Tìm trà Tân Cương, nước mắm Phú Quốc, cà phê Cầu Đất..."
+                               class="w-full pl-10 pr-24 py-2.5 rounded-full border border-line bg-surface-muted/70 text-ink placeholder-ink-muted text-xs sm:text-sm focus:bg-surface focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 shadow-xs transition"
+                               autocomplete="off">
+                        <button type="submit" class="absolute right-1 px-4 py-1.5 rounded-full bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold shadow-xs hover:shadow-sm transition flex items-center gap-1 active:scale-95">
+                            <span>Tìm kiếm</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Dropdown Gợi Ý Tìm Kiếm -->
+                <div x-show="openSuggest && suggestions.length > 0"
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 translate-y-1"
+                     class="absolute top-full left-0 right-0 mt-2 bg-surface rounded-2xl border border-line shadow-lift p-2 z-50 max-h-80 overflow-y-auto">
+                    <div class="text-[11px] font-semibold text-ink-muted px-3 py-1.5 border-b border-line/60">Gợi ý sản phẩm</div>
+                    <template x-for="item in suggestions" :key="item.id">
+                        <a :href="'/products/' + item.slug" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                            <img :src="item.primaryImageUrl || '/images/demo/placeholder.svg'" :alt="item.name" class="w-10 h-10 object-cover rounded-lg border border-line shrink-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-semibold text-ink truncate" x-text="item.name"></div>
+                                <div class="text-[11px] text-primary-700 font-bold" x-text="new Intl.NumberFormat('vi-VN').format(item.price) + '₫'"></div>
+                            </div>
+                            <span class="text-[10px] text-ink-muted bg-surface-muted px-2 py-0.5 rounded-full" x-text="item.regionName"></span>
+                        </a>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Các Hành Động Người Dùng Phía Phải -->
+            <div class="flex items-center gap-1.5 sm:gap-3">
+
+                <!-- Nút Hỏi Trợ Lý AI Nhanh -->
+                <button type="button" onclick="window.toggleChatBot ? window.toggleChatBot() : null"
+                        class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-100 text-ink hover:bg-secondary-200 transition text-xs font-semibold border border-secondary-400/40 shadow-2xs">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-secondary-500 fill-secondary-400"></i>
+                    <span>Tư vấn AI</span>
+                </button>
+
+                <!-- Chuông Thông Báo -->
+                <div class="relative" @click.outside="notifOpen = false">
+                    <button type="button" @click="openNotifications()"
+                            class="relative p-2 sm:p-2.5 rounded-full text-ink-muted hover:text-ink hover:bg-surface-muted transition"
+                            title="Thông báo" aria-label="Thông báo">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span x-show="unreadCount > 0"
+                              x-text="unreadCount"
+                              class="absolute top-1 right-1 w-4 h-4 bg-danger text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse"></span>
+                    </button>
+
+                    <!-- Dropdown Thông Báo -->
+                    <div x-show="notifOpen"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         class="absolute right-0 mt-2 w-80 sm:w-96 bg-surface rounded-2xl border border-line shadow-lift p-3 z-50">
+                        <div class="flex items-center justify-between pb-2 border-b border-line mb-2 px-1">
+                            <span class="font-bold text-xs text-ink">Thông báo hệ thống</span>
+                            <button @click="markAllNotifsRead()" class="text-[11px] text-primary-700 hover:underline font-semibold">Đã đọc tất cả</button>
+                        </div>
+                        <div class="space-y-1.5 max-h-72 overflow-y-auto">
+                            <template x-if="notifications.length === 0">
+                                <div class="text-center py-6 text-xs text-ink-muted">Chưa có thông báo mới nào</div>
+                            </template>
+                            <template x-for="n in notifications" :key="n.id">
+                                <div class="p-2.5 rounded-xl border border-line/60 transition"
+                                     :class="n.read ? 'bg-surface' : 'bg-primary-50/40 border-primary-200'">
+                                    <div class="font-semibold text-xs text-ink" x-text="n.title"></div>
+                                    <div class="text-[11px] text-ink-muted mt-0.5 line-clamp-2" x-text="n.content"></div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Giỏ Hàng -->
+                <a href="/cart" class="relative p-2 sm:p-2.5 rounded-full text-ink-muted hover:text-ink hover:bg-surface-muted transition group"
+                   title="Giỏ hàng" aria-label="Giỏ hàng">
+                    <i data-lucide="shopping-bag" class="w-5 h-5 group-hover:scale-105 transition-transform"></i>
+                    <span x-show="cartCount > 0"
+                          x-text="cartCount"
+                          class="absolute top-1 right-1 px-1.5 py-0.2 min-w-4 h-4 bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs"></span>
+                </a>
+
+                <!-- Đường Ngăn Cách -->
+                <div class="w-px h-6 bg-line mx-1 hidden sm:block"></div>
+
+                <!-- Tài Khoản Người Dùng (Phân theo vai trò) -->
+                
+
+                <div class="relative" x-data="{ userMenuOpen: false }" @click.outside="userMenuOpen = false">
+                    <button type="button" @click="userMenuOpen = !userMenuOpen"
+                            class="flex items-center gap-2 p-1.5 rounded-full hover:bg-surface-muted transition"
+                            aria-expanded="false">
+                        <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-800 border border-primary-200 flex items-center justify-center font-bold text-xs uppercase shadow-2xs">
+                            <span>b</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-ink-muted hidden sm:block"></i>
+                    </button>
+
+                    <!-- Dropdown Menu Người Dùng -->
+                    <div x-show="userMenuOpen"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         class="absolute right-0 mt-2 w-56 bg-surface rounded-2xl border border-line shadow-lift p-2 z-50 text-xs font-medium space-y-1">
+                        
+                        <div class="px-3 py-2 border-b border-line mb-1">
+                            <div class="font-bold text-ink truncate">buyer@vietspecialty.vn</div>
+                            
+                            
+                            
+                        </div>
+
+                        <!-- Menu Admin -->
+                        
+
+                        <!-- Menu Seller -->
+                        
+
+                        <!-- Menu Buyer & Chung -->
+                        <a href="/account/profile" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-ink hover:bg-surface-muted transition">
+                            <i data-lucide="user" class="w-4 h-4 text-ink-muted"></i>
+                            <span>Hồ sơ tài khoản</span>
+                        </a>
+                        <a href="/orders" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-ink hover:bg-surface-muted transition">
+                            <i data-lucide="package" class="w-4 h-4 text-ink-muted"></i>
+                            <span>Đơn hàng của tôi</span>
+                        </a>
+                        <a href="/account/wishlist" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-ink hover:bg-surface-muted transition">
+                            <i data-lucide="heart" class="w-4 h-4 text-rose-500"></i>
+                            <span>Đặc sản yêu thích</span>
+                        </a>
+                        <a href="/account/addresses" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-ink hover:bg-surface-muted transition">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-ink-muted"></i>
+                            <span>Sổ địa chỉ nhận hàng</span>
+                        </a>
+
+                        <div class="pt-1 border-t border-line">
+                            <a href="/account/shop-registration" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-amber-800 hover:bg-amber-50 transition font-semibold">
+                                <i data-lucide="store" class="w-4 h-4 text-amber-600"></i>
+                                <span>Đăng ký mở gian hàng</span>
+                            </a>
+                        </div>
+
+                        <div class="pt-1 border-t border-line">
+                            <form action="/logout" method="POST" class="w-full"><input type="hidden" name="_csrf" value="oA_Fec9_l9I2an4lyDo8jIjdHX3uHJlt52nMGiY8Bq7RE_UClz2jSvwZrrYbUk4QrRcI7-y8MB-NKatA3lr_KRFYMZnmIpEy"/>
+                                <input type="hidden" name="_csrf" value="oA_Fec9_l9I2an4lyDo8jIjdHX3uHJlt52nMGiY8Bq7RE_UClz2jSvwZrrYbUk4QrRcI7-y8MB-NKatA3lr_KRFYMZnmIpEy"/>
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-danger hover:bg-red-50 transition text-left">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                                    <span>Đăng xuất</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 3. Mega-Menu Thanh Điều Hướng Danh Mục & 4 Vùng Miền (Desktop) -->
+    <nav class="hidden md:block bg-surface border-t border-line/60">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between text-xs font-semibold py-2">
+                <div class="flex items-center gap-6">
+                    <a href="/products" class="text-ink hover:text-primary-700 transition flex items-center gap-1.5 py-1">
+                        <i data-lucide="layout-grid" class="w-4 h-4 text-primary-600"></i>
+                        <span>Tất cả đặc sản</span>
+                    </a>
+
+                    <!-- Dropdown 4 Vùng Miền -->
+                    <div class="relative" x-data="{ openRegion: false }" @click.outside="openRegion = false">
+                        <button type="button" @click="openRegion = !openRegion"
+                                class="flex items-center gap-1 text-ink hover:text-primary-700 transition py-1">
+                            <span>Khám phá 4 miền</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-ink-muted transition-transform" :class="openRegion ? 'rotate-180' : ''"></i>
+                        </button>
+
+                        <div x-show="openRegion"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="absolute left-0 mt-2 w-72 bg-surface rounded-2xl border border-line shadow-lift p-3 z-50 space-y-1.5">
+                            <a href="/regions/mien-bac" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                                <span class="w-3.5 h-3.5 rounded-full bg-[#0F9D8A]"></span>
+                                <div>
+                                    <div class="font-bold text-ink">Đặc sản Miền Bắc</div>
+                                    <div class="text-[10px] text-ink-muted">Hương vị trà cổ, gạo nếp nương, cốm làng Vòng</div>
+                                </div>
+                            </a>
+                            <a href="/regions/mien-trung" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                                <span class="w-3.5 h-3.5 rounded-full bg-[#E9A21F]"></span>
+                                <div>
+                                    <div class="font-bold text-ink">Đặc sản Miền Trung</div>
+                                    <div class="text-[10px] text-ink-muted">Mạch nha, mè xửng, mắm cá cơm truyền thống</div>
+                                </div>
+                            </a>
+                            <a href="/regions/tay-nguyen" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                                <span class="w-3.5 h-3.5 rounded-full bg-[#8B5E3C]"></span>
+                                <div>
+                                    <div class="font-bold text-ink">Đặc sản Tây Nguyên</div>
+                                    <div class="text-[10px] text-ink-muted">Cà phê Robusta, hồ tiêu Chư Sê, mật ong hoa cà phê</div>
+                                </div>
+                            </a>
+                            <a href="/regions/mien-nam" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                                <span class="w-3.5 h-3.5 rounded-full bg-[#E8704A]"></span>
+                                <div>
+                                    <div class="font-bold text-ink">Đặc sản Miền Nam</div>
+                                    <div class="text-[10px] text-ink-muted">Kẹo dừa Bến Tre, bánh pía Sóc Trăng, tôm khô Cà Mau</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Danh Mục Đặc Sản -->
+                    <div class="relative" x-data="{ openCat: false }" @click.outside="openCat = false">
+                        <button type="button" @click="openCat = !openCat"
+                                class="flex items-center gap-1 text-ink hover:text-primary-700 transition py-1">
+                            <span>Danh mục đặc sản</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-ink-muted transition-transform" :class="openCat ? 'rotate-180' : ''"></i>
+                        </button>
+
+                        <div x-show="openCat"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="absolute left-0 mt-2 w-64 bg-surface rounded-2xl border border-line shadow-lift p-2 z-50 grid grid-cols-1 gap-1 max-h-80 overflow-y-auto">
+                            
+                                <a href="/categories/banh-mut" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Bánh &amp; Mứt</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/tra-ca-phe" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Trà &amp; Cà phê</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/mam-gia-vi" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Mắm &amp; Gia vị</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/hai-san-kho" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Hải sản khô</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/thit-che-bien" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Thịt &amp; Chế biến</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/trai-cay-hat-say" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Trái cây &amp; Hạt sấy</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/mat-ong-nong-san" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Mật ong &amp; Nông sản</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/ruou-do-uong" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Rượu &amp; Đồ uống</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                        </div>
+                    </div>
+
+                    <a href="/products?hasOcop=true" class="text-ink hover:text-primary-700 transition flex items-center gap-1.5 py-1">
+                        <i data-lucide="award" class="w-4 h-4 text-secondary-500"></i>
+                        <span>Chuẩn OCOP (3-5★)</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-4 text-ink-muted">
+                    <a href="/account/shop-registration" class="hover:text-primary-700 transition flex items-center gap-1 font-medium">
+                        <i data-lucide="store" class="w-3.5 h-3.5 text-primary-600"></i>
+                        <span>Mở gian hàng Hợp Tác Xã</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 4. Mobile Drawer Navigation (Trượt từ cạnh trái) -->
+    <div x-show="mobileMenuOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 -translate-x-full"
+         x-transition:enter-end="opacity-100 translate-x-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-x-0"
+         x-transition:leave-end="opacity-0 -translate-x-full"
+         class="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex"
+         @click.self="mobileMenuOpen = false">
+        
+        <div class="w-4/5 max-w-sm bg-surface h-full shadow-2xl p-5 flex flex-col justify-between overflow-y-auto">
+            <div class="space-y-6">
+                <!-- Header Drawer -->
+                <div class="flex items-center justify-between pb-4 border-b border-line">
+                    <div class="flex items-center gap-2">
+                        <img src="/images/logo.svg" alt="Logo" class="h-8 w-auto">
+                        <span class="font-serif font-bold text-base text-ink">VietSpecialty</span>
+                    </div>
+                    <button @click="mobileMenuOpen = false" class="p-1 rounded-lg text-ink-muted hover:text-ink">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- 4 Miền Nhanh -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-3">Đặc Sản 4 Miền</h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <a href="/regions/mien-bac" class="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-muted flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#0F9D8A]"></span>
+                            <span class="font-medium text-ink">Miền Bắc</span>
+                        </a>
+                        <a href="/regions/mien-trung" class="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-muted flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#E9A21F]"></span>
+                            <span class="font-medium text-ink">Miền Trung</span>
+                        </a>
+                        <a href="/regions/tay-nguyen" class="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-muted flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#8B5E3C]"></span>
+                            <span class="font-medium text-ink">Tây Nguyên</span>
+                        </a>
+                        <a href="/regions/mien-nam" class="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-muted flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#E8704A]"></span>
+                            <span class="font-medium text-ink">Miền Nam</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lối Tắt Mua Sắm -->
+                <div class="space-y-1 text-sm font-medium">
+                    <a href="/products" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-ink hover:bg-surface-muted">
+                        <i data-lucide="layout-grid" class="w-4 h-4 text-primary-600"></i>
+                        <span>Tất cả đặc sản</span>
+                    </a>
+                    <a href="/products?hasOcop=true" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-ink hover:bg-surface-muted">
+                        <i data-lucide="award" class="w-4 h-4 text-secondary-500"></i>
+                        <span>Sản phẩm đạt chuẩn OCOP (3-5★)</span>
+                    </a>
+                    <a href="/cart" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-ink hover:bg-surface-muted">
+                        <i data-lucide="shopping-bag" class="w-4 h-4 text-primary-600"></i>
+                        <span>Giỏ hàng</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Chân Drawer -->
+            <div class="pt-6 border-t border-line space-y-3">
+                
+                <div>
+                    <a href="/orders" class="btn-outline w-full text-xs py-2.5 mb-2">Đơn hàng của tôi</a>
+                </div>
+                <p class="text-[11px] text-ink-muted text-center">VietSpecialty • Tinh hoa Đất Việt</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Mobile Bottom Navigation Bar (Dính đáy màn hình 390px - 5 nút chuẩn sàn TMĐT) -->
+    <div class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-line shadow-lift flex items-center justify-around py-2 px-2">
+        <a href="/" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-primary-700 transition">
+            <i data-lucide="home" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold">Trang chủ</span>
+        </a>
+        <a href="/regions" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-primary-700 transition">
+            <i data-lucide="map" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold">Vùng miền</span>
+        </a>
+        <a href="/cart" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-primary-700 transition relative">
+            <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+            <span x-show="cartCount > 0" x-text="cartCount" class="absolute -top-1 -right-2 px-1 py-0.2 min-w-3.5 h-3.5 bg-primary-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center"></span>
+            <span class="text-[9px] font-semibold">Giỏ hàng</span>
+        </a>
+        <a href="/account/wishlist" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-rose-500 transition">
+            <i data-lucide="heart" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold">Yêu thích</span>
+        </a>
+        <a href="/account/profile" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-primary-700 transition">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold">Tài khoản</span>
+        </a>
+    </div>
+
+</header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        
+        <div class="max-w-4xl mx-auto py-6 sm:py-8 space-y-6" x-data="{
+        cancelModalOpen: false,
+        cancelReason: '',
+        loading: false,
+        reviewModalOpen: false,
+        reviewOrderItemId: null,
+        reviewProductName: '',
+        reviewRating: 5,
+        reviewContent: '',
+        openReview(orderItemId, productName) {
+            this.reviewOrderItemId = orderItemId;
+            this.reviewProductName = productName;
+            this.reviewRating = 5;
+            this.reviewContent = '';
+            this.reviewModalOpen = true;
+        },
+        async submitReview() {
+            if (!this.reviewContent || this.reviewContent.trim().length < 5) {
+                alert('Vui lòng nhập nhận xét chi tiết ít nhất 5 ký tự');
+                return;
+            }
+            this.loading = true;
+            try {
+                const res = await fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderItemId: this.reviewOrderItemId,
+                        rating: this.reviewRating,
+                        content: this.reviewContent
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Cảm ơn bạn đã gửi đánh giá đặc sản!');
+                    this.reviewModalOpen = false;
+                    location.reload();
+                } else {
+                    alert(data.message || 'Không thể gửi đánh giá');
+                }
+            } catch (e) {
+                alert('Đã xảy ra lỗi, vui lòng thử lại');
+            } finally {
+                this.loading = false;
+            }
+        },
+        async cancelOrder() {
+            if (!this.cancelReason) {
+                alert('Vui lòng chọn hoặc nhập lý do hủy đơn');
+                return;
+            }
+            this.loading = true;
+            try {
+                const res = await fetch('/api/orders/' + [[${order.id}]] + '/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: this.cancelReason })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Không thể hủy đơn hàng');
+                }
+            } catch (e) {
+                alert('Đã xảy ra lỗi, vui lòng thử lại');
+            } finally {
+                this.loading = false;
+            }
+        },
+        async confirmReceived() {
+            if (!confirm('Bạn xác nhận đã nhận được toàn bộ kiện hàng đặc sản đúng như mô tả?')) {
+                return;
+            }
+            this.loading = true;
+            try {
+                const res = await fetch('/api/orders/' + [[${order.id}]] + '/received', {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Không thể xác nhận nhận hàng');
+                }
+            } catch (e) {
+                alert('Đã xảy ra lỗi, vui lòng thử lại');
+            } finally {
+                this.loading = false;
+            }
+        }
+     }">
+
+    <!-- Breadcrumb & Tiêu đề -->
+    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-line">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-ink-muted">
+                <a href="/orders" class="hover:text-ink">Đơn hàng của tôi</a>
+                <span>/</span>
+                <span class="text-ink font-medium">#VS261118TPUKNM</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black text-ink mt-1 flex items-center gap-2">
+                <span>Chi tiết đơn hàng</span>
+                <span class="text-base text-ink-muted font-normal">(Mã: VS261118TPUKNM)</span>
+            </h1>
+        </div>
+
+        <!-- Trạng thái hiện tại -->
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1.5 rounded-full text-xs font-bold bg-primary-50 text-primary-700">Chờ xác nhận</span>
+        </div>
+    </div>
+
+    <!-- Timeline Trạng thái Vận chuyển -->
+    <div class="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-4">
+        <h3 class="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="git-commit" class="w-4 h-4 text-primary-600"></i>
+            <span>Hành trình đơn hàng</span>
+        </h3>
+
+        <!-- Danh sách mốc lịch sử -->
+        <div class="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-line">
+            <!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Chi tiết đơn hàng #VS261118TPUKNM — VietSpecialty — VietSpecialty</title>
+
+    <!-- CSRF Meta Tags -->
+    <meta name="_csrf" content="oA_Fec9_l9I2an4lyDo8jIjdHX3uHJlt52nMGiY8Bq7RE_UClz2jSvwZrrYbUk4QrRcI7-y8MB-NKatA3lr_KRFYMZnmIpEy"/>
+    <meta name="_csrf_header" content="X-CSRF-TOKEN"/>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+
+    <!-- Google Fonts: Be Vietnam Pro & Lora -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (compiled) -->
+    <link rel="stylesheet" href="/css/app.css">
+
+    <!-- Dynamic Meta tags from child templates -->
+    
+    
+
+    <!-- Extra CSS from child templates -->
+    
+    
+
+    <!-- Vendor Scripts -->
+    <script src="/vendor/alpine.min.js" defer></script>
+    <script src="/vendor/lucide.min.js"></script>
+
+    <!-- Core App Scripts -->
+    <script src="/js/core/api.js"></script>
+    <script src="/js/core/toast.js"></script>
+    <script src="/js/core/format.js"></script>
+    <script src="/js/core/reveal.js"></script>
+    
+</head>
+<body class="bg-cream text-ink min-h-screen flex flex-col antialiased selection:bg-primary-100 selection:text-primary-700">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header Fragment -->
+    <header class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-line shadow-xs transition-all duration-200"
+        x-data="{
+            mobileMenuOpen: false,
+            searchKeyword: '',
+            suggestions: [],
+            openSuggest: false,
+            loadingSuggest: false,
+            notifOpen: false,
+            notifications: [],
+            unreadCount: 0,
+            cartCount: 0,
+            async fetchCounts() {
+                try {
+                    const cartRes = await fetch('/api/cart/count');
+                    if (cartRes.ok) {
+                        const data = await cartRes.json();
+                        if (data.success) this.cartCount = data.data || 0;
+                    }
+                    const notifRes = await fetch('/api/notifications/unread-count');
+                    if (notifRes.ok) {
+                        const nData = await notifRes.json();
+                        if (nData.success) this.unreadCount = nData.data.unreadCount || 0;
+                    }
+                } catch(e) {}
+            },
+            async fetchSuggestions() {
+                if (!this.searchKeyword || this.searchKeyword.trim().length < 2) {
+                    this.suggestions = [];
+                    this.openSuggest = false;
+                    return;
+                }
+                this.loadingSuggest = true;
+                try {
+                    const res = await fetch('/api/products/suggest?keyword=' + encodeURIComponent(this.searchKeyword.trim()));
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.suggestions = data.data || [];
+                        this.openSuggest = this.suggestions.length > 0;
+                    }
+                } catch(e) {
+                    this.suggestions = [];
+                } finally {
+                    this.loadingSuggest = false;
+                }
+            },
+            async openNotifications() {
+                this.notifOpen = !this.notifOpen;
+                if (this.notifOpen) {
+                    try {
+                        const res = await fetch('/api/notifications?page=0&size=5');
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.notifications = data.data?.content || [];
+                        }
+                    } catch(e) {}
+                }
+            },
+            async markAllNotifsRead() {
+                try {
+                    const res = await fetch('/api/notifications/read-all', { method: 'POST' });
+                    if (res.ok) {
+                        this.unreadCount = 0;
+                        this.notifications.forEach(n => n.read = true);
+                    }
+                } catch(e) {}
+            }
+        }"
+        x-init="
+            fetchCounts();
+            window.addEventListener('cart-updated', () => fetchCounts());
+        ">
+
+    <!-- 1. Top Bar: Tinh hoa Đất Việt -->
+    <div class="bg-gradient-to-r from-primary-800 via-primary-700 to-primary-800 text-white text-[11px] sm:text-xs py-1.5 px-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2 truncate">
+                <span class="inline-flex items-center gap-1 font-semibold text-secondary-400">
+                    <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                    <span>Tinh hoa Đất Việt</span>
+                </span>
+                <span class="hidden sm:inline text-primary-200">•</span>
+                <span class="hidden sm:inline text-primary-100">Đặc sản 34 tỉnh thành • 100% nguồn gốc xuất xứ rõ ràng • Chuẩn hóa OCOP</span>
+            </div>
+
+            <div class="flex items-center gap-4 text-primary-100 text-[11px]">
+                <a href="/account/shop-registration" class="hover:text-white transition flex items-center gap-1 font-medium">
+                    <i data-lucide="store" class="w-3.5 h-3.5 text-secondary-400"></i>
+                    <span>Kênh Hợp Tác Xã / Người Bán</span>
+                </a>
+                <span class="text-primary-400 hidden sm:inline">|</span>
+                <span class="hidden md:inline text-primary-200">Hỗ trợ khách hàng: <strong class="text-white">Tư vấn tận tâm</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Header Chính (Main Navigation) -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 sm:h-20 gap-3 sm:gap-6">
+
+            <!-- Nút menu ba gạch mobile -->
+            <button type="button" @click="mobileMenuOpen = true"
+                    class="md:hidden p-2 -ml-2 rounded-xl text-ink hover:bg-surface-muted transition"
+                    aria-label="Mở menu">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+
+            <!-- Logo Thương Hiệu -->
+            <a href="/" class="flex-shrink-0 flex items-center gap-2.5 group transition">
+                <img src="/images/logo.svg" alt="VietSpecialty Logo" class="h-9 sm:h-11 w-auto transition-transform duration-300 group-hover:scale-105">
+                <div class="hidden xl:block">
+                    <span class="font-serif font-bold text-lg text-ink tracking-tight block leading-tight">VietSpecialty</span>
+                    <span class="text-[10px] uppercase font-semibold tracking-wider text-primary-700 block -mt-0.5">Đặc Sản Vùng Miền</span>
+                </div>
+            </a>
+
+            <!-- Thanh Tìm Kiếm Trung Tâm (Desktop) có Autocomplete -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-2 relative" @click.outside="openSuggest = false">
+                <form action="/products" method="GET" class="relative w-full">
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 flex items-center pointer-events-none text-ink-muted">
+                            <i data-lucide="search" class="w-4 h-4 text-primary-600"></i>
+                        </span>
+                        <input type="text" name="keyword"
+                               x-model="searchKeyword"
+                               @input.debounce.300ms="fetchSuggestions()"
+                               @focus="if(suggestions.length > 0) openSuggest = true"
+                               placeholder="Tìm trà Tân Cương, nước mắm Phú Quốc, cà phê Cầu Đất..."
+                               class="w-full pl-10 pr-24 py-2.5 rounded-full border border-line bg-surface-muted/70 text-ink placeholder-ink-muted text-xs sm:text-sm focus:bg-surface focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 shadow-xs transition"
+                               autocomplete="off">
+                        <button type="submit" class="absolute right-1 px-4 py-1.5 rounded-full bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold shadow-xs hover:shadow-sm transition flex items-center gap-1 active:scale-95">
+                            <span>Tìm kiếm</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Dropdown Gợi Ý Tìm Kiếm -->
+                <div x-show="openSuggest && suggestions.length > 0"
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 translate-y-1"
+                     class="absolute top-full left-0 right-0 mt-2 bg-surface rounded-2xl border border-line shadow-lift p-2 z-50 max-h-80 overflow-y-auto">
+                    <div class="text-[11px] font-semibold text-ink-muted px-3 py-1.5 border-b border-line/60">Gợi ý sản phẩm</div>
+                    <template x-for="item in suggestions" :key="item.id">
+                        <a :href="'/products/' + item.slug" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                            <img :src="item.primaryImageUrl || '/images/demo/placeholder.svg'" :alt="item.name" class="w-10 h-10 object-cover rounded-lg border border-line shrink-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-semibold text-ink truncate" x-text="item.name"></div>
+                                <div class="text-[11px] text-primary-700 font-bold" x-text="new Intl.NumberFormat('vi-VN').format(item.price) + '₫'"></div>
+                            </div>
+                            <span class="text-[10px] text-ink-muted bg-surface-muted px-2 py-0.5 rounded-full" x-text="item.regionName"></span>
+                        </a>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Các Hành Động Người Dùng Phía Phải -->
+            <div class="flex items-center gap-1.5 sm:gap-3">
+
+                <!-- Nút Hỏi Trợ Lý AI Nhanh -->
+                <button type="button" onclick="window.toggleChatBot ? window.toggleChatBot() : null"
+                        class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-100 text-ink hover:bg-secondary-200 transition text-xs font-semibold border border-secondary-400/40 shadow-2xs">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-secondary-500 fill-secondary-400"></i>
+                    <span>Tư vấn AI</span>
+                </button>
+
+                <!-- Chuông Thông Báo -->
+                <div class="relative" @click.outside="notifOpen = false">
+                    <button type="button" @click="openNotifications()"
+                            class="relative p-2 sm:p-2.5 rounded-full text-ink-muted hover:text-ink hover:bg-surface-muted transition"
+                            title="Thông báo" aria-label="Thông báo">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span x-show="unreadCount > 0"
+                              x-text="unreadCount"
+                              class="absolute top-1 right-1 w-4 h-4 bg-danger text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse"></span>
+                    </button>
+
+                    <!-- Dropdown Thông Báo -->
+                    <div x-show="notifOpen"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         class="absolute right-0 mt-2 w-80 sm:w-96 bg-surface rounded-2xl border border-line shadow-lift p-3 z-50">
+                        <div class="flex items-center justify-between pb-2 border-b border-line mb-2 px-1">
+                            <span class="font-bold text-xs text-ink">Thông báo hệ thống</span>
+                            <button @click="markAllNotifsRead()" class="text-[11px] text-primary-700 hover:underline font-semibold">Đã đọc tất cả</button>
+                        </div>
+                        <div class="space-y-1.5 max-h-72 overflow-y-auto">
+                            <template x-if="notifications.length === 0">
+                                <div class="text-center py-6 text-xs text-ink-muted">Chưa có thông báo mới nào</div>
+                            </template>
+                            <template x-for="n in notifications" :key="n.id">
+                                <div class="p-2.5 rounded-xl border border-line/60 transition"
+                                     :class="n.read ? 'bg-surface' : 'bg-primary-50/40 border-primary-200'">
+                                    <div class="font-semibold text-xs text-ink" x-text="n.title"></div>
+                                    <div class="text-[11px] text-ink-muted mt-0.5 line-clamp-2" x-text="n.content"></div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Giỏ Hàng -->
+                <a href="/cart" class="relative p-2 sm:p-2.5 rounded-full text-ink-muted hover:text-ink hover:bg-surface-muted transition group"
+                   title="Giỏ hàng" aria-label="Giỏ hàng">
+                    <i data-lucide="shopping-bag" class="w-5 h-5 group-hover:scale-105 transition-transform"></i>
+                    <span x-show="cartCount > 0"
+                          x-text="cartCount"
+                          class="absolute top-1 right-1 px-1.5 py-0.2 min-w-4 h-4 bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs"></span>
+                </a>
+
+                <!-- Đường Ngăn Cách -->
+                <div class="w-px h-6 bg-line mx-1 hidden sm:block"></div>
+
+                <!-- Tài Khoản Người Dùng (Phân theo vai trò) -->
+                
+
+                <div class="relative" x-data="{ userMenuOpen: false }" @click.outside="userMenuOpen = false">
+                    <button type="button" @click="userMenuOpen = !userMenuOpen"
+                            class="flex items-center gap-2 p-1.5 rounded-full hover:bg-surface-muted transition"
+                            aria-expanded="false">
+                        <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-800 border border-primary-200 flex items-center justify-center font-bold text-xs uppercase shadow-2xs">
+                            <span>b</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-ink-muted hidden sm:block"></i>
+                    </button>
+
+                    <!-- Dropdown Menu Người Dùng -->
+                    <div x-show="userMenuOpen"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         class="absolute right-0 mt-2 w-56 bg-surface rounded-2xl border border-line shadow-lift p-2 z-50 text-xs font-medium space-y-1">
+                        
+                        <div class="px-3 py-2 border-b border-line mb-1">
+                            <div class="font-bold text-ink truncate">buyer@vietspecialty.vn</div>
+                            
+                            
+                            
+                        </div>
+
+                        <!-- Menu Admin -->
+                        
+
+                        <!-- Menu Seller -->
+                        
+
+                        <!-- Menu Buyer & Chung -->
+                        <a href="/account/profile" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-ink hover:bg-surface-muted transition">
+                            <i data-lucide="user" class="w-4 h-4 text-ink-muted"></i>
+                            <span>Hồ sơ tài khoản</span>
+                        </a>
+                        <a href="/orders" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-ink hover:bg-surface-muted transition">
+                            <i data-lucide="package" class="w-4 h-4 text-ink-muted"></i>
+                            <span>Đơn hàng của tôi</span>
+                        </a>
+                        <a href="/account/wishlist" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-ink hover:bg-surface-muted transition">
+                            <i data-lucide="heart" class="w-4 h-4 text-rose-500"></i>
+                            <span>Đặc sản yêu thích</span>
+                        </a>
+                        <a href="/account/addresses" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-ink hover:bg-surface-muted transition">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-ink-muted"></i>
+                            <span>Sổ địa chỉ nhận hàng</span>
+                        </a>
+
+                        <div class="pt-1 border-t border-line">
+                            <a href="/account/shop-registration" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-amber-800 hover:bg-amber-50 transition font-semibold">
+                                <i data-lucide="store" class="w-4 h-4 text-amber-600"></i>
+                                <span>Đăng ký mở gian hàng</span>
+                            </a>
+                        </div>
+
+                        <div class="pt-1 border-t border-line">
+                            <form action="/logout" method="POST" class="w-full"><input type="hidden" name="_csrf" value="oA_Fec9_l9I2an4lyDo8jIjdHX3uHJlt52nMGiY8Bq7RE_UClz2jSvwZrrYbUk4QrRcI7-y8MB-NKatA3lr_KRFYMZnmIpEy"/>
+                                <input type="hidden" name="_csrf" value="oA_Fec9_l9I2an4lyDo8jIjdHX3uHJlt52nMGiY8Bq7RE_UClz2jSvwZrrYbUk4QrRcI7-y8MB-NKatA3lr_KRFYMZnmIpEy"/>
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-danger hover:bg-red-50 transition text-left">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                                    <span>Đăng xuất</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 3. Mega-Menu Thanh Điều Hướng Danh Mục & 4 Vùng Miền (Desktop) -->
+    <nav class="hidden md:block bg-surface border-t border-line/60">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between text-xs font-semibold py-2">
+                <div class="flex items-center gap-6">
+                    <a href="/products" class="text-ink hover:text-primary-700 transition flex items-center gap-1.5 py-1">
+                        <i data-lucide="layout-grid" class="w-4 h-4 text-primary-600"></i>
+                        <span>Tất cả đặc sản</span>
+                    </a>
+
+                    <!-- Dropdown 4 Vùng Miền -->
+                    <div class="relative" x-data="{ openRegion: false }" @click.outside="openRegion = false">
+                        <button type="button" @click="openRegion = !openRegion"
+                                class="flex items-center gap-1 text-ink hover:text-primary-700 transition py-1">
+                            <span>Khám phá 4 miền</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-ink-muted transition-transform" :class="openRegion ? 'rotate-180' : ''"></i>
+                        </button>
+
+                        <div x-show="openRegion"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="absolute left-0 mt-2 w-72 bg-surface rounded-2xl border border-line shadow-lift p-3 z-50 space-y-1.5">
+                            <a href="/regions/mien-bac" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                                <span class="w-3.5 h-3.5 rounded-full bg-[#0F9D8A]"></span>
+                                <div>
+                                    <div class="font-bold text-ink">Đặc sản Miền Bắc</div>
+                                    <div class="text-[10px] text-ink-muted">Hương vị trà cổ, gạo nếp nương, cốm làng Vòng</div>
+                                </div>
+                            </a>
+                            <a href="/regions/mien-trung" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                                <span class="w-3.5 h-3.5 rounded-full bg-[#E9A21F]"></span>
+                                <div>
+                                    <div class="font-bold text-ink">Đặc sản Miền Trung</div>
+                                    <div class="text-[10px] text-ink-muted">Mạch nha, mè xửng, mắm cá cơm truyền thống</div>
+                                </div>
+                            </a>
+                            <a href="/regions/tay-nguyen" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                                <span class="w-3.5 h-3.5 rounded-full bg-[#8B5E3C]"></span>
+                                <div>
+                                    <div class="font-bold text-ink">Đặc sản Tây Nguyên</div>
+                                    <div class="text-[10px] text-ink-muted">Cà phê Robusta, hồ tiêu Chư Sê, mật ong hoa cà phê</div>
+                                </div>
+                            </a>
+                            <a href="/regions/mien-nam" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition">
+                                <span class="w-3.5 h-3.5 rounded-full bg-[#E8704A]"></span>
+                                <div>
+                                    <div class="font-bold text-ink">Đặc sản Miền Nam</div>
+                                    <div class="text-[10px] text-ink-muted">Kẹo dừa Bến Tre, bánh pía Sóc Trăng, tôm khô Cà Mau</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Danh Mục Đặc Sản -->
+                    <div class="relative" x-data="{ openCat: false }" @click.outside="openCat = false">
+                        <button type="button" @click="openCat = !openCat"
+                                class="flex items-center gap-1 text-ink hover:text-primary-700 transition py-1">
+                            <span>Danh mục đặc sản</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-ink-muted transition-transform" :class="openCat ? 'rotate-180' : ''"></i>
+                        </button>
+
+                        <div x-show="openCat"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="absolute left-0 mt-2 w-64 bg-surface rounded-2xl border border-line shadow-lift p-2 z-50 grid grid-cols-1 gap-1 max-h-80 overflow-y-auto">
+                            
+                                <a href="/categories/banh-mut" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Bánh &amp; Mứt</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/tra-ca-phe" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Trà &amp; Cà phê</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/mam-gia-vi" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Mắm &amp; Gia vị</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/hai-san-kho" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Hải sản khô</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/thit-che-bien" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Thịt &amp; Chế biến</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/trai-cay-hat-say" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Trái cây &amp; Hạt sấy</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/mat-ong-nong-san" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Mật ong &amp; Nông sản</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                                <a href="/categories/ruou-do-uong" class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-muted text-ink transition">
+                                    <span>Rượu &amp; Đồ uống</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-ink-muted"></i>
+                                </a>
+                            
+                        </div>
+                    </div>
+
+                    <a href="/products?hasOcop=true" class="text-ink hover:text-primary-700 transition flex items-center gap-1.5 py-1">
+                        <i data-lucide="award" class="w-4 h-4 text-secondary-500"></i>
+                        <span>Chuẩn OCOP (3-5★)</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-4 text-ink-muted">
+                    <a href="/account/shop-registration" class="hover:text-primary-700 transition flex items-center gap-1 font-medium">
+                        <i data-lucide="store" class="w-3.5 h-3.5 text-primary-600"></i>
+                        <span>Mở gian hàng Hợp Tác Xã</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 4. Mobile Drawer Navigation (Trượt từ cạnh trái) -->
+    <div x-show="mobileMenuOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 -translate-x-full"
+         x-transition:enter-end="opacity-100 translate-x-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-x-0"
+         x-transition:leave-end="opacity-0 -translate-x-full"
+         class="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex"
+         @click.self="mobileMenuOpen = false">
+        
+        <div class="w-4/5 max-w-sm bg-surface h-full shadow-2xl p-5 flex flex-col justify-between overflow-y-auto">
+            <div class="space-y-6">
+                <!-- Header Drawer -->
+                <div class="flex items-center justify-between pb-4 border-b border-line">
+                    <div class="flex items-center gap-2">
+                        <img src="/images/logo.svg" alt="Logo" class="h-8 w-auto">
+                        <span class="font-serif font-bold text-base text-ink">VietSpecialty</span>
+                    </div>
+                    <button @click="mobileMenuOpen = false" class="p-1 rounded-lg text-ink-muted hover:text-ink">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- 4 Miền Nhanh -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-3">Đặc Sản 4 Miền</h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <a href="/regions/mien-bac" class="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-muted flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#0F9D8A]"></span>
+                            <span class="font-medium text-ink">Miền Bắc</span>
+                        </a>
+                        <a href="/regions/mien-trung" class="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-muted flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#E9A21F]"></span>
+                            <span class="font-medium text-ink">Miền Trung</span>
+                        </a>
+                        <a href="/regions/tay-nguyen" class="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-muted flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#8B5E3C]"></span>
+                            <span class="font-medium text-ink">Tây Nguyên</span>
+                        </a>
+                        <a href="/regions/mien-nam" class="p-2.5 rounded-xl border border-line bg-surface hover:bg-surface-muted flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#E8704A]"></span>
+                            <span class="font-medium text-ink">Miền Nam</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lối Tắt Mua Sắm -->
+                <div class="space-y-1 text-sm font-medium">
+                    <a href="/products" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-ink hover:bg-surface-muted">
+                        <i data-lucide="layout-grid" class="w-4 h-4 text-primary-600"></i>
+                        <span>Tất cả đặc sản</span>
+                    </a>
+                    <a href="/products?hasOcop=true" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-ink hover:bg-surface-muted">
+                        <i data-lucide="award" class="w-4 h-4 text-secondary-500"></i>
+                        <span>Sản phẩm đạt chuẩn OCOP (3-5★)</span>
+                    </a>
+                    <a href="/cart" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-ink hover:bg-surface-muted">
+                        <i data-lucide="shopping-bag" class="w-4 h-4 text-primary-600"></i>
+                        <span>Giỏ hàng</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Chân Drawer -->
+            <div class="pt-6 border-t border-line space-y-3">
+                
+                <div>
+                    <a href="/orders" class="btn-outline w-full text-xs py-2.5 mb-2">Đơn hàng của tôi</a>
+                </div>
+                <p class="text-[11px] text-ink-muted text-center">VietSpecialty • Tinh hoa Đất Việt</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Mobile Bottom Navigation Bar (Dính đáy màn hình 390px - 5 nút chuẩn sàn TMĐT) -->
+    <div class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-line shadow-lift flex items-center justify-around py-2 px-2">
+        <a href="/" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-primary-700 transition">
+            <i data-lucide="home" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold">Trang chủ</span>
+        </a>
+        <a href="/regions" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-primary-700 transition">
+            <i data-lucide="map" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold">Vùng miền</span>
+        </a>
+        <a href="/cart" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-primary-700 transition relative">
+            <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+            <span x-show="cartCount > 0" x-text="cartCount" class="absolute -top-1 -right-2 px-1 py-0.2 min-w-3.5 h-3.5 bg-primary-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center"></span>
+            <span class="text-[9px] font-semibold">Giỏ hàng</span>
+        </a>
+        <a href="/account/wishlist" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-rose-500 transition">
+            <i data-lucide="heart" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold">Yêu thích</span>
+        </a>
+        <a href="/account/profile" class="flex flex-col items-center gap-0.5 text-ink-muted hover:text-primary-700 transition">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-[9px] font-semibold">Tài khoản</span>
+        </a>
+    </div>
+
+</header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        
+        <div class="py-16 text-center max-w-lg mx-auto">
+    <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-danger border border-red-200 shadow-soft">
+        <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+    </div>
+    <h1 class="font-serif text-3xl font-bold text-ink mb-3">Đã xảy ra sự cố</h1>
+    <p class="text-sm text-ink-muted leading-relaxed mb-8">Hệ thống gặp sự cố trong quá trình xử lý, vui lòng tải lại trang.</p>
+    <div class="flex items-center justify-center gap-3">
+        <a href="/" class="btn-primary px-6 py-2.5 text-sm">Về trang chủ</a>
+        <button onclick="window.location.reload()" class="btn-outline px-6 py-2.5 text-sm">Tải lại trang</button>
+    </div>
+</div>
+    </main>
+
+    <!-- Footer Fragment -->
+    <footer class="bg-surface border-t border-line mt-20 pt-14 pb-16 md:pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- 4 Trụ Cột Niềm Tin (Trust Badges) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-12 border-b border-line">
+            <div class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 border border-primary-100">
+                    <i data-lucide="shield-check" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-ink">100% Nguồn Gốc Chuẩn</h4>
+                    <p class="text-xs text-ink-muted mt-1 leading-relaxed">Trực tiếp từ hợp tác xã, làng nghề truyền thống và hộ sản xuất uy tín.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-secondary-100 text-secondary-600 flex items-center justify-center shrink-0 border border-secondary-200">
+                    <i data-lucide="award" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-ink">Chuẩn Hóa OCOP (3-5★)</h4>
+                    <p class="text-xs text-ink-muted mt-1 leading-relaxed">Được kiểm duyệt chứng nhận OCOP về chất lượng và an toàn thực phẩm.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-accent-50 text-accent-500 flex items-center justify-center shrink-0 border border-accent-100">
+                    <i data-lucide="package-check" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-ink">Đóng Gói Giữ Trọn Vị</h4>
+                    <p class="text-xs text-ink-muted mt-1 leading-relaxed">Quy cách bảo quản chống vỡ, chống ẩm, chuẩn quy cách quà biếu sang trọng.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-ink">Tư Vấn AI Thông Minh</h4>
+                    <p class="text-xs text-ink-muted mt-1 leading-relaxed">Gợi ý quà biếu tinh tế theo khẩu vị người nhận và tra cứu đơn hàng tự động 24/7.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nội Dung Footer 5 Cột -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 py-12 border-b border-line text-xs">
+
+            <!-- Cột 1 & 2: Thương hiệu & Tuyên ngôn -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="flex items-center gap-2">
+                    <img src="/images/logo.svg" alt="VietSpecialty Logo" class="h-10 w-auto">
+                    <div>
+                        <span class="font-serif font-bold text-lg text-ink">VietSpecialty</span>
+                        <p class="text-[11px] text-primary-700 font-semibold uppercase tracking-wider">Hương Vị Quê Nhà — Gửi Trọn Yêu Thương</p>
+                    </div>
+                </div>
+
+                <p class="text-ink-muted leading-relaxed max-w-sm">
+                    Sàn thương mại điện tử đặc sản vùng miền Việt Nam kết nối trực tiếp các nghệ nhân làng nghề, hợp tác xã nông sản sạch với người tiêu dùng cả nước, gìn giữ và tôn vinh ẩm thực truyền thống.
+                </p>
+
+                <div class="pt-2 text-ink-muted space-y-1.5">
+                    <p class="flex items-center gap-2">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-primary-600 shrink-0"></i>
+                        <span>Trường Đại học Nguyễn Trãi, Hà Nội, Việt Nam</span>
+                    </p>
+                    <p class="flex items-center gap-2">
+                        <i data-lucide="mail" class="w-4 h-4 text-primary-600 shrink-0"></i>
+                        <span>Email liên hệ: <strong class="text-ink">contact@vietspecialty.vn</strong></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Cột 3: Khám phá 4 miền -->
+            <div>
+                <h4 class="font-bold text-ink text-sm uppercase tracking-wider mb-3.5">Khám Phá Vùng Miền</h4>
+                <ul class="space-y-2.5 text-ink-muted font-medium">
+                    <li>
+                        <a href="/regions/mien-bac" class="hover:text-primary-600 transition flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#0F9D8A]"></span>
+                            <span>Đặc sản Miền Bắc</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/regions/mien-trung" class="hover:text-primary-600 transition flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#E9A21F]"></span>
+                            <span>Đặc sản Miền Trung</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/regions/tay-nguyen" class="hover:text-primary-600 transition flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#8B5E3C]"></span>
+                            <span>Đặc sản Tây Nguyên</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/regions/mien-nam" class="hover:text-primary-600 transition flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#E8704A]"></span>
+                            <span>Đặc sản Miền Nam</span>
+                        </a>
+                    </li>
+                    <li class="pt-1">
+                        <a href="/products?hasOcop=true" class="text-secondary-600 font-semibold hover:underline flex items-center gap-1">
+                            <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                            <span>Gian hàng OCOP 3-5 Sao</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Cột 4: Hỗ trợ khách hàng -->
+            <div>
+                <h4 class="font-bold text-ink text-sm uppercase tracking-wider mb-3.5">Hỗ Trợ Khách Hàng</h4>
+                <ul class="space-y-2.5 text-ink-muted">
+                    <li><a href="/products" class="hover:text-primary-600 transition">Tìm kiếm đặc sản</a></li>
+                    <li><a href="/orders" class="hover:text-primary-600 transition">Tra cứu vận đơn đơn hàng</a></li>
+                    <li><a href="/account/shop-registration" class="hover:text-primary-600 transition font-medium text-primary-700">Đăng ký mở gian hàng HTX</a></li>
+                </ul>
+            </div>
+
+            <!-- Cột 5: Phương thức thanh toán -->
+            <div>
+                <h4 class="font-bold text-ink text-sm uppercase tracking-wider mb-3.5">Thanh Toán An Toàn</h4>
+                <p class="text-ink-muted mb-3 leading-relaxed text-[11px]">
+                    Hỗ trợ thanh toán tiền mặt khi nhận hàng (COD) hoặc thanh toán trực tuyến qua cổng VNPay Sandbox.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="px-2.5 py-1 rounded-md bg-surface-muted border border-line font-bold text-ink text-[11px]">
+                        💵 COD (Tiền mặt)
+                    </span>
+                    <span class="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 font-bold text-blue-700 text-[11px]">
+                        💳 VNPay Sandbox
+                    </span>
+                </div>
+
+                <div class="p-3 rounded-xl bg-surface-muted/60 border border-line">
+                    <div class="flex items-center gap-1.5 text-primary-700 font-bold text-[11px]">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        <span>Bảo trợ chất lượng</span>
+                    </div>
+                    <p class="text-[10px] text-ink-muted mt-1">Cam kết 100% sản phẩm có nguồn gốc từ địa phương công bố.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chân Trang Cuối Cùng (Bản Quyền Đồ Án) -->
+        <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-ink-muted gap-2">
+            <p>© 2026 <strong>VietSpecialty</strong> — Sàn Thương Mại Điện Tử Đặc Sản Vùng Miền Tích Hợp Chatbot AI.</p>
+            <p>Đồ án tốt nghiệp CNTT: <strong>Nguyễn Hữu Tuyên</strong> (MSSV: 2310900105 — K23CNT1 — Trường ĐH Nguyễn Trãi)</p>
+        </div>
+    </div>
+</footer>
+
+    <!-- Floating Chatbot Widget (Always available on public & buyer pages) -->
+    <div id="chatbot-container" class="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50">
+    <!-- Tooltip mời trò chuyện -->
+    <div id="chatbot-tooltip"
+         onclick="window.toggleChatBot && window.toggleChatBot()"
+         class="hidden md:flex absolute right-16 top-2.5 bg-surface text-ink px-3.5 py-1.5 rounded-full shadow-lg border border-line text-xs font-semibold whitespace-nowrap items-center gap-2 cursor-pointer hover:bg-cream transition-all duration-200 animate-float-slow">
+        <span class="w-2 h-2 rounded-full bg-primary-500 animate-ping"></span>
+        <span>Cần tư vấn quà biếu OCOP? Chat cùng AI 🌿</span>
+    </div>
+
+    <!-- Nút bật/tắt Chatbot -->
+    <button id="chatbot-toggle-btn"
+            type="button"
+            onclick="window.toggleChatBot && window.toggleChatBot()"
+            class="relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-primary-700 to-primary-600 text-white shadow-xl hover:from-primary-800 hover:to-primary-700 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-300">
+        <!-- Icon Chat -->
+        <svg id="chat-icon-open" class="w-7 h-7 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <!-- Icon Đóng -->
+        <svg id="chat-icon-close" class="w-7 h-7 hidden transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <!-- Badge trợ lý AI -->
+        <span class="absolute -top-1 -right-1 flex h-4 w-4">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-4 w-4 bg-amber-500 border-2 border-white"></span>
+        </span>
+    </button>
+
+    <!-- Hộp thoại Chatbot -->
+    <div id="chatbot-window"
+         class="hidden absolute bottom-16 right-0 w-[calc(100vw-32px)] sm:w-[420px] max-w-[420px] h-[520px] sm:h-[580px] max-h-[75vh] sm:max-h-[85vh] bg-surface rounded-3xl shadow-2xl border border-line flex flex-col overflow-hidden transition-all duration-300 transform origin-bottom-right">
+
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-primary-800 via-primary-700 to-teal-800 px-4 py-3.5 text-white flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-white/20 p-1 flex items-center justify-center backdrop-blur-sm">
+                    <span class="text-xl">🌿</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm tracking-wide flex items-center gap-1.5 font-serif">
+                        Trợ lý AI VietSpecialty
+                        <span class="text-[10px] bg-secondary-400 text-ink font-bold px-1.5 py-0.5 rounded-full font-sans">Gemini</span>
+                    </h3>
+                    <p class="text-[11px] text-primary-100 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                        Tư vấn đặc sản & tra cứu đơn hàng
+                    </p>
+                </div>
+            </div>
+            <button id="chatbot-close-btn"
+                    type="button"
+                    onclick="window.toggleChatBot && window.toggleChatBot()"
+                    class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Tin nhắn gợi ý nhanh -->
+        <div class="bg-surface-muted/60 px-3 py-2 border-b border-line flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
+            <button type="button" class="quick-suggest whitespace-nowrap bg-surface border border-line hover:border-primary-500 hover:text-primary-700 px-2.5 py-1 rounded-full text-ink transition shadow-2xs">
+                🍵 Trà Tân Cương biếu Tết
+            </button>
+            <button type="button" class="quick-suggest whitespace-nowrap bg-surface border border-line hover:border-primary-500 hover:text-primary-700 px-2.5 py-1 rounded-full text-ink transition shadow-2xs">
+                📦 Tra cứu đơn hàng
+            </button>
+            <button type="button" class="quick-suggest whitespace-nowrap bg-surface border border-line hover:border-primary-500 hover:text-primary-700 px-2.5 py-1 rounded-full text-ink transition shadow-2xs">
+                🛡️ Chính sách đổi trả
+            </button>
+        </div>
+
+        <!-- Khung hiển thị tin nhắn -->
+        <div id="chatbot-messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-surface text-sm">
+            <!-- Tin nhắn chào mừng ban đầu -->
+            <div class="flex items-start space-x-2.5">
+                <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 shrink-0 text-sm font-bold shadow-xs">
+                    🌿
+                </div>
+                <div class="bg-surface-muted border border-line p-3 rounded-2xl rounded-tl-none shadow-xs text-ink max-w-[85%] space-y-1.5">
+                    <p>Xin chào quý khách! Tôi là trợ lý AI của Sàn Đặc Sản <strong>VietSpecialty</strong> 🇻🇳.</p>
+                    <p class="text-xs text-ink-muted">Tôi có thể giúp bạn:</p>
+                    <ul class="text-xs text-ink-muted list-disc list-inside space-y-0.5">
+                        <li>Gợi ý đặc sản OCOP 3 miền làm quà biếu, sử dụng gia đình.</li>
+                        <li>Tra cứu tình trạng vận chuyển đơn hàng bằng mã đơn.</li>
+                        <li>Giải đáp chính sách đổi trả, hoàn tiền, thanh toán VNPay.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Khung gõ tin nhắn -->
+        <div class="p-3 bg-surface border-t border-line">
+            <form id="chatbot-form" class="flex items-center gap-2">
+                <input id="chatbot-input"
+                       type="text"
+                       placeholder="Hỏi về đặc sản, nhập mã đơn..."
+                       class="flex-1 px-3.5 py-2 text-sm border border-line rounded-xl focus:outline-none focus:border-primary-600 focus:ring-1 focus:ring-primary-600 bg-surface-muted/30 text-ink"
+                       autocomplete="off" />
+                <button type="submit"
+                        id="chatbot-send-btn"
+                        class="p-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition shadow-xs disabled:opacity-50">
+                    <svg class="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script điều khiển nằm TRONG fragment chatWidget để Thymeleaf không bị mất -->
+    <script>
+    (function() {
+        // Mở chat với câu hỏi gợi ý sẵn
+        window.openChatWithPrompt = function(promptText) {
+            const chatWindow = document.getElementById('chatbot-window');
+            if (chatWindow && chatWindow.classList.contains('hidden')) {
+                window.toggleChatBot();
+            }
+            const input = document.getElementById('chatbot-input');
+            if (input) {
+                input.value = promptText;
+                setTimeout(() => input.focus(), 150);
+            }
+        };
+
+        // Hàm đóng/mở chat gắn vào window để gọi từ bất kỳ đâu (header, floating button)
+        window.toggleChatBot = function() {
+            const chatWindow = document.getElementById('chatbot-window');
+            const iconOpen = document.getElementById('chat-icon-open');
+            const iconClose = document.getElementById('chat-icon-close');
+            const input = document.getElementById('chatbot-input');
+            if (!chatWindow) return;
+
+            const isHidden = chatWindow.classList.contains('hidden');
+            if (isHidden) {
+                chatWindow.classList.remove('hidden');
+                if (iconOpen) iconOpen.classList.add('hidden');
+                if (iconClose) iconClose.classList.remove('hidden');
+                if (input) setTimeout(() => input.focus(), 100);
+            } else {
+                chatWindow.classList.add('hidden');
+                if (iconOpen) iconOpen.classList.remove('hidden');
+                if (iconClose) iconClose.classList.add('hidden');
+            }
+        };
+
+        function initChatbot() {
+            const toggleBtn = document.getElementById('chatbot-toggle-btn');
+            const closeBtn = document.getElementById('chatbot-close-btn');
+            const form = document.getElementById('chatbot-form');
+            const input = document.getElementById('chatbot-input');
+            const messages = document.getElementById('chatbot-messages');
+            const sendBtn = document.getElementById('chatbot-send-btn');
+
+            if (!form) return;
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.toggleChatBot();
+                });
+            }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.toggleChatBot();
+                });
+            }
+
+            // Đảm bảo chatKey duy nhất cho mỗi phiên
+            let chatKey = window.localStorage.getItem('vs_chat_key');
+            if (!chatKey) {
+                chatKey = 'chat_' + Math.random().toString(36).substring(2, 12);
+                window.localStorage.setItem('vs_chat_key', chatKey);
+            }
+
+            // Gợi ý nhanh
+            document.querySelectorAll('.quick-suggest').forEach(btn => {
+                btn.onclick = function() {
+                    const text = btn.innerText.replace(/^[^\s]+\s/, '').trim();
+                    if (input) {
+                        input.value = text;
+                        form.dispatchEvent(new Event('submit', { cancelable: true }));
+                    }
+                };
+            });
+
+            function appendUserMessage(text) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'flex justify-end';
+                msgDiv.innerHTML = `
+                    <div class="bg-primary-600 text-white p-3 rounded-2xl rounded-tr-none shadow-xs max-w-[85%] text-sm">
+                        ${escapeHtml(text)}
+                    </div>
+                `;
+                messages.appendChild(msgDiv);
+                scrollToBottom();
+            }
+
+            function appendBotMessage(data) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'flex items-start space-x-2.5';
+
+                const products = data.suggestedProducts || data.recommendedProducts || [];
+                let productsHtml = '';
+                if (products.length > 0) {
+                    productsHtml = `
+                        <div class="mt-3 space-y-2 border-t border-line pt-2">
+                            <p class="text-xs font-semibold text-ink">Đặc sản gợi ý cho bạn:</p>
+                            <div class="grid grid-cols-1 gap-2">
+                                ${products.map(p => `
+                                    <div class="flex items-center gap-2 p-2 bg-surface-muted hover:bg-primary-50/60 rounded-xl border border-line transition group">
+                                        <a href="/products/${p.slug}" target="_blank" class="flex-shrink-0">
+                                            <img src="${p.primaryImageUrl || p.thumbnail || '/images/demo/placeholder.svg'}" 
+                                                 class="w-12 h-12 object-cover rounded-lg border border-line" alt="${escapeHtml(p.name)}">
+                                        </a>
+                                        <div class="flex-1 min-w-0">
+                                            <a href="/products/${p.slug}" target="_blank" class="block">
+                                                <h4 class="text-xs font-medium text-ink truncate group-hover:text-primary-700">${escapeHtml(p.name)}</h4>
+                                            </a>
+                                            <div class="flex items-center gap-1.5 mt-0.5">
+                                                <span class="text-xs font-bold text-primary-700">${p.formattedPrice || p.priceFormatted || formatCurrency(p.price || p.minPrice)}</span>
+                                                ${p.ocopStar ? `<span class="text-[10px] bg-secondary-100 text-ink font-bold px-1 rounded-full">★ OCOP ${p.ocopStar}</span>` : ''}
+                                            </div>
+                                        </div>
+                                        <button type="button" 
+                                                onclick="window.quickAddToCart && window.quickAddToCart(${p.id}, 1)"
+                                                class="text-[11px] bg-primary-600 hover:bg-primary-700 text-white font-medium px-2.5 py-1.5 rounded-lg shrink-0 transition shadow-2xs"
+                                                title="Thêm vào giỏ hàng">
+                                            + Giỏ
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const questions = data.suggestedQuestions || data.followUpSuggestions || [];
+                let followUpsHtml = '';
+                if (questions.length > 0) {
+                    followUpsHtml = `
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            ${questions.map(q => `
+                                <button type="button" class="bot-follow-up text-[11px] bg-primary-50 hover:bg-primary-100 text-primary-800 border border-primary-200 px-2.5 py-1 rounded-full transition">
+                                    ${escapeHtml(q)}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                msgDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 shrink-0 text-sm font-bold shadow-xs">
+                        🌿
+                    </div>
+                    <div class="bg-surface border border-line p-3 rounded-2xl rounded-tl-none shadow-xs text-ink max-w-[85%] space-y-2">
+                        <div class="prose prose-sm leading-relaxed">${formatMarkdown(data.reply || '')}</div>
+                        ${productsHtml}
+                        ${followUpsHtml}
+                    </div>
+                `;
+                messages.appendChild(msgDiv);
+
+                // Gắn sự kiện cho các câu hỏi follow-up
+                msgDiv.querySelectorAll('.bot-follow-up').forEach(btn => {
+                    btn.onclick = function() {
+                        if (input) {
+                            input.value = btn.innerText.trim();
+                            form.dispatchEvent(new Event('submit', { cancelable: true }));
+                        }
+                    };
+                });
+
+                scrollToBottom();
+            }
+
+            function appendLoading() {
+                const loadingDiv = document.createElement('div');
+                loadingDiv.id = 'chat-loading-indicator';
+                loadingDiv.className = 'flex items-start space-x-2.5';
+                loadingDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 shrink-0 text-sm font-bold">
+                        🌿
+                    </div>
+                    <div class="bg-surface border border-line px-4 py-3 rounded-2xl rounded-tl-none shadow-xs flex items-center space-x-1.5">
+                        <span class="w-2 h-2 rounded-full bg-primary-500 animate-bounce"></span>
+                        <span class="w-2 h-2 rounded-full bg-primary-500 animate-bounce [animation-delay:0.2s]"></span>
+                        <span class="w-2 h-2 rounded-full bg-primary-500 animate-bounce [animation-delay:0.4s]"></span>
+                    </div>
+                `;
+                messages.appendChild(loadingDiv);
+                scrollToBottom();
+            }
+
+            function removeLoading() {
+                const loader = document.getElementById('chat-loading-indicator');
+                if (loader) loader.remove();
+            }
+
+            function scrollToBottom() {
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function formatCurrency(amount) {
+                if (!amount) return '0₫';
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+            }
+
+            function formatMarkdown(text) {
+                if (!text) return '';
+                let safe = escapeHtml(text);
+                safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                safe = safe.replace(/\n/g, '<br/>');
+                return safe;
+            }
+
+            form.onsubmit = async function(e) {
+                e.preventDefault();
+                const text = input.value.trim();
+                if (!text) return;
+
+                appendUserMessage(text);
+                input.value = '';
+                input.disabled = true;
+                sendBtn.disabled = true;
+                appendLoading();
+
+                try {
+                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                    const reqHeaders = {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    };
+                    if (csrfToken && csrfHeader) {
+                        reqHeaders[csrfHeader] = csrfToken;
+                    }
+
+                    const currentProdEl = document.getElementById('currentProductId');
+                    const currentProdId = window.currentProductId || (currentProdEl ? Number(currentProdEl.value) : null);
+
+                    const resp = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: reqHeaders,
+                        credentials: 'same-origin',
+                        body: JSON.stringify({
+                            message: text,
+                            chatKey: chatKey,
+                            productId: currentProdId
+                        })
+                    });
+
+                    removeLoading();
+
+                    if (!resp.ok) {
+                        throw new Error('Không thể kết nối đến máy chủ AI');
+                    }
+
+                    const apiRes = await resp.json();
+                    if (apiRes.success && apiRes.data) {
+                        appendBotMessage(apiRes.data);
+                    } else {
+                        appendBotMessage({
+                            reply: apiRes.message || 'Hệ thống AI tạm thời bận, xin quý khách thử lại sau ít phút.',
+                            suggestedProducts: [],
+                            suggestedQuestions: []
+                        });
+                    }
+                } catch (err) {
+                    removeLoading();
+                    appendBotMessage({
+                        reply: 'Rất tiếc, đã có lỗi kết nối đến trợ lý ảo. Quý khách vui lòng thử lại sau.',
+                        suggestedProducts: [],
+                        suggestedQuestions: []
+                    });
+                } finally {
+                    input.disabled = false;
+                    sendBtn.disabled = false;
+                    input.focus();
+                }
+            };
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initChatbot);
+        } else {
+            initChatbot();
+        }
+    })();
+    </script>
+</div>
+
+    <!-- Extra JS from child templates -->
+    
+    
+
+    <!-- Initialize Lucide Icons & Global Helpers -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+
+        async function toggleWishlist(productId, btn) {
+            try {
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+
+                const res = await fetch('/api/wishlist/toggle?productId=' + productId, {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'same-origin'
+                });
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const liked = data.data.liked;
+                    if (btn) {
+                        const icon = btn.querySelector('svg') || btn.querySelector('i');
+                        if (liked) {
+                            btn.classList.add('bg-rose-50', 'border-rose-300', 'text-rose-500');
+                            if (icon) icon.classList.add('fill-rose-500', 'text-rose-500');
+                        } else {
+                            btn.classList.remove('bg-rose-50', 'border-rose-300', 'text-rose-500');
+                            if (icon) icon.classList.remove('fill-rose-500', 'text-rose-500');
+                        }
+                    }
+                    if (window.Toast) {
+                        Toast.success(data.data.message);
+                    }
+                } else if (data.error && data.error.code === 'AUTH_001') {
+                    if (window.Toast) Toast.info(data.error.message);
+                    setTimeout(() => window.location.href = '/login', 1200);
+                } else {
+                    if (window.Toast) Toast.error(data.message || 'Thao tác không thành công');
+                }
+            } catch (err) {
+                console.error('Lỗi toggle wishlist:', err);
+            }
+        }
+
+        async function quickAddToCart(productId) {
+            if (typeof window.cartAdd === 'function') {
+                window.cartAdd(productId, 1);
+            } else if (window.api) {
+                api.post('/api/cart/items', { productId: productId, quantity: 1 })
+                    .then(res => {
+                        if (window.Toast) Toast.success('Đã thêm vào giỏ hàng');
+                        if (window.refreshCartBadge) window.refreshCartBadge();
+                    })
+                    .catch(err => {
+                        if (window.Toast) Toast.error(err.message || 'Không thể thêm vào giỏ hàng');
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
+
