@@ -4,16 +4,26 @@
  */
 class ToastManager {
     constructor() {
+        this.container = null;
+    }
+
+    getContainer() {
+        if (this.container && document.body && document.body.contains(this.container)) {
+            return this.container;
+        }
         this.container = document.getElementById('toast-container');
-        if (!this.container) {
+        if (!this.container && document.body) {
             this.container = document.createElement('div');
             this.container.id = 'toast-container';
             this.container.className = 'fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full px-4';
             document.body.appendChild(this.container);
         }
+        return this.container;
     }
 
     show(type, message, title = '') {
+        const container = this.getContainer();
+        if (!container) return;
         const toastEl = document.createElement('div');
         toastEl.className = 'pointer-events-auto bg-surface rounded-2xl border border-line shadow-lift p-4 flex flex-col overflow-hidden transform transition-all duration-300 translate-x-full opacity-0';
 
@@ -42,7 +52,7 @@ class ToastManager {
             </div>
         `;
 
-        this.container.appendChild(toastEl);
+        container.appendChild(toastEl);
 
         // Hiệu ứng trượt vào
         requestAnimationFrame(() => {

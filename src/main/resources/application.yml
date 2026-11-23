@@ -85,6 +85,11 @@ app:
     return-url: ${VNPAY_RETURN_URL:http://localhost:8080/payment/vnpay/return}
     process-on-return: true
 
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/auth/google/callback}
+
   ai:
     provider: gemini
     gemini:

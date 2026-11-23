@@ -190,11 +190,11 @@ public class ProductServiceImpl implements ProductService {
             throw new BusinessException(ErrorCode.PRODUCT_IMAGE_REQUIRED);
         }
 
-        // Tạo slug duy nhất
+        // Tạo slug duy nhất (kiểm tra trên toàn bảng bao gồm cả HIDDEN và DELETED)
         String baseSlug = SlugUtils.toSlug(req.name());
         String slug = baseSlug;
         int counter = 1;
-        while (productRepository.findBySlugAndStatus(slug, ProductStatus.ACTIVE).isPresent()) {
+        while (productRepository.existsBySlug(slug)) {
             slug = baseSlug + "-" + counter++;
         }
 
@@ -339,7 +339,13 @@ public class ProductServiceImpl implements ProductService {
 
             if (keyword != null && !keyword.isBlank()) {
                 String normalized = VietnameseTextUtils.normalizeSearchText(keyword);
-                predicates.add(cb.like(cb.lower(root.get("searchText")), "%" + normalized.toLowerCase() + "%"));
+                String rawLower = "%" + keyword.trim().toLowerCase() + "%";
+                String normLower = "%" + normalized.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.and(cb.isNotNull(root.get("searchText")), cb.like(cb.lower(root.get("searchText")), normLower)),
+                        cb.like(cb.lower(root.get("name")), rawLower),
+                        cb.like(cb.lower(root.get("name")), normLower)
+                ));
             }
 
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));

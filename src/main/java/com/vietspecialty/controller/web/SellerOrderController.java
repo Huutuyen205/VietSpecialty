@@ -72,12 +72,13 @@ public class SellerOrderController {
     @PostMapping("/{id}/confirm")
     public String confirmOrder(
             @CurrentUser CustomUserDetails userDetails,
-            @PathVariable Long id,
+            @PathVariable("id") String idOrCode,
             RedirectAttributes redirectAttributes
     ) {
         ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
         try {
-            orderService.confirmSellerOrder(id, shop.id());
+            Long orderId = resolveOrderId(idOrCode, shop.id());
+            orderService.confirmSellerOrder(orderId, shop.id());
             redirectAttributes.addFlashAttribute("successMessage", "Đã xác nhận đơn hàng và chuyển sang đóng gói chuẩn bị hàng.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -88,14 +89,15 @@ public class SellerOrderController {
     @PostMapping("/{id}/ship")
     public String shipOrder(
             @CurrentUser CustomUserDetails userDetails,
-            @PathVariable Long id,
-            @RequestParam String carrierName,
+            @PathVariable("id") String idOrCode,
+            @RequestParam(defaultValue = "Viettel Post") String carrierName,
             @RequestParam String trackingCode,
             RedirectAttributes redirectAttributes
     ) {
         ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
         try {
-            orderService.shipSellerOrder(id, shop.id(), carrierName, trackingCode);
+            Long orderId = resolveOrderId(idOrCode, shop.id());
+            orderService.shipSellerOrder(orderId, shop.id(), carrierName, trackingCode);
             redirectAttributes.addFlashAttribute("successMessage", "Đã bàn giao đơn hàng cho đơn vị vận chuyển.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -106,18 +108,26 @@ public class SellerOrderController {
     @PostMapping("/{id}/cancel")
     public String cancelOrder(
             @CurrentUser CustomUserDetails userDetails,
-            @PathVariable Long id,
+            @PathVariable("id") String idOrCode,
             @RequestParam(required = false, defaultValue = "Gian hàng hết sản phẩm hoặc không thể giao") String reason,
             RedirectAttributes redirectAttributes
     ) {
         ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
         try {
-            orderService.cancelSellerOrder(id, shop.id(), reason);
+            Long orderId = resolveOrderId(idOrCode, shop.id());
+            orderService.cancelSellerOrder(orderId, shop.id(), reason);
             redirectAttributes.addFlashAttribute("successMessage", "Đã hủy đơn hàng thành công.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/seller/orders";
+    }
+
+    private Long resolveOrderId(String idOrCode, Long shopId) {
+        if (idOrCode != null && idOrCode.matches("\\d+")) {
+            return Long.parseLong(idOrCode);
+        }
+        return orderService.getSellerOrderDetail(idOrCode, shopId).id();
     }
 }
 

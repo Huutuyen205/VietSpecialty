@@ -29,7 +29,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional(readOnly = true, noRollbackFor = BusinessException.class)
 public class VoucherServiceImpl implements VoucherService {
 
     private final VoucherRepository voucherRepository;

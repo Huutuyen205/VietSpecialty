@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head><meta charset="UTF-8"></head>
 <body>
 <footer th:fragment="footer" class="bg-surface border-t border-line mt-20 pt-14 pb-8">
@@ -126,7 +126,11 @@
                     <li><a th:href="@{/orders}" class="hover:text-primary-600 transition">Tra cứu vận đơn đơn hàng</a></li>
                     <li><a th:href="@{/}" class="hover:text-primary-600 transition">Chính sách kiểm hàng & Đổi trả</a></li>
                     <li><a th:href="@{/}" class="hover:text-primary-600 transition">Quy chuẩn đóng gói đặc sản</a></li>
-                    <li><a th:href="@{/account/shop-registration}" class="hover:text-primary-600 transition font-medium text-primary-700">Dành cho Hợp Tác Xã & Nhà Vườn</a></li>
+                    <li>
+                        <a sec:authorize="hasRole('SELLER')" th:href="@{/seller/dashboard}" class="hover:text-primary-600 transition font-medium text-primary-700">Kênh Người Bán (Seller Center)</a>
+                        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/shops}" class="hover:text-primary-600 transition font-medium text-primary-700">Quản Lý Gian Hàng HTX</a>
+                        <a sec:authorize="!hasRole('SELLER') and !hasRole('ADMIN')" th:href="@{/account/shop-registration}" class="hover:text-primary-600 transition font-medium text-primary-700">Dành cho Hợp Tác Xã & Nhà Vườn</a>
+                    </li>
                 </ul>
             </div>
 

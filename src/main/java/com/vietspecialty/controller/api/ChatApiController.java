@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping({"/api/chat", "/api/chatbot"})
 @RequiredArgsConstructor
 public class ChatApiController {
 
@@ -27,7 +27,7 @@ public class ChatApiController {
     private final ChatConversationRepository conversationRepository;
     private final ChatMessageRepository messageRepository;
 
-    @PostMapping
+    @PostMapping({"", "/send", "/message"})
     public ResponseEntity<ApiResponse<ChatResponse>> sendMessage(
             @CurrentUser CustomUserDetails userDetails,
             @Valid @RequestBody ChatRequest request

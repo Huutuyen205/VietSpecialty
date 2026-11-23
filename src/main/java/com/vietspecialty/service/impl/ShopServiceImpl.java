@@ -77,17 +77,38 @@ public class ShopServiceImpl implements ShopService {
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        if (shopRepository.existsByOwnerId(userId)) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Mỗi tài khoản chỉ được phép sở hữu một gian hàng");
+        String shopName = request.name().trim();
+        Province province = provinceRepository.findById(request.provinceId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.VALIDATION_ERROR, "Tỉnh/thành phố không hợp lệ"));
+
+        // Nếu người dùng đã có hồ sơ bị REJECTED -> Cho phép nộp lại hồ sơ
+        var existingShopOpt = shopRepository.findByOwnerId(userId);
+        if (existingShopOpt.isPresent()) {
+            Shop existingShop = existingShopOpt.get();
+            if (existingShop.getStatus() != ShopStatus.REJECTED) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Mỗi tài khoản chỉ được phép sở hữu một gian hàng");
+            }
+            if (!existingShop.getName().equalsIgnoreCase(shopName) && shopRepository.existsByNameIgnoreCase(shopName)) {
+                throw new BusinessException(ErrorCode.SHOP_NAME_EXISTS);
+            }
+            if (logoFile != null && !logoFile.isEmpty()) {
+                existingShop.setLogoUrl(storageService.uploadImage(logoFile, "shops"));
+            }
+            existingShop.setName(shopName);
+            existingShop.setDescription(request.description() != null ? request.description().trim() : null);
+            existingShop.setAddressDetail(request.pickupAddress().trim());
+            existingShop.setPhone(request.hotline().trim());
+            existingShop.setProvince(province);
+            existingShop.setStatus(ShopStatus.PENDING);
+            existingShop.setRejectReason(null);
+            Shop reSubmitted = shopRepository.save(existingShop);
+            log.info("Rejected shop re-submitted for approval: id={}, name={}, ownerId={}", reSubmitted.getId(), reSubmitted.getName(), userId);
+            return ShopMapper.toResponse(reSubmitted);
         }
 
-        String shopName = request.name().trim();
         if (shopRepository.existsByNameIgnoreCase(shopName)) {
             throw new BusinessException(ErrorCode.SHOP_NAME_EXISTS);
         }
-
-        Province province = provinceRepository.findById(request.provinceId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.VALIDATION_ERROR, "Tỉnh/thành phố không hợp lệ"));
 
         // Upload logo nếu có
         String logoUrl = null;
@@ -132,11 +153,12 @@ public class ShopServiceImpl implements ShopService {
         }
 
         shop.setStatus(ShopStatus.APPROVED);
+        shop.setRejectReason(null);
         shop.setApprovedBy(admin);
         shop.setApprovedAt(LocalDateTime.now());
 
         User owner = shop.getOwner();
-        if (owner.getRole() == Role.USER) {
+        if (owner != null && owner.getRole() == Role.USER) {
             owner.setRole(Role.SELLER);
             userRepository.save(owner);
             sessionInvalidator.invalidateUserSessions(owner.getId());

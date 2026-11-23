@@ -130,10 +130,20 @@ public class ChatServiceImpl implements ChatService {
             return ChatIntent.POLICY;
         }
 
-        if (lower.contains("đặc sản") || lower.contains("quà") || lower.contains("chè") || lower.contains("trà") ||
-                lower.contains("mật ong") || lower.contains("nước mắm") || lower.contains("bánh") || lower.contains("kẹo") ||
-                lower.contains("nem") || lower.contains("hạt") || lower.contains("tây bắc") || lower.contains("miền trung") ||
-                lower.contains("miền nam") || lower.contains("ngon") || lower.contains("giá bao nhiêu") || lower.contains("mua")) {
+        if (lower.contains("đặc sản") || lower.contains("quà") || lower.contains("biếu") || lower.contains("tặng") ||
+                lower.contains("tết") || lower.contains("món nhắm") || lower.contains("nhắm") || lower.contains("nhậu") ||
+                lower.contains("lai rai") || lower.contains("mâm cơm") || lower.contains("bữa cơm") || lower.contains("gia đình") ||
+                lower.contains("chè") || lower.contains("trà") || lower.contains("mật ong") || lower.contains("nước mắm") ||
+                lower.contains("bánh") || lower.contains("kẹo") || lower.contains("nem") || lower.contains("hạt") ||
+                lower.contains("thịt trâu") || lower.contains("gác bếp") || lower.contains("lạp xưởng") || lower.contains("yến sào") ||
+                lower.contains("tỏi") || lower.contains("tôm") || lower.contains("cá") || lower.contains("rượu") ||
+                lower.contains("cà phê") || lower.contains("miến") || lower.contains("gạo") || lower.contains("cốm") ||
+                lower.contains("mè xửng") || lower.contains("tiêu") || lower.contains("muối") || lower.contains("xoài") ||
+                lower.contains("bưởi") || lower.contains("mắc ca") || lower.contains("ocop") || lower.contains("tư vấn") ||
+                lower.contains("gợi ý") || lower.contains("miền bắc") || lower.contains("tây bắc") || lower.contains("miền trung") ||
+                lower.contains("tây nguyên") || lower.contains("miền nam") || lower.contains("miền tây") ||
+                lower.contains("thái nguyên") || lower.contains("huế") || lower.contains("cà mau") || lower.contains("ngon") ||
+                lower.contains("giá bao nhiêu") || lower.contains("mua") || lower.contains("bán gì")) {
             return ChatIntent.PRODUCT_ADVICE;
         }
 
@@ -260,13 +270,28 @@ public class ChatServiceImpl implements ChatService {
     private String extractKeyword(String msg) {
         String lower = msg.toLowerCase();
         if (lower.contains("trà") || lower.contains("chè")) return "trà";
+        if (lower.contains("yến")) return "yến";
         if (lower.contains("mật ong")) return "mật ong";
         if (lower.contains("nước mắm")) return "nước mắm";
         if (lower.contains("tỏi")) return "tỏi";
-        if (lower.contains("bánh") || lower.contains("kẹo")) return "bánh";
+        if (lower.contains("trâu") || lower.contains("gác bếp") || lower.contains("món nhắm") || lower.contains("nhắm") || lower.contains("nhậu") || lower.contains("lai rai") || lower.contains("tây bắc")) return "gác bếp";
+        if (lower.contains("lạp xưởng")) return "lạp xưởng";
+        if (lower.contains("tôm khô")) return "tôm khô";
+        if (lower.contains("tôm chua") || lower.contains("mâm cơm") || lower.contains("bữa cơm")) return "tôm chua";
+        if (lower.contains("khô cá") || lower.contains("cá sặc")) return "cá";
+        if (lower.contains("rượu")) return "rượu";
+        if (lower.contains("cà phê")) return "cà phê";
+        if (lower.contains("mắc ca") || lower.contains("hạt")) return "mắc ca";
+        if (lower.contains("bánh") || lower.contains("kẹo") || lower.contains("mè xửng")) return "bánh";
         if (lower.contains("nem")) return "nem";
+        if (lower.contains("miến")) return "miến";
         if (lower.contains("gạo")) return "gạo";
-        if (lower.contains("hạt")) return "hạt";
-        return "đặc sản";
+        if (lower.contains("cốm")) return "cốm";
+        if (lower.contains("tiêu")) return "tiêu";
+        if (lower.contains("muối")) return "muối";
+        if (lower.contains("xoài")) return "xoài";
+        if (lower.contains("bưởi")) return "bưởi";
+        if (lower.contains("quà") || lower.contains("biếu") || lower.contains("tết")) return "thượng hạng";
+        return "ocop";
     }
 }

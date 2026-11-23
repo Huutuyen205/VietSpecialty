@@ -24,7 +24,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
         
         <!-- SIDEBAR TÀI KHOẢN -->
-        <div class="md:col-span-1" th:replace="~{account/account-sidebar :: accountSidebar(active='shop-reg')}"></div>
+        <div class="md:col-span-1" th:replace="~{account/account-sidebar :: accountSidebar('shop-reg')}"></div>
 
         <!-- CỘT CHÍNH: FORM ĐĂNG KÝ -->
         <main class="md:col-span-3 bg-surface rounded-2xl p-6 sm:p-8 border border-line shadow-sm space-y-6">
@@ -41,9 +41,18 @@
                 </p>
             </div>
 
+            <!-- Thông báo nộp lại nếu hồ sơ trước bị từ chối -->
+            <div th:if="${isReapply == true}" class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs space-y-1">
+                <div class="font-bold text-amber-800 flex items-center gap-1.5">
+                    <i data-lucide="info" class="w-4 h-4"></i>
+                    <span>Cập nhật & Nộp lại hồ sơ mở gian hàng</span>
+                </div>
+                <p th:if="${rejectReason != null and !rejectReason.isEmpty()}" class="text-amber-700" th:text="'Lý do từ chối lần trước: ' + ${rejectReason}"></p>
+            </div>
+
             <!-- Thông báo lỗi nếu có -->
-            <div th:if="${errorMessage != null}" class="alert alert-error">
-                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+            <div th:if="${errorMessage != null}" class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-danger flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
                 <span th:text="${errorMessage}">Có lỗi xảy ra</span>
             </div>
 

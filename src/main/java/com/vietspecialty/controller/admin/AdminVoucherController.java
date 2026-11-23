@@ -43,7 +43,7 @@ public class AdminVoucherController {
         return "admin/vouchers/index";
     }
 
-    @GetMapping("/create")
+    @GetMapping({"/create", "/new"})
     public String createForm(Model model) {
         model.addAttribute("activeNav", "vouchers");
         model.addAttribute("discountTypes", DiscountType.values());
@@ -51,7 +51,7 @@ public class AdminVoucherController {
         return "admin/vouchers/form";
     }
 
-    @PostMapping
+    @PostMapping({"", "/create", "/new"})
     public String handleCreate(
             @CurrentUser CustomUserDetails adminDetails,
             @Valid @ModelAttribute("voucherForm") VoucherCreateRequest request,
@@ -62,6 +62,7 @@ public class AdminVoucherController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("activeNav", "vouchers");
             model.addAttribute("discountTypes", DiscountType.values());
+            model.addAttribute("now", LocalDateTime.now());
             return "admin/vouchers/form";
         }
 
@@ -73,6 +74,7 @@ public class AdminVoucherController {
             model.addAttribute("errorMessage", ex.getMessage());
             model.addAttribute("activeNav", "vouchers");
             model.addAttribute("discountTypes", DiscountType.values());
+            model.addAttribute("now", LocalDateTime.now());
             return "admin/vouchers/form";
         }
     }

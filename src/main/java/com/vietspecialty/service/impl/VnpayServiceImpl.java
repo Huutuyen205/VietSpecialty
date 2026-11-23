@@ -78,14 +78,14 @@ public class VnpayServiceImpl implements VnpayService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = BusinessException.class)
     public boolean processReturn(Map<String, String> params) {
         log.info("Processing VNPay Return URL callback: {}", params);
         return handleVnpayCallback(params);
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = BusinessException.class)
     public Map<String, String> processIpn(Map<String, String> params) {
         log.info("Processing VNPay IPN webhook: {}", params);
         Map<String, String> response = new HashMap<>();

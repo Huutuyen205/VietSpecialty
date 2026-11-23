@@ -37,6 +37,8 @@ public final class OrderMapper {
                 o.getCode(),
                 o.getShop() != null ? o.getShop().getId() : null,
                 o.getShop() != null ? o.getShop().getName() : null,
+                o.getReceiverName(),
+                o.getReceiverPhone(),
                 o.getTotalAmount(),
                 MoneyUtils.formatVnd(o.getTotalAmount()),
                 o.getStatus(),

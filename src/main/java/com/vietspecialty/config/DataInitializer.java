@@ -58,7 +58,8 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initDemoAccountsAndSpecialties() {
         if (productRepository.count() >= 10) {
-            log.info("Dữ liệu sản phẩm mẫu đã có sẵn ({} sản phẩm), bỏ qua bước nạp dữ liệu mẫu.", productRepository.count());
+            backfillMissingProductMetadata();
+            log.info("Dữ liệu sản phẩm mẫu đã có sẵn ({} sản phẩm), đã đồng bộ searchText.", productRepository.count());
             return;
         }
 
@@ -429,6 +430,15 @@ public class DataInitializer implements CommandLineRunner {
             return;
         }
 
+        String originDetail = "Làng nghề truyền thống " + (province != null ? province.getName() : "Việt Nam");
+        String searchText = com.vietspecialty.util.VietnameseTextUtils.toSearchableText(
+                name,
+                shortDesc,
+                originDetail,
+                province != null ? province.getName() : "",
+                category != null ? category.getName() : ""
+        );
+
         Product product = Product.builder()
                 .shop(shop)
                 .category(category)
@@ -441,10 +451,15 @@ public class DataInitializer implements CommandLineRunner {
                 .avgRating(BigDecimal.valueOf(4.8 + Math.random() * 0.2))
                 .reviewCount(10 + (int)(Math.random() * 40))
                 .unit(unit)
+                .weightGram(500)
+                .originDetail(originDetail)
+                .shelfLife("12 tháng kể từ ngày sản xuất")
+                .storageInstructions("Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp")
                 .ocopRating(ocopRating)
                 .status(ProductStatus.ACTIVE)
                 .shortDescription(shortDesc)
                 .description(desc)
+                .searchText(searchText)
                 .build();
 
         Product savedProduct = productRepository.save(product);
@@ -457,5 +472,39 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
 
         productImageRepository.save(image);
+    }
+
+    private void backfillMissingProductMetadata() {
+        List<Product> products = productRepository.findAll();
+        for (Product p : products) {
+            boolean changed = false;
+            String provName = p.getProvince() != null ? p.getProvince().getName() : "Việt Nam";
+            String catName = p.getCategory() != null ? p.getCategory().getName() : "";
+            if (p.getOriginDetail() == null || p.getOriginDetail().isBlank()) {
+                p.setOriginDetail("Làng nghề truyền thống " + provName);
+                changed = true;
+            }
+            if (p.getWeightGram() == null) {
+                p.setWeightGram(500);
+                changed = true;
+            }
+            if (p.getShelfLife() == null || p.getShelfLife().isBlank()) {
+                p.setShelfLife("12 tháng kể từ ngày sản xuất");
+                changed = true;
+            }
+            if (p.getStorageInstructions() == null || p.getStorageInstructions().isBlank()) {
+                p.setStorageInstructions("Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp");
+                changed = true;
+            }
+            if (p.getSearchText() == null || p.getSearchText().isBlank()) {
+                p.setSearchText(com.vietspecialty.util.VietnameseTextUtils.toSearchableText(
+                        p.getName(), p.getShortDescription(), p.getOriginDetail(), provName, catName
+                ));
+                changed = true;
+            }
+            if (changed) {
+                productRepository.save(p);
+            }
+        }
     }
 }

@@ -55,7 +55,7 @@ public class SellerVoucherController {
         return "seller/vouchers/index";
     }
 
-    @GetMapping("/create")
+    @GetMapping({"/create", "/new"})
     public String createForm(@CurrentUser CustomUserDetails userDetails, Model model) {
         ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
         if (shop.status() != ShopStatus.APPROVED) {
@@ -69,7 +69,7 @@ public class SellerVoucherController {
         return "seller/vouchers/form";
     }
 
-    @PostMapping
+    @PostMapping({"", "/create", "/new"})
     public String handleCreate(
             @CurrentUser CustomUserDetails userDetails,
             @Valid @ModelAttribute("voucherForm") VoucherCreateRequest request,
@@ -83,6 +83,7 @@ public class SellerVoucherController {
             model.addAttribute("shop", shop);
             model.addAttribute("activeNav", "vouchers");
             model.addAttribute("discountTypes", DiscountType.values());
+            model.addAttribute("now", LocalDateTime.now());
             return "seller/vouchers/form";
         }
 
@@ -95,6 +96,7 @@ public class SellerVoucherController {
             model.addAttribute("shop", shop);
             model.addAttribute("activeNav", "vouchers");
             model.addAttribute("discountTypes", DiscountType.values());
+            model.addAttribute("now", LocalDateTime.now());
             return "seller/vouchers/form";
         }
     }

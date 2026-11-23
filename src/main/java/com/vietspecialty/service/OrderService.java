@@ -42,6 +42,8 @@ public interface OrderService {
 
     void changeOrderStatus(Long orderId, OrderStatus newStatus, ActorType actorType, Long actorId, String note, String cancelReason);
 
+    void confirmRefund(Long orderId, Long adminId);
+
     void expireUnpaidOrderGroups();
 
     void autoDeliverOrders();

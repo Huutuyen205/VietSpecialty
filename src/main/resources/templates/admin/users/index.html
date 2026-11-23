@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-base :: html(
+        pageTitle='Quản Lý Người Dùng - Quản Trị Sàn',
+        content=~{::#adminUsersContent},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<div id="adminUsersContent" class="space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-stone-900">Quản Lý Người Dùng & Phiên Đăng Nhập</h1>
+            <p class="text-xs text-stone-500">Tra cứu thành viên, phân quyền và khóa/mở khóa tài khoản kèm thu hồi phiên tức thì</p>
+        </div>
+    </div>
+
+    <!-- Bộ lọc tìm kiếm -->
+    <form th:action="@{/admin/users}" method="get"
+          class="bg-white p-4 rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row items-center gap-3 text-xs">
+        <div class="relative flex-1 w-full">
+            <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" name="keyword" th:value="${keyword}"
+                   placeholder="Tìm kiếm theo họ tên, email hoặc số điện thoại..."
+                   class="w-full pl-9 pr-3 py-2 border border-stone-300 rounded-xl focus:border-amber-500 focus:outline-none">
+        </div>
+
+        <select name="role" class="w-full sm:w-auto px-3 py-2 border border-stone-300 rounded-xl focus:border-amber-500 focus:outline-none">
+            <option value="">-- Tất cả vai trò --</option>
+            <option th:each="r : ${roles}" th:value="${r.name()}" th:text="${r.name()}"
+                    th:selected="${currentRole != null and currentRole.name() == r.name()}">USER</option>
+        </select>
+
+        <select name="status" class="w-full sm:w-auto px-3 py-2 border border-stone-300 rounded-xl focus:border-amber-500 focus:outline-none">
+            <option value="">-- Tất cả trạng thái --</option>
+            <option th:each="st : ${statuses}" th:value="${st.name()}" th:text="${st.name()}"
+                    th:selected="${currentStatus != null and currentStatus.name() == st.name()}">ACTIVE</option>
+        </select>
+
+        <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition">
+            Tìm kiếm
+        </button>
+        <a th:href="@{/admin/users}" class="px-3 py-2 text-stone-500 hover:text-stone-800 font-semibold">Đặt lại</a>
+    </form>
+
+    <!-- Bảng danh sách user -->
+    <div class="bg-white rounded-2xl border border-stone-200 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-stone-700">
+                <thead class="bg-stone-50 border-b border-stone-200 text-stone-500 font-semibold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-4">Người dùng</th>
+                        <th class="py-3 px-4">Số điện thoại</th>
+                        <th class="py-3 px-4">Vai trò</th>
+                        <th class="py-3 px-4">Trạng thái</th>
+                        <th class="py-3 px-4">Ngày tham gia</th>
+                        <th class="py-3 px-4 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    <tr th:each="u : ${users.content}" class="hover:bg-stone-50/50 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-stone-900" th:text="${u.fullName}">Nguyễn Văn A</div>
+                            <div class="text-[11px] text-stone-500" th:text="${u.email}">user@vietspecialty.vn</div>
+                        </td>
+                        <td class="py-3.5 px-4 font-mono" th:text="${u.phone != null ? u.phone : '---'}">0912345678</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                  th:classappend="${u.role.name() == 'ADMIN' ? 'bg-purple-100 text-purple-800' : (u.role.name() == 'SELLER' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700')}"
+                                  th:text="${u.role.name()}">USER</span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span th:if="${u.status.name() == 'ACTIVE'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                Đang hoạt động
+                            </span>
+                            <span th:if="${u.status.name() != 'ACTIVE'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                                Đã khóa (LOCKED)
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-stone-500" th:text="${#temporals.format(u.createdAt, 'dd/MM/yyyy HH:mm')}">11/11/2026</td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <form th:if="${u.status.name() == 'ACTIVE' and u.role.name() != 'ADMIN'}"
+                                      th:action="@{/admin/users/{id}/lock(id=${u.id})}" method="post"
+                                      onsubmit="return confirm('Xác nhận khóa tài khoản này và hủy toàn bộ phiên đăng nhập?');">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg font-semibold text-xs transition">
+                                        Khóa tài khoản
+                                    </button>
+                                </form>
+
+                                <form th:if="${u.status.name() != 'ACTIVE'}"
+                                      th:action="@{/admin/users/{id}/unlock(id=${u.id})}" method="post">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg font-semibold text-xs transition">
+                                        Mở khóa
+                                    </button>
+                                </form>
+
+                                <span th:if="${u.role.name() == 'ADMIN'}" class="text-[11px] text-stone-400 italic">Quản trị viên</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${users.totalElements == 0}">
+                        <td colspan="6" class="text-center py-8 text-stone-400">Không tìm thấy người dùng nào phù hợp.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Phân trang -->
+        <div th:if="${users.totalPages > 1}" class="p-4 border-t border-stone-200 flex items-center justify-between text-xs">
+            <span class="text-stone-500" th:text="'Trang ' + (${users.number + 1}) + ' / ' + ${users.totalPages}">Trang 1 / 1</span>
+            <div class="flex items-center gap-2">
+                <a th:if="${users.hasPrevious()}"
+                   th:href="@{/admin/users(page=${users.number - 1}, keyword=${keyword}, role=${currentRole}, status=${currentStatus})}"
+                   class="px-3 py-1.5 border border-stone-300 rounded-lg">Trước</a>
+                <a th:if="${users.hasNext()}"
+                   th:href="@{/admin/users(page=${users.number + 1}, keyword=${keyword}, role=${currentRole}, status=${currentStatus})}"
+                   class="px-3 py-1.5 border border-stone-300 rounded-lg">Sau</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+</html>

@@ -24,8 +24,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -42,6 +45,7 @@ public class CheckoutController {
             @CurrentUser CustomUserDetails userDetails,
             @RequestParam(required = false, defaultValue = "STANDARD") String shippingMethod,
             @RequestParam(required = false) String systemVoucherCode,
+            @RequestParam Map<String, String> allParams,
             Model model
     ) {
         if (userDetails == null) {
@@ -49,8 +53,33 @@ public class CheckoutController {
         }
 
         try {
+            Map<Long, String> shopVoucherCodes = new HashMap<>();
+            if (allParams != null) {
+                for (Map.Entry<String, String> entry : allParams.entrySet()) {
+                    String key = entry.getKey();
+                    String val = entry.getValue();
+                    if (key != null && key.startsWith("shopVoucher_") && val != null && !val.isBlank()) {
+                        try {
+                            Long shopId = Long.parseLong(key.substring("shopVoucher_".length()));
+                            shopVoucherCodes.put(shopId, val.trim());
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
+
+            if (systemVoucherCode != null && !systemVoucherCode.isBlank()) {
+                try {
+                    // Kiểm tra sơ bộ để hiển thị thông báo nếu mã sàn không hợp lệ
+                    CheckoutPreviewResponse tempPreview = orderService.previewCheckout(userDetails.getId(), shippingMethod, null, shopVoucherCodes);
+                    voucherService.validateAndGetVoucher(systemVoucherCode.trim(), null, tempPreview.subtotal(), userDetails.getId());
+                    model.addAttribute("voucherSuccessMessage", "Đã áp dụng mã ưu đãi sàn: " + systemVoucherCode.trim().toUpperCase());
+                } catch (BusinessException vex) {
+                    model.addAttribute("voucherErrorMessage", vex.getMessage());
+                }
+            }
+
             CheckoutPreviewResponse preview = orderService.previewCheckout(
-                    userDetails.getId(), shippingMethod, systemVoucherCode, null
+                    userDetails.getId(), shippingMethod, systemVoucherCode, shopVoucherCodes
             );
 
             List<AddressResponse> userAddresses = addressService.getUserAddresses(userDetails.getId());
@@ -60,6 +89,7 @@ public class CheckoutController {
             model.addAttribute("systemVouchers", voucherService.getAvailableSystemVouchers());
             model.addAttribute("selectedShippingMethod", shippingMethod);
             model.addAttribute("selectedSystemVoucher", systemVoucherCode);
+            model.addAttribute("selectedShopVouchers", shopVoucherCodes);
 
             return "web/checkout";
         } catch (BusinessException e) {
@@ -74,14 +104,15 @@ public class CheckoutController {
             @Valid @ModelAttribute CheckoutFormRequest request,
             BindingResult bindingResult,
             HttpServletRequest servletRequest,
-            Model model
+            RedirectAttributes redirectAttributes
     ) {
         if (userDetails == null) {
             return "redirect:/login?redirect=/checkout";
         }
 
         if (bindingResult.hasErrors()) {
-            return "redirect:/checkout?error=invalid_data";
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn đầy đủ địa chỉ nhận hàng và hình thức thanh toán.");
+            return "redirect:/checkout";
         }
 
         String clientIp = servletRequest.getHeader("X-Forwarded-For");
@@ -103,11 +134,12 @@ public class CheckoutController {
 
         } catch (BusinessException e) {
             log.error("Place order failed: {}", e.getMessage());
-            return "redirect:/checkout?error=" + e.getMessage();
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/checkout";
         }
     }
 
-    @GetMapping("/checkout/success")
+    @GetMapping({"/checkout/success", "/orders/success"})
     public String orderSuccess(
             @CurrentUser CustomUserDetails userDetails,
             @RequestParam String groupCode,

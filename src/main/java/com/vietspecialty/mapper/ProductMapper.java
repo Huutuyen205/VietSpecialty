@@ -61,7 +61,8 @@ public final class ProductMapper {
                 regionColorHex,
                 shopId,
                 shopName,
-                shopSlug
+                shopSlug,
+                p.getStatus()
         );
     }
 

@@ -25,6 +25,7 @@ public class AppProperties {
     private Order order = new Order();
     private Storage storage = new Storage();
     private Vnpay vnpay = new Vnpay();
+    private Google google = new Google();
     private Ai ai = new Ai();
 
     @Getter
@@ -64,11 +65,27 @@ public class AppProperties {
     @Getter
     @Setter
     public static class Vnpay {
-        private String tmnCode = "";
-        private String hashSecret = "";
+        private String tmnCode = "VIETSPEC";
+        private String hashSecret = "VIETSPECIALTYSANDBOXSECRETKEY2026";
         private String payUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
         private String returnUrl = "http://localhost:8080/payment/vnpay/return";
         private boolean processOnReturn = true;
+
+        public String getTmnCode() {
+            return (tmnCode == null || tmnCode.isBlank()) ? "VIETSPEC" : tmnCode;
+        }
+
+        public String getHashSecret() {
+            return (hashSecret == null || hashSecret.isBlank()) ? "VIETSPECIALTYSANDBOXSECRETKEY2026" : hashSecret;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class Google {
+        private String clientId = "";
+        private String clientSecret = "";
+        private String redirectUri = "http://localhost:8080/auth/google/callback";
     }
 
     @Getter

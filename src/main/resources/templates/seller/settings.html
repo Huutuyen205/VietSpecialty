@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/seller-base :: html(
+        pageTitle='Cài đặt Gian Hàng - Kênh người bán',
+        content=~{::#sellerSettingsContent},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<div id="sellerSettingsContent" class="max-w-3xl space-y-6">
+
+    <!-- Tiêu đề -->
+    <div>
+        <h1 class="text-2xl font-black text-ink tracking-tight">Cài đặt thông tin gian hàng</h1>
+        <p class="text-xs text-ink-muted mt-1">Cập nhật hồ sơ Hợp tác xã / Nhà vườn, logo nhận diện, địa chỉ kho lấy hàng và số hotline hỗ trợ</p>
+    </div>
+
+    <!-- Thông báo -->
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+        <span th:text="${successMessage}">Đã lưu thay đổi</span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600"></i>
+        <span th:text="${errorMessage}">Lỗi</span>
+    </div>
+
+    <!-- Form cài đặt -->
+    <form th:action="@{/seller/settings}" method="post" enctype="multipart/form-data"
+          class="bg-surface rounded-2xl border border-line p-6 shadow-sm space-y-5">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <!-- Logo hiện tại & Upload logo mới -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-5 pb-5 border-b border-line">
+            <img th:src="${shop.logoUrl != null ? shop.logoUrl : '/images/default-shop.png'}"
+                 th:alt="${shop.name}"
+                 class="w-20 h-20 rounded-2xl object-cover border border-line bg-surface-muted shrink-0">
+            <div class="space-y-1.5 flex-1">
+                <label class="block text-xs font-bold text-ink">Logo đại diện gian hàng</label>
+                <input type="file" name="logo" accept="image/png, image/jpeg, image/webp"
+                       class="w-full text-xs text-ink-muted file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer">
+                <p class="text-[11px] text-ink-muted">Định dạng PNG, JPG, WEBP. Kích thước khuyến nghị 400x400px.</p>
+            </div>
+        </div>
+
+        <!-- Tên gian hàng & Hotline -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-ink mb-1">Tên gian hàng HTX / Cơ sở <span class="text-danger">*</span></label>
+                <input type="text" name="name" required th:value="${shop.name}"
+                       placeholder="VD: HTX Trà Tân Cương Thái Nguyên"
+                       class="w-full px-3.5 py-2.5 rounded-xl border border-line text-xs focus:border-primary-600 focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-ink mb-1">Số điện thoại Hotline <span class="text-danger">*</span></label>
+                <input type="text" name="hotline" required th:value="${shop.hotline}"
+                       placeholder="VD: 0988111222"
+                       class="w-full px-3.5 py-2.5 rounded-xl border border-line text-xs focus:border-primary-600 focus:outline-none">
+            </div>
+        </div>
+
+        <!-- Địa chỉ lấy hàng -->
+        <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Địa chỉ kho lấy hàng & Sản xuất <span class="text-danger">*</span></label>
+            <input type="text" name="pickupAddress" required th:value="${shop.pickupAddress}"
+                   placeholder="VD: Xóm Hồng Thái 2, Xã Tân Cương, TP Thái Nguyên"
+                   class="w-full px-3.5 py-2.5 rounded-xl border border-line text-xs focus:border-primary-600 focus:outline-none">
+        </div>
+
+        <!-- Mô tả gian hàng -->
+        <div>
+            <label class="block text-xs font-semibold text-ink mb-1">Giới thiệu câu chuyện Gian hàng & Chứng nhận OCOP</label>
+            <textarea name="description" rows="4" th:text="${shop.description}"
+                      placeholder="Giới thiệu truyền thống làng nghề, quy trình sản xuất, chứng nhận chất lượng..."
+                      class="w-full px-3.5 py-2.5 rounded-xl border border-line text-xs focus:border-primary-600 focus:outline-none"></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-line flex items-center justify-end gap-3">
+            <a th:href="@{'/shops/' + ${shop.slug}}" target="_blank"
+               class="btn btn-outline py-2.5 px-4 text-xs font-semibold">
+                Xem trang Gian hàng
+            </a>
+            <button type="submit" class="btn btn-primary py-2.5 px-6 text-xs font-bold">
+                Lưu Cài Đặt Gian Hàng
+            </button>
+        </div>
+    </form>
+
+</div>
+</html>

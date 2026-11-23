@@ -13,6 +13,8 @@ public record OrderSummaryResponse(
         String code,
         Long shopId,
         String shopName,
+        String receiverName,
+        String receiverPhone,
         BigDecimal totalAmount,
         String formattedTotalAmount,
         OrderStatus status,
@@ -22,6 +24,22 @@ public record OrderSummaryResponse(
         List<OrderItemSummary> items,
         LocalDateTime createdAt
 ) {
+    public OrderSummaryResponse(
+            Long id,
+            String code,
+            Long shopId,
+            String shopName,
+            BigDecimal totalAmount,
+            String formattedTotalAmount,
+            OrderStatus status,
+            String statusDescription,
+            PaymentMethod paymentMethod,
+            OrderPaymentStatus paymentStatus,
+            List<OrderItemSummary> items,
+            LocalDateTime createdAt
+    ) {
+        this(id, code, shopId, shopName, null, null, totalAmount, formattedTotalAmount, status, statusDescription, paymentMethod, paymentStatus, items, createdAt);
+    }
     public record OrderItemSummary(
             Long id,
             Long productId,

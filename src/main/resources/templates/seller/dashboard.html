@@ -160,6 +160,51 @@
 
     </div>
 
+    <!-- Đơn hàng mới nhất của gian hàng -->
+    <div class="bg-surface rounded-2xl p-6 border border-line shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-line pb-3">
+            <div class="flex items-center gap-2">
+                <i data-lucide="shopping-bag" class="w-4 h-4 text-primary-600"></i>
+                <h2 class="text-sm font-bold text-ink">Đơn Hàng Mới Nhất</h2>
+            </div>
+            <a th:href="@{/seller/orders}" class="text-xs text-primary-700 font-semibold hover:underline">Quản lý tất cả đơn</a>
+        </div>
+
+        <div th:if="${#lists.isEmpty(recentOrders)}" class="text-center py-8 text-xs text-ink-muted">
+            Chưa có đơn hàng nào phát sinh tại gian hàng.
+        </div>
+
+        <div th:unless="${#lists.isEmpty(recentOrders)}" class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-ink">
+                <thead class="text-ink-muted font-bold uppercase text-[10px] border-b border-line">
+                    <tr>
+                        <th class="py-2.5 px-3">Mã đơn</th>
+                        <th class="py-2.5 px-3">Tổng tiền</th>
+                        <th class="py-2.5 px-3">Trạng thái</th>
+                        <th class="py-2.5 px-3">Thời gian</th>
+                        <th class="py-2.5 px-3 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line/60">
+                    <tr th:each="ord : ${recentOrders}" class="hover:bg-surface-muted/40">
+                        <td class="py-2.5 px-3 font-bold text-primary-700">
+                            <a th:href="@{'/seller/orders/' + ${ord.code}}" class="hover:underline" th:text="${ord.code}">VS26...</a>
+                        </td>
+                        <td class="py-2.5 px-3 font-bold" th:text="${ord.formattedTotalAmount}">250.000₫</td>
+                        <td class="py-2.5 px-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-50 text-primary-700"
+                                  th:text="${ord.statusDescription}">Chờ xác nhận</span>
+                        </td>
+                        <td class="py-2.5 px-3 text-ink-muted" th:text="${#temporals.format(ord.createdAt, 'dd/MM/yyyy HH:mm')}">11/11/2026</td>
+                        <td class="py-2.5 px-3 text-right">
+                            <a th:href="@{'/seller/orders/' + ${ord.code}}" class="text-primary-700 font-semibold hover:underline">Chi tiết</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 <th:block id="sellerDashboardJs">

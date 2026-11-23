@@ -7,12 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle} != null ? ${pageTitle} : 'Kênh Người Bán - VietSpecialty'">Kênh Người Bán - VietSpecialty</title>
     
-    <link rel="stylesheet" th:href="@{/static/css/app.css}">
-    <link rel="icon" type="image/svg+xml" th:href="@{/static/images/logo.svg}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo.svg}">
 
     <!-- Vendor Scripts (Local) -->
-    <script defer th:src="@{/static/vendor/alpine.min.js}"></script>
-    <script th:src="@{/static/vendor/lucide.min.js}"></script>
+    <script defer th:src="@{/vendor/alpine.min.js}"></script>
+    <script th:src="@{/vendor/lucide.min.js}"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- CSRF Meta -->
@@ -36,7 +36,7 @@
                 </button>
 
                 <a th:href="@{/seller/dashboard}" class="flex items-center gap-2">
-                    <img th:src="@{/static/images/logo.svg}" alt="VietSpecialty" class="w-8 h-8">
+                    <img th:src="@{/images/logo.svg}" alt="VietSpecialty" class="w-8 h-8">
                     <div>
                         <span class="font-extrabold text-sm sm:text-base text-primary-700 tracking-tight">VietSpecialty</span>
                         <span class="ml-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-primary-100 text-primary-800 uppercase">Kênh Người Bán</span>
@@ -64,7 +64,7 @@
                 </div>
 
                 <form th:action="@{/logout}" method="POST" class="inline">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <button type="submit" class="p-2 text-ink-muted hover:text-danger rounded-lg transition" title="Đăng xuất">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                     </button>
@@ -119,11 +119,32 @@
                         <span>Đánh giá từ khách</span>
                     </a>
 
+                    <a th:href="@{/seller/questions}"
+                       class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition"
+                       th:classappend="${activeNav == 'questions'} ? 'bg-primary-50 text-primary-700 font-bold' : 'text-ink hover:bg-surface-muted'">
+                        <i data-lucide="message-circle-question" class="w-4 h-4"></i>
+                        <span>Hỏi đáp sản phẩm</span>
+                    </a>
+
                     <a th:href="@{/seller/vouchers}"
                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition"
                        th:classappend="${activeNav == 'vouchers'} ? 'bg-primary-50 text-primary-700 font-bold' : 'text-ink hover:bg-surface-muted'">
                         <i data-lucide="ticket-percent" class="w-4 h-4"></i>
                         <span>Mã giảm giá Shop</span>
+                    </a>
+
+                    <a th:href="@{/seller/revenue}"
+                       class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition"
+                       th:classappend="${activeNav == 'revenue'} ? 'bg-primary-50 text-primary-700 font-bold' : 'text-ink hover:bg-surface-muted'">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                        <span>Doanh thu & Đối soát</span>
+                    </a>
+
+                    <a th:href="@{/seller/settings}"
+                       class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition"
+                       th:classappend="${activeNav == 'settings'} ? 'bg-primary-50 text-primary-700 font-bold' : 'text-ink hover:bg-surface-muted'">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span>Cài đặt gian hàng</span>
                     </a>
 
                     <a th:href="@{/seller/products/create}"
@@ -155,8 +176,8 @@
     </div>
 
     <!-- Core Scripts -->
-    <script th:src="@{/static/js/api.js}"></script>
-    <script th:src="@{/static/js/toast.js}"></script>
+    <script th:src="@{/js/core/api.js}"></script>
+    <script th:src="@{/js/core/toast.js}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             if (window.lucide) {

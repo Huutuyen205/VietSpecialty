@@ -24,7 +24,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
         
         <!-- SIDEBAR TÀI KHOẢN -->
-        <div class="md:col-span-1" th:replace="~{account/account-sidebar :: accountSidebar(active='shop-reg')}"></div>
+        <div class="md:col-span-1" th:replace="~{account/account-sidebar :: accountSidebar('shop-reg')}"></div>
 
         <!-- CỘT CHÍNH -->
         <main class="md:col-span-3 bg-surface rounded-2xl p-6 sm:p-8 border border-line shadow-sm space-y-6">
@@ -84,7 +84,32 @@
                 <div class="space-y-1">
                     <h2 class="text-lg font-bold text-ink">Hồ sơ chưa được phê duyệt</h2>
                     <p class="text-xs text-ink-muted leading-relaxed">
-                        Rất tiếc, hồ sơ mở gian hàng chưa đáp ứng đầy đủ tiêu chí của sàn đặc sản. Vui lòng kiểm tra lại thông tin hoặc liên hệ bộ phận hỗ trợ khách hàng.
+                        Rất tiếc, hồ sơ mở gian hàng <strong class="text-ink" th:text="${shop.name}">Tên Shop</strong> chưa đáp ứng đầy đủ tiêu chí của sàn đặc sản. Vui lòng cập nhật lại thông tin để nộp xét duyệt lại.
+                    </p>
+                </div>
+                <div th:if="${rejectReason != null and !rejectReason.isEmpty()}"
+                     class="p-4 rounded-xl bg-red-50 border border-red-200 text-left text-xs space-y-1">
+                    <span class="font-bold text-danger block">Lý do từ chối từ Ban Quản Trị:</span>
+                    <p class="text-ink" th:text="${rejectReason}">Thiếu thông tin địa chỉ cơ sở rõ ràng.</p>
+                </div>
+                <div class="pt-2">
+                    <a th:href="@{/account/shop-registration(reapply=true)}"
+                       class="btn btn-primary py-2.5 px-6 text-xs inline-flex items-center gap-2 font-semibold">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span>Chỉnh sửa & Nộp lại hồ sơ</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- TRƯỜNG HỢP 4: SUSPENDED -->
+            <div th:if="${shop.status.name() == 'SUSPENDED'}" class="text-center py-8 space-y-4 max-w-lg mx-auto">
+                <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+                    <i data-lucide="shield-alert" class="w-8 h-8"></i>
+                </div>
+                <div class="space-y-1">
+                    <h2 class="text-lg font-bold text-ink">Gian hàng đang tạm ngừng hoạt động</h2>
+                    <p class="text-xs text-ink-muted leading-relaxed">
+                        Gian hàng <strong class="text-ink" th:text="${shop.name}">Tên Shop</strong> hiện đang bị tạm đình chỉ bởi Ban Quản Trị. Vui lòng liên hệ bộ phận hỗ trợ sàn VietSpecialty qua Hotline 1900 8888 để được giải quyết.
                     </p>
                 </div>
             </div>

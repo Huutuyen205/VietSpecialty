@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>Đăng nhập bằng Google — VietSpecialty</title>
+</head>
+<body>
+<div layout:fragment="content" class="py-10 max-w-md mx-auto">
+    <div class="card p-8 bg-surface shadow-lift" x-data="{ customAccount: false }">
+        <!-- Google Header -->
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white border border-line shadow-sm mb-3">
+                <svg class="w-7 h-7" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+            </div>
+            <h1 class="font-serif text-xl font-bold text-ink"
+                th:text="${mode == 'register' ? 'Đăng ký nhanh bằng Google' : 'Chọn tài khoản Google'}">
+                Chọn tài khoản Google
+            </h1>
+            <p class="text-xs text-ink-muted mt-1">
+                để tiếp tục tới <span class="font-semibold text-primary-700">VietSpecialty</span>
+            </p>
+        </div>
+
+        <!-- Google Identity Services (Nếu có cấu hình client_id) -->
+        <div th:if="${googleClientId != null and !googleClientId.isEmpty()}" class="mb-5 flex flex-col items-center">
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <div id="g_id_onload"
+                 th:attr="data-client_id=${googleClientId},data-login_uri=@{/auth/google/callback}"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="continue_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
+        </div>
+
+        <!-- Danh sách tài khoản Google gợi ý chọn nhanh -->
+        <div class="space-y-2.5 mb-5">
+            <p class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-2">Tài khoản Google gợi ý</p>
+
+            <!-- Tài khoản Google mới (Đăng ký nhanh) -->
+            <form th:action="@{/auth/google/confirm}" method="POST">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="email" value="nguyenvanan.google@gmail.com"/>
+                <input type="hidden" name="fullName" value="Nguyễn Văn An"/>
+                <input type="hidden" name="googleId" value="google-oauth2-10001"/>
+                <button type="submit"
+                        class="w-full flex items-center gap-3 p-3 rounded-xl border border-line bg-white hover:bg-cream hover:border-primary-400 transition text-left group">
+                    <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-sm flex-shrink-0">
+                        NA
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-ink group-hover:text-primary-700 truncate">Nguyễn Văn An</p>
+                        <p class="text-xs text-ink-muted truncate">nguyenvanan.google@gmail.com</p>
+                    </div>
+                    <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary-50 text-primary-700">Mới</span>
+                </button>
+            </form>
+
+            <!-- Tài khoản Khách mua đã có -->
+            <form th:action="@{/auth/google/confirm}" method="POST">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="email" value="buyer@vietspecialty.vn"/>
+                <input type="hidden" name="fullName" value="Trần Thị Minh Hương"/>
+                <input type="hidden" name="googleId" value="google-oauth2-buyer"/>
+                <button type="submit"
+                        class="w-full flex items-center gap-3 p-3 rounded-xl border border-line bg-white hover:bg-cream hover:border-primary-400 transition text-left group">
+                    <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-sm flex-shrink-0">
+                        MH
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-ink group-hover:text-primary-700 truncate">Trần Thị Minh Hương (Buyer)</p>
+                        <p class="text-xs text-ink-muted truncate">buyer@vietspecialty.vn</p>
+                    </div>
+                    <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800">Thành viên</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Phân cách mở form nhập tài khoản Google bất kỳ -->
+        <div class="border-t border-line pt-4">
+            <button type="button"
+                    @click="customAccount = !customAccount"
+                    class="w-full flex items-center justify-between text-xs font-semibold text-primary-700 hover:text-primary-800 py-1.5">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Sử dụng một tài khoản Google khác (Đăng ký / Đăng nhập)</span>
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="customAccount ? 'rotate-180' : ''"></i>
+            </button>
+
+            <form th:action="@{/auth/google/confirm}" method="POST" class="mt-3 space-y-3" x-show="customAccount" style="display: none;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div>
+                    <label for="googleEmail" class="block text-xs font-semibold text-ink mb-1">Email Google (@gmail.com hoặc email của bạn)</label>
+                    <input type="email" id="googleEmail" name="email" required
+                           placeholder="tenban@gmail.com"
+                           class="input-field text-sm">
+                </div>
+
+                <div>
+                    <label for="googleFullName" class="block text-xs font-semibold text-ink mb-1">Họ và tên hiển thị trên Google</label>
+                    <input type="text" id="googleFullName" name="fullName" required
+                           placeholder="Nguyễn Văn B"
+                           class="input-field text-sm">
+                </div>
+
+                <button type="submit" class="btn-primary w-full py-2.5 text-sm font-semibold">
+                    Tiếp tục với tài khoản Google này
+                </button>
+            </form>
+        </div>
+
+        <!-- Quay lại -->
+        <div class="mt-6 pt-4 border-t border-line text-center text-xs text-ink-muted">
+            <a th:href="${mode == 'register' ? '/register' : '/login'}"
+               class="font-semibold text-ink-muted hover:text-ink inline-flex items-center gap-1">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                <span>Quay lại trang trước</span>
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -3,9 +3,20 @@
 <head><meta charset="UTF-8"></head>
 <body>
 <header th:fragment="header" class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-line shadow-xs transition-all duration-200"
-        x-data="{ mobileMenuOpen: false, unreadCount: 0, cartCount: 0 }"
+        th:data-auth="${#authorization.expression('hasRole(''USER'')')}"
+        x-data="{
+            mobileMenuOpen: false,
+            unreadCount: 0,
+            cartCount: 0,
+            wishlistCount: 0,
+            searchQuery: '',
+            suggestions: [],
+            suggestOpen: false
+        }"
         x-init="
+            const isUserAuth = $el.dataset.auth === 'true';
             const fetchCounts = async () => {
+                if (!isUserAuth) return;
                 try {
                     const cartRes = await fetch('/api/cart/count');
                     if (cartRes.ok) {
@@ -19,8 +30,16 @@
                     }
                 } catch(e) {}
             };
+            const updateWishlistBadge = () => {
+                try {
+                    const wl = JSON.parse(localStorage.getItem('vs_wishlist_ids') || '[]');
+                    wishlistCount = Array.isArray(wl) ? wl.length : 0;
+                } catch(e) { wishlistCount = 0; }
+            };
             fetchCounts();
+            updateWishlistBadge();
             window.addEventListener('cart-updated', () => fetchCounts());
+            window.addEventListener('wishlist-updated', () => updateWishlistBadge());
         ">
 
     <!-- 1. Thanh Thông Điệp Văn Hóa Trên Cùng (Top Bar) -->
@@ -32,11 +51,19 @@
                     <span>Tinh hoa Đất Việt</span>
                 </span>
                 <span class="hidden sm:inline text-primary-200">•</span>
-                <span class="hidden sm:inline text-primary-100">Đặc sản 63 tỉnh thành • 100% nguồn gốc rõ ràng • Đạt chuẩn OCOP</span>
+                <span class="hidden sm:inline text-primary-100">Đặc sản 34 tỉnh thành • 100% nguồn gốc rõ ràng • Đạt chuẩn OCOP</span>
             </div>
 
             <div class="flex items-center gap-4 text-primary-100 text-[11px]">
-                <a th:href="@{/account/shop-registration}" class="hover:text-white transition flex items-center gap-1 font-medium">
+                <a sec:authorize="hasRole('SELLER')" th:href="@{/seller/dashboard}" class="hover:text-white transition flex items-center gap-1 font-medium">
+                    <i data-lucide="store" class="w-3.5 h-3.5 text-secondary-400"></i>
+                    <span>Kênh Người Bán</span>
+                </a>
+                <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/shops}" class="hover:text-white transition flex items-center gap-1 font-medium">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-secondary-400"></i>
+                    <span>Quản Lý Gian Hàng HTX</span>
+                </a>
+                <a sec:authorize="!hasRole('SELLER') and !hasRole('ADMIN')" th:href="@{/account/shop-registration}" class="hover:text-white transition flex items-center gap-1 font-medium">
                     <i data-lucide="store" class="w-3.5 h-3.5 text-secondary-400"></i>
                     <span>Kênh Hợp Tác Xã / Người Bán</span>
                 </a>
@@ -59,20 +86,55 @@
                 </div>
             </a>
 
-            <!-- Thanh Tìm Kiếm Trung Tâm (Desktop) -->
-            <div class="hidden md:flex flex-1 max-w-xl mx-2">
+            <!-- Thanh Tìm Kiếm Trung Tâm (Desktop) có Autocomplete -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-2 relative" @click.outside="suggestOpen = false">
                 <form th:action="@{/products}" method="GET" class="relative w-full">
                     <div class="relative flex items-center">
                         <span class="absolute left-3.5 flex items-center pointer-events-none text-ink-muted">
                             <i data-lucide="search" class="w-4 h-4 text-primary-600"></i>
                         </span>
-                        <input type="text" name="keyword" placeholder="Tìm trà Tân Cương, nước mắm Phú Quốc, cà phê Cầu Đất..."
+                        <input type="text" name="keyword"
+                               x-model="searchQuery"
+                               @input.debounce.250ms="
+                                   if (searchQuery.trim().length >= 2) {
+                                       fetch('/api/products/suggest?q=' + encodeURIComponent(searchQuery.trim()))
+                                           .then(r => r.json())
+                                           .then(d => { if (d.success) { suggestions = d.data || []; suggestOpen = suggestions.length > 0; } })
+                                           .catch(() => {});
+                                   } else {
+                                       suggestions = [];
+                                       suggestOpen = false;
+                                   }
+                               "
+                               @focus="if (suggestions.length > 0) suggestOpen = true"
+                               autocomplete="off"
+                               placeholder="Tìm trà Tân Cương, nước mắm Phú Quốc, cà phê Cầu Đất..."
                                class="w-full pl-10 pr-24 py-2.5 rounded-full border border-line bg-surface-muted/70 text-ink placeholder-ink-muted text-xs sm:text-sm focus:bg-surface focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 shadow-inner-xs transition">
                         <button type="submit" class="absolute right-1 px-4 py-1.5 rounded-full bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold shadow-xs hover:shadow-sm transition flex items-center gap-1 active:scale-95">
                             <span>Tìm kiếm</span>
                         </button>
                     </div>
                 </form>
+
+                <!-- Dropdown Gợi ý tìm kiếm nhanh -->
+                <div x-show="suggestOpen && suggestions.length > 0"
+                     x-transition
+                     style="display: none;"
+                     class="absolute left-0 right-0 top-full mt-2 bg-surface rounded-2xl shadow-lift border border-line py-2 z-50 divide-y divide-line/60 max-h-96 overflow-y-auto">
+                    <template x-for="item in suggestions" :key="item.id">
+                        <a :href="'/products/' + item.slug" class="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-muted/60 transition">
+                            <img :src="item.primaryImageUrl || '/images/demo/placeholder.svg'" :alt="item.name" class="w-10 h-10 rounded-xl object-cover border border-line shrink-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-ink truncate" x-text="item.name"></div>
+                                <div class="text-[11px] text-ink-muted flex items-center gap-2">
+                                    <span x-text="item.provinceName || item.regionName"></span>
+                                    <span x-show="item.ocopRating" class="text-amber-600 font-semibold" x-text="item.ocopRating + '★ OCOP'"></span>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-primary-700 font-serif" x-text="item.formattedPrice"></span>
+                        </a>
+                    </template>
+                </div>
             </div>
 
             <!-- Điều Hướng 4 Miền Nhanh (Desktop Large) -->
@@ -95,13 +157,23 @@
                 </a>
             </nav>
 
-            <!-- Tác Vụ Phải: Tất cả đặc sản, Giỏ hàng, Thông báo, Tài khoản -->
+            <!-- Tác Vụ Phải: Tất cả đặc sản, Yêu thích, Giỏ hàng, Thông báo, Tài khoản -->
             <div class="flex items-center space-x-1 sm:space-x-2">
 
                 <!-- Nút Tất Cả Đặc Sản -->
                 <a th:href="@{/products}" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 border border-primary-200/60 transition shadow-2xs">
                     <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-primary-600"></i>
                     <span>Tất cả đặc sản</span>
+                </a>
+
+                <!-- Yêu Thích (Wishlist) -->
+                <a th:href="@{/wishlist}" class="relative p-2.5 text-ink hover:text-danger hover:bg-surface-muted rounded-xl transition flex items-center group" aria-label="Đặc sản yêu thích" title="Đặc sản yêu thích">
+                    <i data-lucide="heart" class="w-5 h-5 text-ink group-hover:text-danger transition-colors"></i>
+                    <span x-show="wishlistCount > 0" x-text="wishlistCount"
+                          style="display: none;"
+                          class="absolute -top-1 -right-1 flex items-center justify-center min-w-5 h-5 px-1 text-[10px] font-bold text-white bg-danger rounded-full shadow-sm">
+                        0
+                    </span>
                 </a>
 
                 <!-- Giỏ Hàng -->
@@ -135,7 +207,7 @@
                          class="absolute right-0 mt-2 w-80 sm:w-96 bg-surface rounded-2xl shadow-lift border border-line py-2 z-50 text-xs">
                         <div class="px-4 py-2.5 border-b border-line flex items-center justify-between">
                             <span class="font-bold text-ink">Thông báo mới nhận</span>
-                            <button @click="fetch('/api/notifications/read-all', {method: 'POST'}).then(()=>{ unreadCount = 0; notifications.forEach(n=>n.isRead=true); });"
+                            <button @click="window.api.post('/api/notifications/read-all').then(()=>{ unreadCount = 0; notifications.forEach(n=>n.isRead=true); });"
                                     class="text-[11px] text-primary-600 hover:underline font-semibold">
                                 Đã đọc tất cả
                             </button>
@@ -144,7 +216,7 @@
                         <div class="max-h-80 overflow-y-auto divide-y divide-line/60">
                             <template x-for="item in notifications" :key="item.id">
                                 <a :href="item.linkUrl || '#'"
-                                   @click="fetch('/api/notifications/' + item.id + '/read', {method: 'POST'})"
+                                   @click="window.api.post('/api/notifications/' + item.id + '/read')"
                                    class="block px-4 py-3 hover:bg-surface-muted/50 transition-colors"
                                    :class="!item.isRead ? 'bg-primary-50/40' : ''">
                                     <div class="flex items-start justify-between gap-2">
@@ -199,6 +271,11 @@
                             <a th:href="@{/orders}" class="flex items-center gap-2 px-4 py-2 text-ink hover:bg-surface-muted transition">
                                 <i data-lucide="package" class="w-4 h-4 text-ink-muted"></i>
                                 <span>Đơn mua của tôi</span>
+                            </a>
+
+                            <a th:href="@{/wishlist}" class="flex items-center gap-2 px-4 py-2 text-ink hover:bg-surface-muted transition">
+                                <i data-lucide="heart" class="w-4 h-4 text-ink-muted"></i>
+                                <span>Đặc sản yêu thích</span>
                             </a>
 
                             <a th:href="@{/account/addresses}" class="flex items-center gap-2 px-4 py-2 text-ink hover:bg-surface-muted transition">
@@ -272,7 +349,7 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 translate-x-0"
          x-transition:leave-end="opacity-0 -translate-x-full"
-         class="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex"
+         class="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex"
          @click.self="mobileMenuOpen = false">
         
         <div class="w-4/5 max-w-sm bg-surface h-full shadow-2xl p-5 flex flex-col justify-between overflow-y-auto">
@@ -320,6 +397,10 @@
                     <a th:href="@{/products?hasOcop=true}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-ink hover:bg-surface-muted">
                         <i data-lucide="award" class="w-4 h-4 text-secondary-500"></i>
                         <span>Sản phẩm đạt chuẩn OCOP (3-5★)</span>
+                    </a>
+                    <a th:href="@{/wishlist}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-ink hover:bg-surface-muted">
+                        <i data-lucide="heart" class="w-4 h-4 text-danger"></i>
+                        <span>Đặc sản yêu thích</span>
                     </a>
                     <a th:href="@{/cart}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-ink hover:bg-surface-muted">
                         <i data-lucide="shopping-bag" class="w-4 h-4 text-primary-600"></i>

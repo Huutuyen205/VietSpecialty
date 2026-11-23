@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/admin-base :: html(
+        pageTitle='Kiểm Duyệt Đánh Giá & Hỏi Đáp - Quản Trị Sàn',
+        content=~{::#adminModerationContent},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<div id="adminModerationContent" class="space-y-6">
+
+    <div>
+        <h1 class="text-xl font-bold text-stone-900">Kiểm Duyệt Đánh Giá & Bình Luận Hỏi Đáp (Q&A)</h1>
+        <p class="text-xs text-stone-500">Ẩn/hiện nội dung đánh giá hoặc bình luận vi phạm tiêu chuẩn cộng đồng; tự động cập nhật lại điểm sao sản phẩm</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex items-center gap-2 border-b border-stone-200 pb-1 text-xs">
+        <a th:href="@{/admin/moderation(tab='reviews')}"
+           class="px-4 py-2 font-bold rounded-lg transition"
+           th:classappend="${activeTab == 'reviews' ? 'bg-amber-500 text-slate-900' : 'text-stone-600 hover:bg-stone-100'}">
+            Đánh Giá Sản Phẩm (<span th:text="${reviews.totalElements}">0</span>)
+        </a>
+        <a th:href="@{/admin/moderation(tab='comments')}"
+           class="px-4 py-2 font-bold rounded-lg transition"
+           th:classappend="${activeTab == 'comments' ? 'bg-amber-500 text-slate-900' : 'text-stone-600 hover:bg-stone-100'}">
+            Hỏi Đáp Q&A (<span th:text="${comments.totalElements}">0</span>)
+        </a>
+    </div>
+
+    <!-- Bảng kiểm duyệt Đánh giá (Reviews) -->
+    <div th:if="${activeTab == 'reviews'}" class="bg-white rounded-2xl border border-stone-200 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-stone-700">
+                <thead class="bg-stone-50 border-b border-stone-200 text-stone-500 font-semibold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-4">Khách hàng</th>
+                        <th class="py-3 px-4">Sản phẩm</th>
+                        <th class="py-3 px-4">Điểm sao</th>
+                        <th class="py-3 px-4">Nội dung nhận xét</th>
+                        <th class="py-3 px-4">Trạng thái</th>
+                        <th class="py-3 px-4 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    <tr th:each="r : ${reviews.content}" class="hover:bg-stone-50/50 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-stone-900" th:text="${r.user != null ? r.user.fullName : 'Khách hàng'}">Nguyễn Khách</div>
+                            <div class="text-[11px] text-stone-400" th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm')}">11/11/2026</div>
+                        </td>
+                        <td class="py-3.5 px-4 font-semibold text-stone-800"
+                            th:text="${r.product != null ? r.product.name : 'Đặc sản'}">Trà Đinh</td>
+                        <td class="py-3.5 px-4 font-extrabold text-amber-600" th:text="${r.rating + ' ★'}">5 ★</td>
+                        <td class="py-3.5 px-4 max-w-md">
+                            <p class="text-stone-700" th:text="${r.content}">Đặc sản rất ngon</p>
+                            <p th:if="${r.sellerReply != null}" class="text-[11px] text-emerald-700 mt-1"
+                               th:text="'Phản hồi Shop: ' + ${r.sellerReply}"></p>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span th:if="${r.status.name() == 'VISIBLE'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Hiển thị</span>
+                            <span th:if="${r.status.name() == 'HIDDEN'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Đã ẩn</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <form th:action="@{/admin/moderation/reviews/{id}/toggle(id=${r.id})}" method="post">
+                                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit"
+                                        class="px-3 py-1.5 rounded-lg border font-semibold text-xs transition"
+                                        th:classappend="${r.status.name() == 'VISIBLE'} ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'"
+                                        th:text="${r.status.name() == 'VISIBLE'} ? 'Ẩn đánh giá' : 'Hiện lại'">
+                                    Ẩn đánh giá
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${reviews.totalElements == 0}">
+                        <td colspan="6" class="text-center py-8 text-stone-400">Chưa có đánh giá nào trên hệ thống.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bảng kiểm duyệt Hỏi đáp Q&A (Comments) -->
+    <div th:if="${activeTab == 'comments'}" class="bg-white rounded-2xl border border-stone-200 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-stone-700">
+                <thead class="bg-stone-50 border-b border-stone-200 text-stone-500 font-semibold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="py-3 px-4">Người gửi</th>
+                        <th class="py-3 px-4">Sản phẩm</th>
+                        <th class="py-3 px-4">Nội dung hỏi đáp</th>
+                        <th class="py-3 px-4">Trạng thái</th>
+                        <th class="py-3 px-4 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    <tr th:each="c : ${comments.content}" class="hover:bg-stone-50/50 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-stone-900" th:text="${c.user != null ? c.user.fullName : 'Thành viên'}">Nguyễn Khách</div>
+                            <span th:if="${c.isSellerReply}" class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">Chủ Shop trả lời</span>
+                        </td>
+                        <td class="py-3.5 px-4 font-semibold text-stone-800"
+                            th:text="${c.product != null ? c.product.name : 'Đặc sản'}">Trà Đinh</td>
+                        <td class="py-3.5 px-4 max-w-md" th:text="${c.content}">Nội dung câu hỏi</td>
+                        <td class="py-3.5 px-4">
+                            <span th:if="${c.status.name() == 'VISIBLE'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Hiển thị</span>
+                            <span th:if="${c.status.name() == 'HIDDEN'}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Đã ẩn</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <form th:action="@{/admin/moderation/comments/{id}/toggle(id=${c.id})}" method="post">
+                                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit"
+                                        class="px-3 py-1.5 rounded-lg border font-semibold text-xs transition"
+                                        th:classappend="${c.status.name() == 'VISIBLE'} ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'"
+                                        th:text="${c.status.name() == 'VISIBLE'} ? 'Ẩn bình luận' : 'Hiện lại'">
+                                    Ẩn bình luận
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${comments.totalElements == 0}">
+                        <td colspan="5" class="text-center py-8 text-stone-400">Chưa có bình luận hỏi đáp nào.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</html>

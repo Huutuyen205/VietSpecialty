@@ -21,6 +21,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @EntityGraph(attributePaths = {"images", "shop", "province", "category"})
     Optional<Product> findBySlugAndStatus(String slug, ProductStatus status);
 
+    boolean existsBySlug(String slug);
+
     @EntityGraph(attributePaths = {"images", "shop", "province", "category"})
     Optional<Product> findByIdAndShopId(Long id, Long shopId);
 

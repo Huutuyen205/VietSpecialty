@@ -56,7 +56,7 @@
     @apply hover:shadow-lift hover:-translate-y-1 hover:border-primary-500/30;
   }
   .card-heritage {
-    @apply bg-surface/95 backdrop-blur-xs rounded-2xl border border-line/80 shadow-soft transition-all duration-300 hover:shadow-lift hover:-translate-y-1.5;
+    @apply bg-surface/95 backdrop-blur-sm rounded-2xl border border-line/80 shadow-soft transition-all duration-300 hover:shadow-lift hover:-translate-y-1.5;
   }
 
   /* Regional Badges & Seals */

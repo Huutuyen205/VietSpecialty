@@ -9,7 +9,9 @@
       )}">
 
 <div id="orderDetailContent" class="max-w-4xl mx-auto py-6 sm:py-8 space-y-6"
+     th:data-order-id="${order.id}"
      x-data="{
+        orderId: null,
         cancelModalOpen: false,
         cancelReason: '',
         loading: false,
@@ -18,6 +20,9 @@
         reviewProductName: '',
         reviewRating: 5,
         reviewContent: '',
+        init() {
+            this.orderId = this.$el.dataset.orderId;
+        },
         openReview(orderItemId, productName) {
             this.reviewOrderItemId = orderItemId;
             this.reviewProductName = productName;
@@ -32,25 +37,20 @@
             }
             this.loading = true;
             try {
-                const res = await fetch('/api/reviews', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        orderItemId: this.reviewOrderItemId,
-                        rating: this.reviewRating,
-                        content: this.reviewContent
-                    })
+                const res = await window.api.post('/api/reviews', {
+                    orderItemId: this.reviewOrderItemId,
+                    rating: this.reviewRating,
+                    content: this.reviewContent
                 });
-                const data = await res.json();
-                if (data.success) {
-                    alert('Cảm ơn bạn đã gửi đánh giá đặc sản!');
+                if (res && res.success) {
+                    if (window.Toast) window.Toast.success('Cảm ơn bạn đã gửi đánh giá đặc sản!');
                     this.reviewModalOpen = false;
                     location.reload();
                 } else {
-                    alert(data.message || 'Không thể gửi đánh giá');
+                    alert((res && res.message) || 'Không thể gửi đánh giá');
                 }
             } catch (e) {
-                alert('Đã xảy ra lỗi, vui lòng thử lại');
+                alert((e && e.message) || 'Đã xảy ra lỗi, vui lòng thử lại');
             } finally {
                 this.loading = false;
             }
@@ -62,19 +62,16 @@
             }
             this.loading = true;
             try {
-                const res = await fetch('/api/orders/' + [[${order.id}]] + '/cancel', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reason: this.cancelReason })
+                const res = await window.api.post('/api/orders/' + this.orderId + '/cancel', {
+                    reason: this.cancelReason
                 });
-                const data = await res.json();
-                if (data.success) {
+                if (res && res.success) {
                     location.reload();
                 } else {
-                    alert(data.message || 'Không thể hủy đơn hàng');
+                    alert((res && res.message) || 'Không thể hủy đơn hàng');
                 }
             } catch (e) {
-                alert('Đã xảy ra lỗi, vui lòng thử lại');
+                alert((e && e.message) || 'Đã xảy ra lỗi, vui lòng thử lại');
             } finally {
                 this.loading = false;
             }
@@ -85,17 +82,14 @@
             }
             this.loading = true;
             try {
-                const res = await fetch('/api/orders/' + [[${order.id}]] + '/received', {
-                    method: 'POST'
-                });
-                const data = await res.json();
-                if (data.success) {
+                const res = await window.api.post('/api/orders/' + this.orderId + '/received', {});
+                if (res && res.success) {
                     location.reload();
                 } else {
-                    alert(data.message || 'Không thể xác nhận nhận hàng');
+                    alert((res && res.message) || 'Không thể xác nhận nhận hàng');
                 }
             } catch (e) {
-                alert('Đã xảy ra lỗi, vui lòng thử lại');
+                alert((e && e.message) || 'Đã xảy ra lỗi, vui lòng thử lại');
             } finally {
                 this.loading = false;
             }
@@ -135,7 +129,7 @@
 
         <!-- Danh sách mốc lịch sử -->
         <div class="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-line">
-            <div th:each="hist, stat : ${order.statusHistories}" class="relative">
+            <div th:each="hist, stat : ${order.histories}" class="relative">
                 <!-- Dot icon -->
                 <div class="absolute -left-6 top-0.5 w-4 h-4 rounded-full border-2 border-surface flex items-center justify-center"
                      th:classappend="${stat.last ? 'bg-primary-600 ring-4 ring-primary-100' : 'bg-ink-muted/50'}">
@@ -209,12 +203,12 @@
         <div class="flex items-center justify-between pb-3 border-b border-line">
             <div class="flex items-center gap-2">
                 <i data-lucide="store" class="w-4 h-4 text-primary-600"></i>
-                <a th:href="@{'/shops/' + ${order.shopId}}" class="font-bold text-ink text-sm hover:underline" th:text="${order.shopName}">
+                <span class="font-bold text-ink text-sm" th:text="${order.shopName}">
                     HTX Chè Tân Cương
-                </a>
+                </span>
             </div>
-            <a th:href="@{'/shops/' + ${order.shopId}}" class="btn btn-outline py-1 px-3 text-xs">
-                Ghé thăm gian hàng
+            <a th:href="@{/products(shopId=${order.shopId})}" class="btn btn-outline py-1 px-3 text-xs">
+                Xem sản phẩm của shop
             </a>
         </div>
 
@@ -236,7 +230,9 @@
                     <!-- Nút đánh giá nếu đơn đã DELIVERED -->
                     <div th:if="${order.status.name() == 'DELIVERED'}" class="mt-2">
                         <button type="button"
-                                @click="openReview([[${item.id}]], [[${item.productName}]])"
+                                th:data-item-id="${item.id}"
+                                th:data-item-name="${item.productName}"
+                                @click="openReview($el.dataset.itemId, $el.dataset.itemName)"
                                 class="btn btn-outline py-1 px-2.5 text-[11px] font-semibold text-primary-700 hover:bg-primary-50">
                             <i data-lucide="star" class="w-3.5 h-3.5 mr-1"></i> Đánh giá
                         </button>
@@ -279,7 +275,27 @@
             <i data-lucide="arrow-left" class="w-4 h-4 mr-1.5"></i> Quay lại danh sách
         </a>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Nút Mua lại khi đơn đã DELIVERED hoặc CANCELLED -->
+            <form th:if="${order.status.name() == 'DELIVERED' or order.status.name() == 'CANCELLED'}"
+                  th:action="@{'/orders/' + ${order.id} + '/reorder'}" method="POST">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-primary py-2.5 px-5 text-xs font-bold flex items-center gap-1.5">
+                    <i data-lucide="rotate-Ccw" class="w-4 h-4"></i>
+                    <span>Mua lại đơn này</span>
+                </button>
+            </form>
+
+            <!-- Nút Yêu cầu hoàn tiền khi đã thanh toán -->
+            <form th:if="${order.paymentStatus.name() == 'PAID' and (order.status.name() == 'CANCELLED' or order.status.name() == 'DELIVERED')}"
+                  th:action="@{'/orders/' + ${order.id} + '/refund-request'}" method="POST">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-outline py-2.5 px-5 text-xs font-semibold text-amber-700 border-amber-300 hover:bg-amber-50 flex items-center gap-1.5">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span>Yêu cầu hoàn tiền</span>
+                </button>
+            </form>
+
             <!-- Nút Hủy đơn nếu còn ở PENDING_PAYMENT hoặc PENDING_CONFIRM -->
             <button th:if="${order.status.name() == 'PENDING_PAYMENT' or order.status.name() == 'PENDING_CONFIRM'}"
                     @click="cancelModalOpen = true"

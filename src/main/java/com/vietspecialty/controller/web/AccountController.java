@@ -1,18 +1,28 @@
 package com.vietspecialty.controller.web;
 
+import com.vietspecialty.domain.entity.Order;
+import com.vietspecialty.domain.enums.OrderStatus;
 import com.vietspecialty.dto.request.AddressRequest;
 import com.vietspecialty.dto.request.ChangePasswordRequest;
 import com.vietspecialty.dto.request.ProfileUpdateRequest;
 import com.vietspecialty.dto.response.AddressResponse;
+import com.vietspecialty.dto.response.OrderDetailResponse;
+import com.vietspecialty.dto.response.OrderSummaryResponse;
 import com.vietspecialty.dto.response.UserResponse;
 import com.vietspecialty.exception.BusinessException;
 import com.vietspecialty.repository.ProvinceRepository;
+import com.vietspecialty.security.CurrentUser;
+import com.vietspecialty.security.CustomUserDetails;
 import com.vietspecialty.security.SecurityUtils;
 import com.vietspecialty.service.AddressService;
+import com.vietspecialty.service.OrderService;
 import com.vietspecialty.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,6 +31,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -34,10 +45,39 @@ public class AccountController {
     private final UserService userService;
     private final AddressService addressService;
     private final ProvinceRepository provinceRepository;
+    private final OrderService orderService;
 
     @GetMapping("/orders")
-    public String accountOrdersRedirect() {
-        return "redirect:/orders";
+    public String accountOrders(
+            @CurrentUser CustomUserDetails userDetails,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model
+    ) {
+        if (userDetails == null) {
+            return "redirect:/login?redirect=/account/orders";
+        }
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
+        Page<OrderSummaryResponse> orderPage = orderService.getBuyerOrders(userDetails.getId(), status, pageable);
+        model.addAttribute("orderPage", orderPage);
+        model.addAttribute("selectedStatus", status != null ? status.name() : "ALL");
+        model.addAttribute("statuses", OrderStatus.values());
+        return "web/orders/index";
+    }
+
+    @GetMapping("/orders/{code}")
+    public String accountOrderDetail(
+            @CurrentUser CustomUserDetails userDetails,
+            @PathVariable String code,
+            Model model
+    ) {
+        if (userDetails == null) {
+            return "redirect:/login?redirect=/account/orders/" + code;
+        }
+        OrderDetailResponse detail = orderService.getOrderDetail(code, userDetails.getId());
+        model.addAttribute("order", detail);
+        return "web/orders/detail";
     }
 
     @GetMapping("/profile")

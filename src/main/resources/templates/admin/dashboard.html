@@ -72,17 +72,108 @@
         </div>
     </div>
 
-    <!-- Biểu đồ doanh thu toàn sàn -->
-    <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs space-y-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="font-bold text-stone-800 text-sm">Biểu Đồ Doanh Thu Toàn Sàn 7 Ngày Gần Nhất</h3>
-                <p class="text-xs text-stone-500">Doanh số thực tế ghi nhận từ các đơn hàng hoàn tất</p>
+    <!-- 2 Biểu đồ: Doanh thu ngày & Phân bổ 4 vùng miền -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-stone-200 shadow-xs space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-stone-800 text-sm">Biểu Đồ Doanh Thu Toàn Sàn 7 Ngày Gần Nhất</h3>
+                    <p class="text-xs text-stone-500">Doanh số thực tế ghi nhận từ các đơn hàng hoàn tất</p>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-1 bg-stone-100 text-stone-700 rounded-lg">7 ngày</span>
             </div>
-            <span class="text-xs font-semibold px-2.5 py-1 bg-stone-100 text-stone-700 rounded-lg">7 ngày</span>
+            <div class="h-64">
+                <canvas id="adminRevenueChart"></canvas>
+            </div>
         </div>
-        <div class="h-64">
-            <canvas id="adminRevenueChart"></canvas>
+
+        <!-- Phân bổ 4 vùng miền -->
+        <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-stone-800 text-sm">Thống Kê 4 Vùng Miền Đặc Sản</h3>
+                    <p class="text-xs text-stone-500">Doanh thu & Độ phủ tỉnh thành</p>
+                </div>
+                <a th:href="@{/admin/regions}" class="text-xs font-bold text-amber-600 hover:underline">Chi tiết</a>
+            </div>
+            <div class="h-44">
+                <canvas id="adminRegionChart"></canvas>
+            </div>
+            <div class="space-y-2 pt-2 border-t border-stone-100 text-xs" th:if="${regionStats != null}">
+                <div th:each="reg : ${regionStats}" class="flex items-center justify-between">
+                    <span class="font-semibold text-stone-700" th:text="${reg.label}">Miền Bắc</span>
+                    <span class="font-bold text-emerald-700"
+                          th:text="${#numbers.formatDecimal(reg.revenue, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Việc cần xử lý & Gian hàng chờ duyệt -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-xs space-y-4">
+            <h3 class="font-bold text-stone-800 text-sm flex items-center gap-2">
+                <i data-lucide="bell-ring" class="w-4 h-4 text-amber-500"></i>
+                <span>Việc Cần Xử Lý Ngay</span>
+            </h3>
+            <div class="space-y-3 text-xs">
+                <a th:href="@{/admin/shops(status='PENDING')}"
+                   class="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 hover:bg-amber-100/70 transition">
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="store" class="w-4 h-4 text-amber-600"></i>
+                        <span class="font-semibold text-stone-800">Hồ sơ mở gian hàng chờ duyệt</span>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full font-extrabold bg-amber-500 text-slate-900"
+                          th:text="${pendingShopsCount != null ? pendingShopsCount : 0}">0</span>
+                </a>
+
+                <a th:href="@{/admin/refunds(status='REFUND_PENDING')}"
+                   class="flex items-center justify-between p-3.5 rounded-xl bg-rose-50/70 border border-rose-200 hover:bg-rose-100/70 transition">
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4 text-rose-600"></i>
+                        <span class="font-semibold text-stone-800">Yêu cầu hoàn tiền chờ xác nhận</span>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full font-extrabold bg-rose-600 text-white"
+                          th:text="${pendingRefundsCount != null ? pendingRefundsCount : 0}">0</span>
+                </a>
+
+                <a th:href="@{/admin/moderation}"
+                   class="flex items-center justify-between p-3.5 rounded-xl bg-stone-50 border border-stone-200 hover:bg-stone-100 transition">
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                        <span class="font-semibold text-stone-800">Kiểm duyệt đánh giá & hỏi đáp</span>
+                    </div>
+                    <span class="text-stone-500 font-semibold">Xem &rarr;</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-stone-200 shadow-xs space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-stone-800 text-sm">Hồ Sơ Đăng Ký Gian Hàng Mới Nhất</h3>
+                <a th:href="@{/admin/shops}" class="text-xs font-bold text-amber-600 hover:underline">Quản lý tất cả gian hàng</a>
+            </div>
+
+            <div th:if="${pendingShops == null or #lists.isEmpty(pendingShops)}" class="py-8 text-center text-xs text-stone-400">
+                Hiện không có hồ sơ đăng ký mở gian hàng nào đang chờ phê duyệt.
+            </div>
+
+            <div th:if="${pendingShops != null and !#lists.isEmpty(pendingShops)}" class="divide-y divide-stone-100 text-xs">
+                <div th:each="ps : ${pendingShops}" class="py-3 flex items-center justify-between gap-4">
+                    <div>
+                        <div class="font-bold text-stone-900" th:text="${ps.name}">HTX Đặc Sản</div>
+                        <div class="text-[11px] text-stone-500" th:text="${ps.provinceName + ' • Hotline: ' + ps.hotline}">Thái Nguyên</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <form th:action="@{/admin/shops/{id}/approve(id=${ps.id})}" method="post">
+                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs">
+                                Duyệt ngay
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -141,6 +232,32 @@
                 }
             } catch (err) {
                 console.error('Không thể tải dữ liệu biểu đồ doanh thu sàn', err);
+            }
+
+            try {
+                const regRes = await fetch('/api/admin/analytics/regions');
+                const regData = await regRes.json();
+                const regEl = document.getElementById('adminRegionChart');
+                if (regEl && regData.success && regData.data) {
+                    const rLabels = regData.data.map(item => item.label);
+                    const rValues = regData.data.map(item => item.revenue > 0 ? item.revenue : item.orderCount);
+                    new Chart(regEl.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: rLabels,
+                            datasets: [{
+                                data: rValues,
+                                backgroundColor: ['#059669', '#d97706', '#8b5cf6', '#0284c7']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Không thể tải biểu đồ vùng miền', err);
             }
         });
     </script>

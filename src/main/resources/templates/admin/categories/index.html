@@ -7,7 +7,21 @@
         extraJs=~{}
       )}">
 
-<div id="adminCategoriesContent" class="space-y-6">
+<div id="adminCategoriesContent" class="space-y-6"
+     x-data="{
+        editModalOpen: false,
+        editId: null,
+        editName: '',
+        editDescription: '',
+        editIcon: 'tag',
+        openEdit(id, name, desc, icon) {
+            this.editId = id;
+            this.editName = name;
+            this.editDescription = desc || '';
+            this.editIcon = icon || 'tag';
+            this.editModalOpen = true;
+        }
+     }">
 
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -60,6 +74,7 @@
                             <th class="py-3 px-4">Slug</th>
                             <th class="py-3 px-4">Mô tả</th>
                             <th class="py-3 px-4">Trạng thái</th>
+                            <th class="py-3 px-4 text-right">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-stone-100">
@@ -73,7 +88,35 @@
                             <td class="py-3.5 px-4 font-mono text-[11px] text-stone-500" th:text="${cat.slug}">tra-ca-phe</td>
                             <td class="py-3.5 px-4 text-stone-600" th:text="${cat.description != null ? cat.description : '---'}">---</td>
                             <td class="py-3.5 px-4">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Hoạt động</span>
+                                <span th:if="${cat.isActive}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Hoạt động</span>
+                                <span th:unless="${cat.isActive}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-600">Tạm ẩn</span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button type="button"
+                                            @click="openEdit([[${cat.id}]], [[${cat.name}]], [[${cat.description}]], [[${cat.icon}]])"
+                                            class="px-2.5 py-1 rounded-lg border border-stone-200 hover:bg-stone-100 text-stone-700 font-semibold text-xs">
+                                        Sửa
+                                    </button>
+
+                                    <form th:action="@{/admin/categories/{id}/toggle(id=${cat.id})}" method="post" class="inline">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit"
+                                                class="px-2.5 py-1 rounded-lg border font-semibold text-xs transition"
+                                                th:classappend="${cat.isActive} ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'"
+                                                th:text="${cat.isActive} ? 'Ẩn' : 'Bật'">
+                                            Ẩn
+                                        </button>
+                                    </form>
+
+                                    <form th:action="@{/admin/categories/{id}/delete(id=${cat.id})}" method="post" class="inline"
+                                          onsubmit="return confirm('Xác nhận xóa danh mục đặc sản này?');">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="px-2.5 py-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs">
+                                            Xóa
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -81,6 +124,39 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal chỉnh sửa danh mục -->
+    <div x-show="editModalOpen" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 border border-stone-200 shadow-xl space-y-4"
+             @click.away="editModalOpen = false">
+            <div class="flex items-center justify-between pb-2 border-b border-stone-200">
+                <h3 class="font-bold text-sm text-stone-900">Chỉnh Sửa Danh Mục Đặc Sản</h3>
+                <button type="button" @click="editModalOpen = false" class="text-stone-400 hover:text-stone-700">&times;</button>
+            </div>
+            <form :action="'/admin/categories/' + editId + '/update'" method="post" class="space-y-3">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Tên danh mục</label>
+                    <input type="text" name="name" x-model="editName" required
+                           class="w-full px-3.5 py-2 text-xs border border-stone-300 rounded-xl focus:border-amber-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Mô tả ngắn</label>
+                    <textarea name="description" x-model="editDescription" rows="2"
+                              class="w-full px-3.5 py-2 text-xs border border-stone-300 rounded-xl focus:border-amber-500 focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Biểu tượng Lucide Icon</label>
+                    <input type="text" name="icon" x-model="editIcon"
+                           class="w-full px-3.5 py-2 text-xs border border-stone-300 rounded-xl focus:border-amber-500 focus:outline-none font-mono">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" @click="editModalOpen = false" class="px-4 py-2 border border-stone-300 rounded-xl text-xs font-semibold">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl text-xs">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 </html>
-

@@ -229,7 +229,10 @@
             removeCartItem(cartItemId);
             return;
         }
-        api.put('/api/cart/items/' + cartItemId, { quantity: newQty })
+        api.request('/api/cart/items/' + cartItemId, {
+            method: 'PUT',
+            body: JSON.stringify({ quantity: newQty })
+        })
             .then(res => {
                 window.location.reload();
             })

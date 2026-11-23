@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="html(pageTitle, content, pageMeta, extraCss, extraJs)">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title layout:title-pattern="$CONTENT_TITLE — VietSpecialty">VietSpecialty — Sàn Đặc Sản Vùng Miền Việt Nam</title>
+    <title layout:title-pattern="$CONTENT_TITLE — VietSpecialty"
+           th:text="${pageTitle != null ? pageTitle : 'VietSpecialty — Sàn Đặc Sản Vùng Miền Việt Nam'}">VietSpecialty — Sàn Đặc Sản Vùng Miền Việt Nam</title>
 
     <!-- CSRF Meta Tags -->
     <meta name="_csrf" th:content="${_csrf?.token}"/>
@@ -19,6 +23,17 @@
 
     <!-- Tailwind CSS (compiled) -->
     <link rel="stylesheet" th:href="@{/css/app.css}">
+
+    <!-- Dynamic Meta tags from child templates -->
+    <th:block th:if="${pageMeta != null}">
+        <th:block th:replace="${pageMeta}"></th:block>
+    </th:block>
+
+    <!-- Extra CSS from child templates -->
+    <th:block th:if="${extraCss != null}">
+        <th:block th:replace="${extraCss}"></th:block>
+    </th:block>
+    <th:block layout:fragment="extraCss"></th:block>
 
     <!-- Vendor Scripts -->
     <script th:src="@{/vendor/alpine.min.js}" defer></script>
@@ -40,14 +55,22 @@
 
     <!-- Main Content Area -->
     <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div layout:fragment="content"></div>
+        <div layout:fragment="content">
+            <th:block th:if="${content != null}" th:replace="${content}"></th:block>
+        </div>
     </main>
 
     <!-- Footer Fragment -->
     <div th:replace="~{fragments/footer :: footer}"></div>
 
-    <!-- Floating Chatbot Widget (Always available on public & buyer pages) -->
+    <!-- Floating Chatbot Widget -->
     <div th:replace="~{fragments/chat-widget :: chatWidget}"></div>
+
+    <!-- Extra JS from child templates -->
+    <th:block th:if="${extraJs != null}">
+        <th:block th:replace="${extraJs}"></th:block>
+    </th:block>
+    <th:block layout:fragment="extraJs"></th:block>
 
     <!-- Initialize Lucide Icons -->
     <script>

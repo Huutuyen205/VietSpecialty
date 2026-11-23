@@ -13,6 +13,8 @@ public final class ShopMapper {
         if (s == null) return null;
 
         String provinceName = s.getProvince() != null ? s.getProvince().getName() : null;
+        String ownerFullName = s.getOwner() != null ? s.getOwner().getFullName() : null;
+        String ownerEmail = s.getOwner() != null ? s.getOwner().getEmail() : null;
 
         return new ShopResponse(
                 s.getId(),
@@ -24,7 +26,10 @@ public final class ShopMapper {
                 provinceName,
                 s.getAddressDetail(),
                 s.getStatus(),
-                s.getCreatedAt()
+                s.getCreatedAt(),
+                ownerFullName,
+                ownerEmail,
+                s.getRejectReason()
         );
     }
 }

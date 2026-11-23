@@ -7,12 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle} != null ? ${pageTitle} : 'Quản Trị Hệ Thống - VietSpecialty'">Quản Trị Hệ Thống - VietSpecialty</title>
     
-    <link rel="stylesheet" th:href="@{/static/css/app.css}">
-    <link rel="icon" type="image/svg+xml" th:href="@{/static/images/logo.svg}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo.svg}">
 
     <!-- Vendor Scripts (Local) -->
-    <script defer th:src="@{/static/vendor/alpine.min.js}"></script>
-    <script th:src="@{/static/vendor/lucide.min.js}"></script>
+    <script defer th:src="@{/vendor/alpine.min.js}"></script>
+    <script th:src="@{/vendor/lucide.min.js}"></script>
     <!-- Chart.js CDN hoặc inline script -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -36,7 +36,7 @@
                 </button>
 
                 <a th:href="@{/admin/dashboard}" class="flex items-center gap-2">
-                    <img th:src="@{/static/images/logo.svg}" alt="VietSpecialty" class="w-8 h-8">
+                    <img th:src="@{/images/logo.svg}" alt="VietSpecialty" class="w-8 h-8">
                     <div>
                         <span class="font-extrabold text-sm sm:text-base text-white tracking-tight">VietSpecialty</span>
                         <span class="ml-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-900 uppercase">Quản Trị Sàn</span>
@@ -93,11 +93,18 @@
                     <span>Quản Lý Gian Hàng</span>
                 </a>
 
-                <a th:href="@{/admin/vouchers}"
+                <a th:href="@{/admin/users}"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition"
-                   th:classappend="${activeNav == 'vouchers'} ? 'bg-amber-500 text-slate-900 font-bold' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
-                    <i data-lucide="ticket-percent" class="w-4 h-4"></i>
-                    <span>Mã Giảm Giá Sàn</span>
+                   th:classappend="${activeNav == 'users'} ? 'bg-amber-500 text-slate-900 font-bold' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>Quản Lý Người Dùng</span>
+                </a>
+
+                <a th:href="@{/admin/regions}"
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition"
+                   th:classappend="${activeNav == 'regions'} ? 'bg-amber-500 text-slate-900 font-bold' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                    <i data-lucide="map" class="w-4 h-4"></i>
+                    <span>Vùng Miền & Tỉnh Thành</span>
                 </a>
 
                 <a th:href="@{/admin/categories}"
@@ -105,6 +112,27 @@
                    th:classappend="${activeNav == 'categories'} ? 'bg-amber-500 text-slate-900 font-bold' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                     <i data-lucide="folder-tree" class="w-4 h-4"></i>
                     <span>Danh Mục Đặc Sản</span>
+                </a>
+
+                <a th:href="@{/admin/vouchers}"
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition"
+                   th:classappend="${activeNav == 'vouchers'} ? 'bg-amber-500 text-slate-900 font-bold' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                    <i data-lucide="ticket-percent" class="w-4 h-4"></i>
+                    <span>Mã Giảm Giá Sàn</span>
+                </a>
+
+                <a th:href="@{/admin/moderation}"
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition"
+                   th:classappend="${activeNav == 'moderation'} ? 'bg-amber-500 text-slate-900 font-bold' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    <span>Kiểm Duyệt Nội Dung</span>
+                </a>
+
+                <a th:href="@{/admin/refunds}"
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition"
+                   th:classappend="${activeNav == 'refunds'} ? 'bg-amber-500 text-slate-900 font-bold' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    <span>Quản Lý Hoàn Tiền</span>
                 </a>
             </nav>
 

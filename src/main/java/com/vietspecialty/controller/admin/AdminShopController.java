@@ -51,7 +51,19 @@ public class AdminShopController {
             RedirectAttributes redirectAttributes
     ) {
         shopService.approveShop(shopId, adminDetails.getId());
-        redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt gian hàng thành công!");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã phê duyệt gian hàng và cấp quyền Người bán thành công!");
+        return "redirect:/admin/shops";
+    }
+
+    @PostMapping("/{id}/reject")
+    public String rejectShop(
+            @PathVariable("id") Long shopId,
+            @RequestParam(value = "reason", required = false, defaultValue = "Hồ sơ đăng ký chưa đủ thông tin xác thực OCOP") String reason,
+            @CurrentUser CustomUserDetails adminDetails,
+            RedirectAttributes redirectAttributes
+    ) {
+        shopService.rejectShop(shopId, adminDetails.getId(), reason);
+        redirectAttributes.addFlashAttribute("successMessage", "Đã từ chối hồ sơ đăng ký gian hàng!");
         return "redirect:/admin/shops";
     }
 
@@ -63,6 +75,17 @@ public class AdminShopController {
     ) {
         shopService.suspendShop(shopId, adminDetails.getId());
         redirectAttributes.addFlashAttribute("successMessage", "Đã tạm dừng hoạt động gian hàng!");
+        return "redirect:/admin/shops";
+    }
+
+    @PostMapping({"/{id}/restore", "/{id}/activate", "/{id}/reactivate"})
+    public String restoreShop(
+            @PathVariable("id") Long shopId,
+            @CurrentUser CustomUserDetails adminDetails,
+            RedirectAttributes redirectAttributes
+    ) {
+        shopService.approveShop(shopId, adminDetails.getId());
+        redirectAttributes.addFlashAttribute("successMessage", "Đã khôi phục hoạt động gian hàng thành công!");
         return "redirect:/admin/shops";
     }
 }

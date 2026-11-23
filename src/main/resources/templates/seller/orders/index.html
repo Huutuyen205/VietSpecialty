@@ -83,7 +83,8 @@
 
                         <!-- Khách hàng -->
                         <td class="px-5 py-4">
-                            <span class="font-medium text-ink block" th:text="${ord.shopName}">Khách hàng</span>
+                            <span class="font-medium text-ink block" th:text="${ord.receiverName != null ? ord.receiverName : ord.shopName}">Khách hàng</span>
+                            <span th:if="${ord.receiverPhone != null}" class="text-[11px] text-ink-muted font-mono" th:text="${ord.receiverPhone}">0912345678</span>
                         </td>
 
                         <!-- Sản phẩm tóm tắt -->

@@ -468,8 +468,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDetailResponse getSellerOrderDetail(String orderCode, Long shopId) {
-        Order order = orderRepository.findByCodeAndShopId(orderCode, shopId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        Optional<Order> orderOpt = orderRepository.findByCodeAndShopId(orderCode, shopId);
+        if (orderOpt.isEmpty() && orderCode != null && orderCode.matches("\\d+")) {
+            Long orderId = Long.parseLong(orderCode);
+            orderOpt = orderRepository.findById(orderId)
+                    .filter(o -> o.getShop() != null && o.getShop().getId().equals(shopId));
+        }
+        Order order = orderOpt.orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         return OrderMapper.toDetail(order);
     }
 
@@ -610,6 +615,9 @@ public class OrderServiceImpl implements OrderService {
             order.setCancelledAt(now);
             order.setCancelReason(cancelReason);
             order.setCancelledBy(actorType);
+            if (order.getPaymentStatus() == OrderPaymentStatus.PAID) {
+                order.setPaymentStatus(OrderPaymentStatus.REFUND_PENDING);
+            }
 
             List<OrderItem> items = order.getItems();
             if (items == null || items.isEmpty()) {
@@ -623,6 +631,9 @@ public class OrderServiceImpl implements OrderService {
             // Hoàn lại voucher nếu có
             if (order.getShopVoucher() != null) {
                 voucherService.releaseVoucher(order.getShopVoucher().getId());
+            }
+            if (order.getOrderGroup() != null && order.getOrderGroup().getPlatformVoucher() != null) {
+                voucherService.releaseVoucher(order.getOrderGroup().getPlatformVoucher().getId());
             }
         }
 
@@ -699,6 +710,44 @@ public class OrderServiceImpl implements OrderService {
         }
 
         log.info("Order {} status changed: {} -> {} by {}", order.getCode(), currentStatus, newStatus, actorType);
+    }
+
+    @Override
+    @Transactional
+    public void confirmRefund(Long orderId, Long adminId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getPaymentStatus() != OrderPaymentStatus.REFUND_PENDING) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Đơn hàng không ở trạng thái chờ hoàn tiền");
+        }
+
+        order.setPaymentStatus(OrderPaymentStatus.REFUNDED);
+        orderRepository.save(order);
+
+        User adminUser = adminId != null ? userRepository.findById(adminId).orElse(null) : null;
+
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .fromStatus(order.getStatus())
+                .toStatus(order.getStatus())
+                .actorType(ActorType.ADMIN)
+                .changedBy(adminUser)
+                .note("Quản trị viên đã xác nhận hoàn tiền thành công cho đơn hàng")
+                .build();
+        orderStatusHistoryRepository.save(history);
+
+        if (order.getUser() != null) {
+            notificationService.createNotification(
+                    order.getUser(),
+                    "ORDER_REFUNDED",
+                    "Hoàn tiền thành công đơn hàng #" + order.getCode(),
+                    "Số tiền " + MoneyUtils.formatVnd(order.getTotalAmount()) + " của đơn hàng #" + order.getCode() + " đã được hoàn trả thành công.",
+                    "/orders/" + order.getCode()
+            );
+        }
+
+        log.info("Refund confirmed for orderId={}, code={} by adminId={}", order.getId(), order.getCode(), adminId);
     }
 
     @Override

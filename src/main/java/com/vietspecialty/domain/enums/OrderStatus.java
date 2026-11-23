@@ -28,7 +28,7 @@ public enum OrderStatus {
         return switch (this) {
             case PENDING_PAYMENT -> target == PENDING_CONFIRM || target == CANCELLED;
             case PENDING_CONFIRM -> target == PREPARING || target == CANCELLED;
-            case PREPARING -> target == SHIPPING;
+            case PREPARING -> target == SHIPPING || target == CANCELLED;
             case SHIPPING -> target == DELIVERED;
             case DELIVERED, CANCELLED -> false; // Trạng thái cuối, không thể chuyển đổi tiếp
         };
@@ -51,7 +51,11 @@ public enum OrderStatus {
                 case CANCELLED -> actor == ActorType.BUYER || actor == ActorType.SELLER || actor == ActorType.ADMIN;
                 default -> false;
             };
-            case PREPARING -> target == SHIPPING && actor == ActorType.SELLER;
+            case PREPARING -> switch (target) {
+                case SHIPPING -> actor == ActorType.SELLER;
+                case CANCELLED -> actor == ActorType.SELLER || actor == ActorType.ADMIN;
+                default -> false;
+            };
             case SHIPPING -> target == DELIVERED && (actor == ActorType.BUYER || actor == ActorType.SELLER || actor == ActorType.SYSTEM);
             case DELIVERED, CANCELLED -> false;
         };

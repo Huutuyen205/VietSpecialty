@@ -230,11 +230,11 @@
                     <span class="text-[11px] text-ink-muted" th:text="'(Có sẵn ' + ${product.stock} + ' sản phẩm)'">Có sẵn 50</span>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2">
                     <!-- Nút Thêm Vào Giỏ -->
                     <button type="button"
                             th:onclick="'addToCartWithQuantity(' + ${product.id} + ')'"
-                            class="btn btn-outline py-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 border-primary-600/40 text-primary-700 hover:bg-primary-50 shadow-2xs active:scale-95">
+                            class="sm:col-span-5 btn btn-outline py-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 border-primary-600/40 text-primary-700 hover:bg-primary-50 shadow-2xs active:scale-95">
                         <i data-lucide="shopping-cart" class="w-4 h-4 text-primary-600"></i>
                         <span>Thêm vào giỏ</span>
                     </button>
@@ -242,9 +242,20 @@
                     <!-- Nút Mua Ngay (Vibrant Accent Gốm Sứ) -->
                     <button type="button"
                             th:onclick="'buyNow(' + ${product.id} + ')'"
-                            class="btn-accent py-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95">
+                            class="sm:col-span-5 btn-accent py-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95">
                         <i data-lucide="zap" class="w-4 h-4"></i>
-                        <span>Mua ngay với giá ưu đãi</span>
+                        <span>Mua ngay</span>
+                    </button>
+
+                    <!-- Nút Yêu thích Wishlist -->
+                    <button type="button"
+                            th:data-wishlist-id="${product.id}"
+                            th:onclick="'window.toggleWishlistItem && window.toggleWishlistItem(' + ${product.id} + ', this)'"
+                            class="wishlist-btn sm:col-span-2 btn btn-outline py-3.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 text-ink-muted hover:text-danger hover:border-danger/40 shadow-2xs active:scale-95"
+                            title="Lưu vào đặc sản yêu thích"
+                            aria-label="Lưu vào đặc sản yêu thích">
+                        <i data-lucide="heart" class="w-4 h-4"></i>
+                        <span class="sm:hidden">Yêu thích</span>
                     </button>
                 </div>
             </div>
@@ -292,6 +303,12 @@
                 <span>Đánh giá từ khách hàng</span>
                 <span class="text-[11px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-bold" th:text="${product.reviewCount}">36</span>
             </button>
+            <button type="button" @click="activeTab = 'qa'"
+                    :class="activeTab === 'qa' ? 'text-primary-700 border-b-2 border-primary-600 pb-3' : 'text-ink-muted hover:text-ink pb-3'"
+                    class="transition whitespace-nowrap flex items-center gap-1.5">
+                <span>Hỏi đáp về đặc sản (Q&amp;A)</span>
+                <span class="text-[11px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-bold" th:text="${commentCount != null ? commentCount : 0}">0</span>
+            </button>
             <button type="button" @click="activeTab = 'policy'"
                     :class="activeTab === 'policy' ? 'text-primary-700 border-b-2 border-primary-600 pb-3' : 'text-ink-muted hover:text-ink pb-3'"
                     class="transition whitespace-nowrap">
@@ -311,6 +328,7 @@
 
         <!-- Tab 2: Đánh giá khách hàng -->
         <div x-show="activeTab === 'reviews'"
+             th:data-product-id="${product.id}"
              x-data="{
                 reviews: [],
                 filterRating: null,
@@ -321,7 +339,8 @@
                     this.filterRating = rating;
                     this.reviewLoading = true;
                     try {
-                        let url = '/api/reviews/product/' + [[${product.id}]] + '?page=0&size=10';
+                        const pid = this.$el.dataset.productId;
+                        let url = '/api/reviews/product/' + pid + '?page=0&size=10';
                         if (rating) url += '&rating=' + rating;
                         const res = await fetch(url);
                         const data = await res.json();
@@ -414,6 +433,70 @@
 
                 <div x-show="reviewLoading" class="text-center py-8 text-xs text-ink-muted">
                     <span>Đang tải đánh giá...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2b: Hỏi đáp về đặc sản (Q&A) -->
+        <div id="qa-section" x-show="activeTab === 'qa'" class="space-y-6" style="display: none;">
+            <div th:if="${commentSuccess != null}" class="p-3 rounded-xl bg-primary-50 border border-primary-200 text-xs text-primary-700 flex items-center gap-2">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                <span th:text="${commentSuccess}"></span>
+            </div>
+            <div th:if="${commentError != null}" class="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-danger flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                <span th:text="${commentError}"></span>
+            </div>
+
+            <!-- Form gửi câu hỏi Q&A -->
+            <form th:action="@{'/products/' + ${product.id} + '/comments'}" method="POST" class="p-4 sm:p-5 rounded-2xl bg-surface-muted/50 border border-line space-y-3">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <label class="block text-xs font-bold text-ink">Đặt câu hỏi cho gian hàng về món đặc sản này:</label>
+                <textarea name="content" rows="2" required maxlength="1000"
+                          placeholder="Hỏi về quy cách đóng gói quà biếu, hạn sử dụng, cách chế biến hoặc bảo quản..."
+                          class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface text-xs text-ink focus:ring-2 focus:ring-primary-500/20 focus:border-primary-600 focus:outline-none"></textarea>
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] text-ink-muted">Chủ gian hàng HTX sẽ phản hồi trực tiếp tại đây.</span>
+                    <button type="submit" class="btn-primary py-2 px-5 text-xs font-semibold flex items-center gap-1.5">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                        <span>Gửi câu hỏi</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Danh sách câu hỏi & trả lời -->
+            <div class="space-y-4">
+                <div th:if="${comments != null and !comments.isEmpty()}" th:each="c : ${comments}"
+                     class="p-4 sm:p-5 rounded-2xl bg-surface border border-line space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs uppercase"
+                                 th:text="${c.user != null and c.user.fullName != null ? #strings.substring(c.user.fullName,0,1) : 'K'}">K</div>
+                            <div>
+                                <span class="font-bold text-xs text-ink" th:text="${c.user != null ? c.user.fullName : 'Khách hàng'}">Khách hàng</span>
+                                <span class="text-[10px] text-ink-muted ml-2" th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-ink leading-relaxed" th:text="${c.content}">Nội dung câu hỏi</p>
+
+                    <!-- Các phản hồi -->
+                    <div th:if="${c.replies != null and !c.replies.isEmpty()}" class="space-y-2 pl-4 border-l-2 border-primary-200">
+                        <div th:each="rep : ${c.replies}" th:if="${rep.status.name() == 'VISIBLE'}"
+                             class="p-3 rounded-xl bg-surface-muted/60 border border-line text-xs space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-primary-700 text-[11px]" th:text="${rep.user != null ? rep.user.fullName : 'Gian hàng'}">Gian hàng</span>
+                                <span th:if="${rep.isSellerReply}" class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-primary-600 text-white">Chủ gian hàng</span>
+                                <span class="text-[10px] text-ink-muted" th:text="${#temporals.format(rep.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                            </div>
+                            <p class="text-ink leading-relaxed" th:text="${rep.content}"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${comments == null or comments.isEmpty()}" class="text-center py-8 text-xs text-ink-muted space-y-2">
+                    <i data-lucide="help-circle" class="w-8 h-8 text-ink-muted mx-auto opacity-50"></i>
+                    <p>Chưa có câu hỏi nào cho đặc sản này. Hãy đặt câu hỏi đầu tiên cho gian hàng nhé!</p>
                 </div>
             </div>
         </div>

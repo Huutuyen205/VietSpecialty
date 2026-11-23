@@ -24,10 +24,12 @@ public class ProductApiController {
 
     @GetMapping("/products/suggest")
     public ResponseEntity<ApiResponse<List<ProductCardResponse>>> suggestProducts(
-            @RequestParam(name = "q", required = false, defaultValue = "") String query,
+            @RequestParam(name = "q", required = false) String query,
+            @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(defaultValue = "6") int limit
     ) {
-        List<ProductCardResponse> suggestions = productService.suggestProducts(query, limit);
+        String searchTerm = (query != null && !query.isBlank()) ? query : (keyword != null ? keyword : "");
+        List<ProductCardResponse> suggestions = productService.suggestProducts(searchTerm, limit);
         return ResponseEntity.ok(ApiResponse.success(suggestions));
     }
 

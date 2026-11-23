@@ -11,13 +11,13 @@
             <img th:src="${p.primaryImageUrl != null ? p.primaryImageUrl : '/images/demo/placeholder.svg'}"
                  th:alt="${p.name}"
                  loading="lazy"
-                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-106"
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                  th:classappend="${p.stock <= 0} ? 'opacity-50 grayscale' : ''">
         </a>
 
         <!-- Tag Vùng Miền (Top Left) -->
         <div class="absolute top-2.5 left-2.5 z-10">
-            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white shadow-sm backdrop-blur-xs"
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white shadow-sm backdrop-blur-sm"
                   th:style="'background-color: ' + (${p.regionColorHex != null ? p.regionColorHex : '#0F9D8A'})">
                 <span class="w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse"></span>
                 <span th:text="${p.regionName}">Miền Bắc</span>
@@ -31,6 +31,16 @@
                 <span th:text="${p.ocopRating} + '★ OCOP'">4★ OCOP</span>
             </span>
         </div>
+
+        <!-- Nút Yêu thích Wishlist (Bottom Right trên ảnh) -->
+        <button type="button"
+                th:data-wishlist-id="${p.id}"
+                th:onclick="'window.toggleWishlistItem && window.toggleWishlistItem(' + ${p.id} + ', this)'"
+                class="wishlist-btn absolute bottom-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-surface/90 backdrop-blur-sm text-ink-muted hover:text-danger hover:bg-surface flex items-center justify-center shadow-sm border border-line/60 transition active:scale-90"
+                title="Yêu thích đặc sản"
+                aria-label="Yêu thích đặc sản">
+            <i data-lucide="heart" class="w-4 h-4"></i>
+        </button>
 
         <!-- Lớp phủ Tạm Hết Hàng (nếu hết hàng) -->
         <div th:if="${p.stock <= 0}" class="absolute inset-0 flex items-center justify-center bg-ink/40 backdrop-blur-[2px] z-20">

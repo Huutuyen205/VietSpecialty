@@ -19,6 +19,16 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
     @EntityGraph(attributePaths = {"user"})
     List<ProductComment> findByParentIdAndStatusOrderByCreatedAtAsc(Long parentId, CommentStatus status);
 
+    @EntityGraph(attributePaths = {"user", "product", "replies", "replies.user"})
+    Page<ProductComment> findByProductShopIdAndParentIsNullOrderByCreatedAtDesc(Long shopId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "product", "replies", "replies.user"})
+    Page<ProductComment> findByParentIsNullOrderByCreatedAtDesc(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "product"})
+    Page<ProductComment> findByStatusOrderByCreatedAtDesc(CommentStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "product"})
     Page<ProductComment> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }
 

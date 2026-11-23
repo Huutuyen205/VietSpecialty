@@ -21,10 +21,17 @@
         </ol>
     </nav>
 
+    <!-- Flash Error / Warning Message -->
+    <div th:if="${errorMessage != null or param.error != null}" class="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-danger flex items-center gap-2">
+        <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+        <span th:text="${errorMessage != null ? errorMessage : param.error}">Có lỗi xảy ra khi đặt hàng. Vui lòng kiểm tra lại thông tin.</span>
+    </div>
+
     <form th:action="@{/checkout/place-order}" method="POST" @submit="submitting = true" class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <input type="hidden" name="checkoutToken" th:value="${preview.checkoutToken}">
+        <input type="hidden" name="systemVoucherCode" th:value="${selectedSystemVoucher}">
 
         <!-- CỘT TRÁI (2/3): ĐỊA CHỈ, VẬN CHUYỂN, SẢN PHẨM & PHƯƠNG THỨC THANH TOÁN -->
         <div class="lg:col-span-2 space-y-6">
@@ -107,6 +114,29 @@
                                     </div>
                                 </div>
                                 <span class="font-serif font-bold text-primary-700 text-sm" th:text="${item.subtotalFormatted}">185.000₫</span>
+                            </div>
+                        </div>
+
+                        <!-- Mã giảm giá của gian hàng -->
+                        <div class="bg-surface-muted/30 px-4 py-2.5 border-t border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                            <div class="flex items-center gap-1.5 text-ink-muted">
+                                <i data-lucide="ticket" class="w-3.5 h-3.5 text-primary-600"></i>
+                                <span>Voucher của gian hàng:</span>
+                                <span th:if="${sg.shopDiscount != null and sg.shopDiscount.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                      class="text-primary-700 font-bold" th:text="'(-' + ${sg.shopDiscountFormatted} + ')'"></span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <input type="text"
+                                       th:id="'shopVoucherInput-' + ${sg.shopId}"
+                                       th:name="'shopVoucherCodes[' + ${sg.shopId} + ']'"
+                                       th:value="${selectedShopVouchers != null ? selectedShopVouchers.get(sg.shopId) : ''}"
+                                       placeholder="Mã voucher shop..."
+                                       class="px-2.5 py-1 rounded-lg border border-line bg-surface text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 uppercase w-36">
+                                <button type="button"
+                                        th:onclick="'applyShopVoucher(' + ${sg.shopId} + ')'"
+                                        class="btn btn-outline py-1 px-2.5 text-[11px] font-semibold">
+                                    Áp dụng
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -217,6 +247,27 @@
                            class="flex-1 px-3 py-2 rounded-xl border border-line text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 uppercase">
                     <button type="button" onclick="applyVoucher()" class="btn btn-outline py-2 px-3.5 text-xs font-bold">Áp dụng</button>
                 </div>
+                <div th:if="${voucherErrorMessage != null}" class="text-[11px] text-danger font-medium flex items-center gap-1">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span th:text="${voucherErrorMessage}">Mã giảm giá không hợp lệ</span>
+                </div>
+                <div th:if="${voucherSuccessMessage != null}" class="text-[11px] text-primary-700 font-medium flex items-center gap-1">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span th:text="${voucherSuccessMessage}">Đã áp dụng mã ưu đãi</span>
+                </div>
+                <div th:if="${systemVouchers != null and !systemVouchers.isEmpty()}" class="pt-2 border-t border-line/60 space-y-1.5">
+                    <span class="text-[10px] font-semibold text-ink-muted uppercase tracking-wider block">Mã ưu đãi gợi ý:</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button"
+                                th:each="v : ${systemVouchers}"
+                                th:data-code="${v.code}"
+                                onclick="document.getElementById('voucherInput').value = this.dataset.code; applyVoucher();"
+                                class="px-2.5 py-1 rounded-lg bg-primary-50 hover:bg-primary-100 text-primary-700 border border-primary-200 text-[11px] font-bold transition flex items-center gap-1">
+                            <i data-lucide="tag" class="w-3 h-3"></i>
+                            <span th:text="${v.code}">CHAOHE</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Bảng tính tiền -->
@@ -291,6 +342,18 @@
             url.searchParams.set('systemVoucherCode', code);
         } else {
             url.searchParams.delete('systemVoucherCode');
+        }
+        window.location.href = url.toString();
+    }
+
+    function applyShopVoucher(shopId) {
+        const input = document.getElementById('shopVoucherInput-' + shopId);
+        const code = input ? input.value.trim() : '';
+        const url = new URL(window.location.href);
+        if (code) {
+            url.searchParams.set('shopVoucher_' + shopId, code);
+        } else {
+            url.searchParams.delete('shopVoucher_' + shopId);
         }
         window.location.href = url.toString();
     }

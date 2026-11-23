@@ -41,13 +41,24 @@ public final class ProductSpecification {
             predicates.add(cb.equal(root.get("status"), ProductStatus.ACTIVE));
             predicates.add(cb.equal(root.get("shop").get("status"), ShopStatus.APPROVED));
 
-            // 2. Lọc theo từ khóa (tách token, mỗi token phải khớp search_text)
+            // 2. Lọc theo từ khóa (tách token, hỗ trợ cả searchText không dấu và fallback trên name / shortDescription / originDetail)
             if (keyword != null && !keyword.isBlank()) {
                 String normalized = VietnameseTextUtils.normalizeSearchText(keyword);
-                String[] tokens = normalized.split("\\s+");
-                for (String token : tokens) {
-                    if (!token.isBlank()) {
-                        predicates.add(cb.like(cb.lower(root.get("searchText")), "%" + token.toLowerCase() + "%"));
+                String[] normTokens = normalized.split("\\s+");
+                String[] rawTokens = keyword.trim().toLowerCase().split("\\s+");
+                for (int i = 0; i < normTokens.length; i++) {
+                    String normToken = normTokens[i];
+                    String rawToken = i < rawTokens.length ? rawTokens[i] : normToken;
+                    if (!normToken.isBlank()) {
+                        String normPattern = "%" + normToken.toLowerCase() + "%";
+                        String rawPattern = "%" + rawToken.toLowerCase() + "%";
+                        predicates.add(cb.or(
+                                cb.and(cb.isNotNull(root.get("searchText")), cb.like(cb.lower(root.get("searchText")), normPattern)),
+                                cb.like(cb.lower(root.get("name")), rawPattern),
+                                cb.like(cb.lower(root.get("name")), normPattern),
+                                cb.and(cb.isNotNull(root.get("shortDescription")), cb.like(cb.lower(root.get("shortDescription")), rawPattern)),
+                                cb.and(cb.isNotNull(root.get("originDetail")), cb.like(cb.lower(root.get("originDetail")), rawPattern))
+                        ));
                     }
                 }
             }

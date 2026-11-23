@@ -67,7 +67,7 @@ public class SecurityConfig {
                 .requestCache(cache -> cache.requestCache(requestCache))
                 // CSRF bảo vệ toàn diện, ngoại trừ Webhook IPN từ VNPay và Chatbot API
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/payment/vnpay/ipn", "/api/chat/**"))
+                        .ignoringRequestMatchers("/api/payment/vnpay/ipn", "/api/chat/**", "/api/chatbot/**"))
                 // Phân quyền truy cập theo URL
                 .authorizeHttpRequests(auth -> auth
                         // Tài nguyên công khai & Trang xem sản phẩm
@@ -80,6 +80,7 @@ public class SecurityConfig {
                                 "/search/**",
                                 "/login",
                                 "/register",
+                                "/auth/google/**",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
@@ -87,18 +88,23 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/api/products/**",
                                 "/api/chat/**",
+                                "/api/chatbot/**",
                                 "/api/locations/**",
                                 "/payment/vnpay/return",
                                 "/api/payment/vnpay/ipn",
                                 "/error",
                                 "/error/**")
                         .permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reviews/product/**").permitAll()
 
                         // Khu vực Quản trị viên
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
 
                         // Khu vực Kênh người bán
                         .requestMatchers("/seller/**", "/api/seller/**").hasRole("SELLER")
+
+                        // Đăng ký gian hàng cho phép cả USER, SELLER và ADMIN để điều hướng thông minh theo vai trò
+                        .requestMatchers("/account/shop-registration", "/account/shop-registration/**").hasAnyRole("USER", "SELLER", "ADMIN")
 
                         // Khu vực Người mua / Thành viên
                         .requestMatchers(

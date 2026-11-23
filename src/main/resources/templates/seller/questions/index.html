@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/seller-base :: html(
+        pageTitle='Hỏi đáp khách hàng (Q&A) - Kênh người bán',
+        content=~{::#sellerQuestionsContent},
+        extraCss=~{},
+        extraJs=~{}
+      )}">
+
+<div id="sellerQuestionsContent" class="space-y-6">
+
+    <!-- Tiêu đề -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-ink tracking-tight">Hỏi đáp sản phẩm (Q&A)</h1>
+            <p class="text-xs text-ink-muted mt-1">Giải đáp thắc mắc của khách hàng về xuất xứ, cách dùng và bảo quản đặc sản</p>
+        </div>
+    </div>
+
+    <!-- Flash message -->
+    <div th:if="${successMessage}" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+        <span th:text="${successMessage}">Thành công</span>
+    </div>
+    <div th:if="${errorMessage}" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600"></i>
+        <span th:text="${errorMessage}">Lỗi</span>
+    </div>
+
+    <!-- Danh sách câu hỏi -->
+    <div class="space-y-4">
+        <div th:if="${questionPage != null and !questionPage.isEmpty()}"
+             th:each="q : ${questionPage.content}"
+             class="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-4">
+
+            <!-- Header câu hỏi -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-line/60">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-xs uppercase">
+                        <span th:text="${q.user != null and q.user.fullName != null ? #strings.substring(q.user.fullName, 0, 1) : 'K'}">K</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-xs text-ink" th:text="${q.user != null ? q.user.fullName : 'Khách hàng'}">Nguyễn Khách</div>
+                        <div class="text-[11px] text-ink-muted" th:if="${q.product != null}">
+                            <span>Đặc sản: </span>
+                            <a th:href="@{'/products/' + ${q.product.slug}}" target="_blank"
+                               class="font-semibold text-primary-700 hover:underline" th:text="${q.product.name}">Trà Tân Cương</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span th:if="${q.replies != null and !q.replies.isEmpty()}"
+                          class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                        Đã trả lời
+                    </span>
+                    <span th:if="${q.replies == null or q.replies.isEmpty()}"
+                          class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                        Chờ phản hồi
+                    </span>
+                    <span class="text-xs text-ink-muted" th:text="${#temporals.format(q.createdAt, 'dd/MM/yyyy HH:mm')}">11/11/2026</span>
+                </div>
+            </div>
+
+            <!-- Nội dung câu hỏi -->
+            <div class="text-xs text-ink leading-relaxed font-medium bg-surface-muted/40 p-3.5 rounded-xl border border-line/60">
+                <span class="font-bold text-primary-700 mr-1">Câu hỏi:</span>
+                <span th:text="${q.content}">Đặc sản này bảo quản ở nhiệt độ phòng được bao lâu ạ?</span>
+            </div>
+
+            <!-- Các câu trả lời đã có -->
+            <div th:if="${q.replies != null and !q.replies.isEmpty()}" class="space-y-2 pl-4 border-l-2 border-primary-300">
+                <div th:each="rep : ${q.replies}" class="p-3 rounded-xl bg-primary-50/50 border border-primary-100 text-xs space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-primary-800 flex items-center gap-1">
+                            <i data-lucide="store" class="w-3.5 h-3.5"></i>
+                            <span th:text="${rep.isSellerReply ? 'Phản hồi từ Gian hàng' : (rep.user != null ? rep.user.fullName : 'Phản hồi')}">Phản hồi từ Gian hàng</span>
+                        </span>
+                        <span class="text-[10px] text-ink-muted" th:text="${#temporals.format(rep.createdAt, 'dd/MM/yyyy HH:mm')}">11/11/2026</span>
+                    </div>
+                    <p class="text-ink leading-relaxed" th:text="${rep.content}">Dạ sản phẩm bảo quản nơi khô ráo được 12 tháng ạ!</p>
+                </div>
+            </div>
+
+            <!-- Form trả lời trực tiếp -->
+            <form th:action="@{/seller/questions/{id}/reply(id=${q.id})}" method="post" class="flex items-center gap-2 pt-2">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="text" name="reply" required
+                       placeholder="Nhập câu trả lời tư vấn cho khách hàng..."
+                       class="flex-1 px-3.5 py-2 text-xs border border-line rounded-xl focus:border-primary-600 focus:outline-none">
+                <button type="submit" class="px-4 py-2 bg-primary-700 hover:bg-primary-800 text-white font-bold rounded-xl text-xs transition inline-flex items-center gap-1.5">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>Trả lời</span>
+                </button>
+            </form>
+
+        </div>
+
+        <!-- Trạng thái trống -->
+        <div th:if="${questionPage == null or questionPage.isEmpty()}"
+             class="bg-surface rounded-2xl border border-line p-12 text-center text-ink-muted space-y-2">
+            <i data-lucide="message-circle-question" class="w-8 h-8 mx-auto text-ink-muted/60 mb-2"></i>
+            <p class="font-semibold text-xs">Chưa có câu hỏi Q&A nào từ khách hàng trên sản phẩm của gian hàng.</p>
+        </div>
+    </div>
+
+    <!-- Phân trang -->
+    <div th:if="${questionPage != null and questionPage.totalPages > 1}" class="flex justify-center items-center gap-2 pt-4">
+        <a th:if="${questionPage.hasPrevious()}"
+           th:href="@{/seller/questions(page=${questionPage.number - 1})}"
+           class="btn btn-outline px-3 py-1.5 text-xs">Trước</a>
+        <span class="text-xs text-ink-muted" th:text="'Trang ' + (${questionPage.number + 1}) + ' / ' + ${questionPage.totalPages}">Trang 1 / 1</span>
+        <a th:if="${questionPage.hasNext()}"
+           th:href="@{/seller/questions(page=${questionPage.number + 1})}"
+           class="btn btn-outline px-3 py-1.5 text-xs">Sau</a>
+    </div>
+
+</div>
+</html>

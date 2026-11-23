@@ -15,10 +15,10 @@ import java.util.Optional;
 @Repository
 public interface OrderGroupRepository extends JpaRepository<OrderGroup, Long> {
 
-    @EntityGraph(attributePaths = {"orders", "orders.shop", "orders.items"})
+    @EntityGraph(attributePaths = {"orders", "orders.shop"})
     Optional<OrderGroup> findByCode(String code);
 
-    @EntityGraph(attributePaths = {"orders", "orders.shop", "orders.items"})
+    @EntityGraph(attributePaths = {"orders", "orders.shop"})
     Optional<OrderGroup> findByCodeAndUserId(String code, Long userId);
 
     @Query("SELECT og FROM OrderGroup og WHERE og.paymentMethod = com.vietspecialty.domain.enums.PaymentMethod.VNPAY " +

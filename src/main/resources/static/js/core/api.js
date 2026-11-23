@@ -73,6 +73,14 @@ const api = {
         });
     },
 
+    put(url, body = {}, options = {}) {
+        return this.request(url, {
+            ...options,
+            method: 'PUT',
+            body: JSON.stringify(body)
+        });
+    },
+
     patch(url, body = {}, options = {}) {
         return this.request(url, {
             ...options,
@@ -118,3 +126,70 @@ window.refreshCartBadge = function() {
     window.dispatchEvent(new CustomEvent('cart-updated'));
 };
 
+/**
+ * Quản lý danh sách Yêu thích (Wishlist) đồng bộ LocalStorage & Server Session
+ */
+window.toggleWishlistItem = async function(productId, btnEl) {
+    if (!productId) return;
+    const id = Number(productId);
+    let ids = [];
+    try {
+        ids = JSON.parse(localStorage.getItem('vs_wishlist_ids') || '[]');
+        if (!Array.isArray(ids)) ids = [];
+    } catch (e) {
+        ids = [];
+    }
+
+    const idx = ids.indexOf(id);
+    let added = false;
+    if (idx >= 0) {
+        ids.splice(idx, 1);
+        added = false;
+    } else {
+        ids.push(id);
+        added = true;
+    }
+    localStorage.setItem('vs_wishlist_ids', JSON.stringify(ids));
+    window.syncWishlistButtons();
+    window.dispatchEvent(new CustomEvent('wishlist-updated'));
+
+    try {
+        const token = api.getCsrfToken();
+        const headerName = api.getCsrfHeader();
+        const headers = { 'Accept': 'application/json' };
+        if (token && headerName) headers[headerName] = token;
+        await fetch('/wishlist/toggle/' + id, { method: 'POST', headers });
+    } catch (e) {}
+
+    if (window.toast) {
+        window.toast.success(added ? 'Đã lưu đặc sản vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích');
+    }
+};
+
+window.syncWishlistButtons = function() {
+    let ids = [];
+    try {
+        ids = JSON.parse(localStorage.getItem('vs_wishlist_ids') || '[]');
+    } catch (e) {
+        ids = [];
+    }
+    document.querySelectorAll('[data-wishlist-id]').forEach(btn => {
+        const pid = Number(btn.getAttribute('data-wishlist-id'));
+        const isFav = ids.includes(pid);
+        if (isFav) {
+            btn.classList.add('text-danger', 'border-danger/40');
+            btn.classList.remove('text-ink-muted');
+            const svg = btn.querySelector('svg');
+            if (svg) svg.classList.add('fill-current');
+        } else {
+            btn.classList.remove('text-danger', 'border-danger/40');
+            btn.classList.add('text-ink-muted');
+            const svg = btn.querySelector('svg');
+            if (svg) svg.classList.remove('fill-current');
+        }
+    });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => window.syncWishlistButtons(), 100);
+});

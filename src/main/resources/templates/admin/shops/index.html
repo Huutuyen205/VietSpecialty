@@ -39,6 +39,11 @@
            th:classappend="${currentStatus != null and currentStatus.name() == 'SUSPENDED'} ? 'bg-amber-500 text-slate-900' : 'text-stone-600 hover:bg-stone-100'">
             Tạm dừng
         </a>
+        <a th:href="@{/admin/shops(status='REJECTED')}"
+           class="px-3.5 py-2 font-semibold rounded-lg transition whitespace-nowrap"
+           th:classappend="${currentStatus != null and currentStatus.name() == 'REJECTED'} ? 'bg-amber-500 text-slate-900' : 'text-stone-600 hover:bg-stone-100'">
+            Đã từ chối
+        </a>
     </div>
 
     <!-- Table -->
@@ -102,20 +107,30 @@
                                     </button>
                                 </form>
 
+                                <form th:if="${shop.status.name() == 'PENDING'}"
+                                      th:action="@{/admin/shops/{id}/reject(id=${shop.id})}" method="post"
+                                      onsubmit="return confirm('Xác nhận từ chối hồ sơ mở gian hàng này?');">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <input type="hidden" name="reason" value="Hồ sơ gian hàng chưa đầy đủ thông tin xác thực OCOP"/>
+                                    <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg font-semibold text-xs transition">
+                                        Từ chối
+                                    </button>
+                                </form>
+
                                 <form th:if="${shop.status.name() == 'APPROVED'}"
                                       th:action="@{/admin/shops/{id}/suspend(id=${shop.id})}" method="post"
                                       onsubmit="return confirm('Bạn có chắc chắn muốn tạm khóa gian hàng này?');">
                                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                     <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg font-semibold text-xs transition">
-                                        Khóa
+                                        Đình chỉ
                                     </button>
                                 </form>
 
-                                <form th:if="${shop.status.name() == 'SUSPENDED'}"
-                                      th:action="@{/admin/shops/{id}/approve(id=${shop.id})}" method="post">
+                                <form th:if="${shop.status.name() == 'SUSPENDED' or shop.status.name() == 'REJECTED'}"
+                                      th:action="@{/admin/shops/{id}/restore(id=${shop.id})}" method="post">
                                     <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                     <button type="submit" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg font-semibold text-xs transition">
-                                        Mở lại
+                                        Khôi phục
                                     </button>
                                 </form>
                             </div>

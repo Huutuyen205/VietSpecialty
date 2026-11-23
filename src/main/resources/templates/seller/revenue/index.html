@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/seller-base :: html(
+        pageTitle='Thống kê Doanh thu & Đối soát - Kênh người bán',
+        content=~{::#sellerRevenueContent},
+        extraCss=~{},
+        extraJs=~{::#sellerRevenueJs}
+      )}">
+
+<div id="sellerRevenueContent" class="space-y-6">
+
+    <!-- Header & Nút xuất CSV -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-ink tracking-tight">Thống kê Doanh thu & Đối soát</h1>
+            <p class="text-xs text-ink-muted mt-1">Tổng hợp doanh thu thực tế từ các đơn hàng đã giao thành công (DELIVERED)</p>
+        </div>
+
+        <a th:href="@{/seller/revenue/export}"
+           class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs inline-flex items-center gap-2 shadow-sm transition">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Xuất Báo Cáo CSV (UTF-8)</span>
+        </a>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-ink-muted">
+                <span>Tổng doanh thu thực nhận</span>
+                <i data-lucide="wallet" class="w-4 h-4 text-emerald-600"></i>
+            </div>
+            <div class="text-xl font-extrabold text-emerald-700"
+                 th:text="${#numbers.formatDecimal(stats.totalRevenue, 0, 'COMMA', 0, 'POINT') + '₫'}">0₫</div>
+            <p class="text-[11px] text-ink-muted">Từ đơn hàng trạng thái DELIVERED</p>
+        </div>
+
+        <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-ink-muted">
+                <span>Đơn hoàn thành</span>
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-primary-600"></i>
+            </div>
+            <div class="text-xl font-extrabold text-ink" th:text="${stats.completedOrders}">0</div>
+            <p class="text-[11px] text-ink-muted" th:text="'Trên tổng số ' + ${stats.totalOrders} + ' đơn hàng'">Trên tổng số 0 đơn</p>
+        </div>
+
+        <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-ink-muted">
+                <span>Giá trị đơn trung bình</span>
+                <i data-lucide="trending-up" class="w-4 h-4 text-amber-500"></i>
+            </div>
+            <div class="text-xl font-extrabold text-ink"
+                 th:text="${#numbers.formatDecimal(avgOrderValue, 0, 'COMMA', 0, 'POINT') + '₫'}">0₫</div>
+            <p class="text-[11px] text-ink-muted">Doanh thu bình quân / đơn</p>
+        </div>
+
+        <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-ink-muted">
+                <span>Đơn đang giao / Chờ xử lý</span>
+                <i data-lucide="truck" class="w-4 h-4 text-blue-600"></i>
+            </div>
+            <div class="text-xl font-extrabold text-blue-600" th:text="${stats.shippingOrders + stats.pendingOrders}">0</div>
+            <p class="text-[11px] text-ink-muted">Doanh thu dự kiến ghi nhận</p>
+        </div>
+    </div>
+
+    <!-- Biểu đồ doanh thu 14 ngày -->
+    <div class="bg-surface p-6 rounded-2xl border border-line shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-ink text-sm">Biểu Đồ Tăng Trưởng Doanh Thu</h3>
+                <p class="text-xs text-ink-muted">Biến động doanh thu theo ngày của gian hàng</p>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 bg-surface-muted text-ink rounded-lg">14 ngày gần nhất</span>
+        </div>
+        <div class="h-64">
+            <canvas id="revenueDetailChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Bảng chi tiết đơn hàng đã giao thành công -->
+    <div class="bg-surface rounded-2xl border border-line shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-line flex items-center justify-between">
+            <h3 class="font-bold text-sm text-ink">Chi Tiết Đơn Hàng Đã Ghi Nhận Doanh Thu (DELIVERED)</h3>
+            <span class="text-xs text-ink-muted" th:text="${deliveredOrders.totalElements} + ' đơn hoàn tất'">0 đơn hoàn tất</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-ink">
+                <thead class="bg-surface-muted/60 text-ink-muted font-bold uppercase text-[10px] tracking-wider border-b border-line">
+                    <tr>
+                        <th class="px-5 py-3.5">Mã đơn</th>
+                        <th class="px-5 py-3.5">Sản phẩm</th>
+                        <th class="px-5 py-3.5">Phương thức TT</th>
+                        <th class="px-5 py-3.5">Ngày tạo</th>
+                        <th class="px-5 py-3.5 text-right">Thực thu</th>
+                        <th class="px-5 py-3.5 text-right">Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line/60">
+                    <tr th:each="ord : ${deliveredOrders.content}" class="hover:bg-surface-muted/30 transition">
+                        <td class="px-5 py-3.5 font-bold text-primary-700">
+                            <a th:href="@{'/seller/orders/' + ${ord.code}}" class="hover:underline" th:text="${ord.code}">VS26...</a>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <span th:if="${ord.items != null and !ord.items.isEmpty()}"
+                                  th:text="${ord.items[0].productName} + (${ord.items.size() > 1 ? ' (+' + (ord.items.size() - 1) + ')' : ''})">Đặc sản</span>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <span class="px-2 py-0.5 rounded bg-surface-muted font-semibold text-[11px]" th:text="${ord.paymentMethod}">COD</span>
+                        </td>
+                        <td class="px-5 py-3.5 text-ink-muted" th:text="${#temporals.format(ord.createdAt, 'dd/MM/yyyy HH:mm')}">11/11/2026</td>
+                        <td class="px-5 py-3.5 text-right font-extrabold text-emerald-700" th:text="${ord.formattedTotalAmount}">350.000₫</td>
+                        <td class="px-5 py-3.5 text-right">
+                            <a th:href="@{'/seller/orders/' + ${ord.code}}" class="text-primary-700 font-semibold hover:underline">Xem đơn</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${deliveredOrders.isEmpty()}">
+                        <td colspan="6" class="px-5 py-10 text-center text-ink-muted">Chưa có đơn hàng đã giao thành công nào để đối soát.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<th:block id="sellerRevenueJs">
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/seller/analytics/revenue?days=14');
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const labels = data.data.map(item => item.label);
+                    const revenues = data.data.map(item => item.revenue);
+                    const ctx = document.getElementById('revenueDetailChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Doanh thu (VNĐ)',
+                                data: revenues,
+                                borderColor: '#16a34a',
+                                backgroundColor: 'rgba(22, 163, 74, 0.12)',
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        });
+    </script>
+</th:block>
+</html>

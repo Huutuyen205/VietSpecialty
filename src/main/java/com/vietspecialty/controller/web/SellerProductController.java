@@ -43,26 +43,42 @@ public class SellerProductController {
     public String listProducts(
             @CurrentUser CustomUserDetails userDetails,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) ProductStatus status,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model
     ) {
         ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
+        ProductStatus parsedStatus = parseProductStatus(status);
         Page<ProductCardResponse> products = productService.getSellerProducts(
-                shop.id(), keyword, status, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
+                shop.id(), keyword, parsedStatus, PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.DESC, "createdAt"))
         );
 
         model.addAttribute("shop", shop);
         model.addAttribute("products", products);
         model.addAttribute("keyword", keyword);
-        model.addAttribute("status", status);
+        model.addAttribute("status", parsedStatus);
         model.addAttribute("activeNav", "products");
 
         return "seller/products/index";
     }
 
-    @GetMapping("/create")
+    private ProductStatus parseProductStatus(String statusStr) {
+        if (statusStr == null || statusStr.isBlank()) {
+            return null;
+        }
+        String normalized = statusStr.trim().toUpperCase();
+        if ("INACTIVE".equals(normalized) || "HIDDEN".equals(normalized)) {
+            return ProductStatus.HIDDEN;
+        }
+        try {
+            return ProductStatus.valueOf(normalized);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    @GetMapping({"/create", "/new"})
     public String createProductForm(@CurrentUser CustomUserDetails userDetails, Model model) {
         ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
 
@@ -76,12 +92,12 @@ public class SellerProductController {
         return "seller/products/form";
     }
 
-    @PostMapping("/create")
+    @PostMapping({"", "/create", "/new"})
     public String handleCreateProduct(
             @CurrentUser CustomUserDetails userDetails,
             @Valid @ModelAttribute("productRequest") ProductCreateRequest req,
             BindingResult bindingResult,
-            @RequestParam("images") List<MultipartFile> imageFiles,
+            @RequestParam(value = "images", required = false) List<MultipartFile> imageFiles,
             Model model,
             RedirectAttributes redirectAttributes
     ) {
@@ -169,6 +185,7 @@ public class SellerProductController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("shop", shop);
+            model.addAttribute("product", productService.getProductById(id));
             model.addAttribute("categories", catalogService.getAllActiveCategories());
             model.addAttribute("provinces", catalogService.getAllProvinces());
             model.addAttribute("isEdit", true);
@@ -182,6 +199,7 @@ public class SellerProductController {
             return "redirect:/seller/products";
         } catch (BusinessException e) {
             model.addAttribute("shop", shop);
+            model.addAttribute("product", productService.getProductById(id));
             model.addAttribute("errorMessage", e.getMessage());
             model.addAttribute("categories", catalogService.getAllActiveCategories());
             model.addAttribute("provinces", catalogService.getAllProvinces());
@@ -191,7 +209,7 @@ public class SellerProductController {
         }
     }
 
-    @PostMapping("/{id}/status")
+    @PostMapping({"/{id}/status", "/{id}/toggle"})
     public String toggleStatus(
             @CurrentUser CustomUserDetails userDetails,
             @PathVariable Long id,

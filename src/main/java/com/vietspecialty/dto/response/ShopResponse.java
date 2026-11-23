@@ -14,8 +14,26 @@ public record ShopResponse(
         String provinceName,
         String addressDetail,
         ShopStatus status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String ownerFullName,
+        String ownerEmailAddr,
+        String rejectReason
 ) {
+    public ShopResponse(
+            Long id,
+            String name,
+            String slug,
+            String description,
+            String logoUrl,
+            String phone,
+            String provinceName,
+            String addressDetail,
+            ShopStatus status,
+            LocalDateTime createdAt
+    ) {
+        this(id, name, slug, description, logoUrl, phone, provinceName, addressDetail, status, createdAt, null, null, null);
+    }
+
     public String pickupAddress() {
         return addressDetail != null ? addressDetail : provinceName;
     }
@@ -29,11 +47,11 @@ public record ShopResponse(
     }
 
     public String ownerName() {
-        return name;
+        return ownerFullName != null ? ownerFullName : name;
     }
 
     public String ownerEmail() {
-        return "";
+        return ownerEmailAddr != null ? ownerEmailAddr : "";
     }
 }
 

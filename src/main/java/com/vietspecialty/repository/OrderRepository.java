@@ -48,7 +48,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o WHERE o.status = com.vietspecialty.domain.enums.OrderStatus.SHIPPING AND o.shippedAt <= :cutoffTime")
     List<Order> findOrdersForAutoDeliver(@Param("cutoffTime") LocalDateTime cutoffTime);
 
+    @EntityGraph(attributePaths = {"user", "shop", "items"})
     Page<Order> findByPaymentStatusOrderByCreatedAtDesc(OrderPaymentStatus paymentStatus, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "shop", "items"})
+    Page<Order> findByPaymentStatusInOrderByCreatedAtDesc(List<OrderPaymentStatus> paymentStatuses, Pageable pageable);
+
+    long countByPaymentStatus(OrderPaymentStatus paymentStatus);
+
+    @EntityGraph(attributePaths = {"items"})
+    List<Order> findByShopIdAndStatusOrderByCreatedAtDesc(Long shopId, OrderStatus status);
 
     List<Order> findByOrderGroupId(Long orderGroupId);
 
