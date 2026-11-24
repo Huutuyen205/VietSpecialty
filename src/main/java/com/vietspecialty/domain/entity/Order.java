@@ -1,6 +1,8 @@
 package com.vietspecialty.domain.entity;
 
 import com.vietspecialty.domain.enums.ActorType;
+import com.vietspecialty.domain.enums.GiftOccasion;
+import com.vietspecialty.domain.enums.GiftWrapType;
 import com.vietspecialty.domain.enums.OrderPaymentStatus;
 import com.vietspecialty.domain.enums.OrderStatus;
 import com.vietspecialty.domain.enums.PaymentMethod;
@@ -27,6 +29,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -125,6 +129,30 @@ public class Order {
 
     @Column(name = "note", length = 500)
     private String note;
+
+    @Column(name = "is_gift", nullable = false, columnDefinition = "TINYINT(1)")
+    @Builder.Default
+    private Boolean isGift = false;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "gift_occasion", length = 50)
+    private GiftOccasion giftOccasion;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "gift_wrap_type", length = 50)
+    private GiftWrapType giftWrapType;
+
+    @Column(name = "gift_fee", nullable = false, precision = 15, scale = 0)
+    @Builder.Default
+    private BigDecimal giftFee = BigDecimal.ZERO;
+
+    @Column(name = "gift_recipient_name", length = 100)
+    private String giftRecipientName;
+
+    @Column(name = "gift_message", length = 300)
+    private String giftMessage;
 
     @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;

@@ -73,6 +73,8 @@ public class SecurityConfig {
                         // Tài nguyên công khai & Trang xem sản phẩm
                         .requestMatchers(
                                 "/",
+                                "/explore",
+                                "/explore/**",
                                 "/products/**",
                                 "/shops/**",
                                 "/regions/**",
@@ -86,6 +88,7 @@ public class SecurityConfig {
                                 "/images/**",
                                 "/vendor/**",
                                 "/uploads/**",
+                                "/api/explore/**",
                                 "/api/products/**",
                                 "/api/chat/**",
                                 "/api/chatbot/**",

@@ -14,6 +14,8 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
 
     List<ProductImage> findByProductIdOrderBySortOrderAsc(Long productId);
 
+    List<ProductImage> findByProductIdInOrderBySortOrderAsc(List<Long> productIds);
+
     @Modifying
     @Query("UPDATE ProductImage pi SET pi.isPrimary = false WHERE pi.product.id = :productId")
     void resetPrimaryImageForProduct(@Param("productId") Long productId);

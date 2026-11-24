@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: html(
+        pageTitle=${pageTitle} + ' — VietSpecialty',
+        content=~{::#exploreContent},
+        pageMeta=~{::#exploreMeta},
+        extraCss=~{},
+        extraJs=~{::#exploreJs}
+      )}">
+
+<th:block id="exploreMeta">
+    <meta name="description" content="Khám phá bản đồ đặc sản 4 miền và 34 tỉnh thành Việt Nam tại VietSpecialty: sản phẩm OCOP, hợp tác xã chính gốc và món ngon địa phương.">
+</th:block>
+
+<div id="exploreContent" class="space-y-6" x-data="explorePage()">
+
+    <!-- Breadcrumb -->
+    <nav class="flex text-xs text-ink-muted" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-2">
+            <li class="inline-flex items-center">
+                <a th:href="@{/}" class="hover:text-primary-700 flex items-center gap-1 transition">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                    <span>Trang chủ</span>
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-line"></i>
+                    <span class="ml-1 text-ink font-semibold">Bản đồ đặc sản 4 miền &amp; 34 tỉnh thành</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Heritage Hero Header -->
+    <section class="bg-surface rounded-3xl border border-line shadow-soft p-6 sm:p-8 bg-heritage-pattern">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div class="space-y-3 max-w-2xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 border border-primary-500/30">
+                    <i data-lucide="compass" class="w-3.5 h-3.5 text-primary-600"></i>
+                    <span>Hành Trình Ẩm Thực Việt Nam</span>
+                </div>
+                <h1 class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-ink leading-tight">
+                    Bản Đồ Đặc Sản 4 Miền &amp; 34 Tỉnh Thành
+                </h1>
+                <p class="text-xs sm:text-sm text-ink-muted leading-relaxed">
+                    Chọn một vùng miền trên bản đồ hoặc tìm nhanh tỉnh/thành phố để khám phá đặc sản địa phương, sản phẩm đạt chuẩn OCOP và các hợp tác xã uy tín.
+                </p>
+            </div>
+
+            <!-- Thống kê tổng quan toàn sàn -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
+                <div class="bg-surface-muted rounded-2xl border border-line px-4 py-3 text-center">
+                    <div class="font-serif text-xl sm:text-2xl font-bold text-primary-700" th:text="${overview.totalRegions}">4</div>
+                    <div class="text-[11px] font-medium text-ink-muted">Vùng miền</div>
+                </div>
+                <div class="bg-surface-muted rounded-2xl border border-line px-4 py-3 text-center">
+                    <div class="font-serif text-xl sm:text-2xl font-bold text-ink" th:text="${overview.totalProvinces}">34</div>
+                    <div class="text-[11px] font-medium text-ink-muted">Tỉnh/Thành</div>
+                </div>
+                <div class="bg-surface-muted rounded-2xl border border-line px-4 py-3 text-center">
+                    <div class="font-serif text-xl sm:text-2xl font-bold text-primary-600" th:text="${overview.totalActiveProducts}">30</div>
+                    <div class="text-[11px] font-medium text-ink-muted">Đặc sản</div>
+                </div>
+                <div class="bg-surface-muted rounded-2xl border border-line px-4 py-3 text-center">
+                    <div class="font-serif text-xl sm:text-2xl font-bold text-secondary-500" th:text="${overview.totalOcopProducts}">12</div>
+                    <div class="text-[11px] font-medium text-ink-muted">Chuẩn OCOP</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Region Filter Tabs + Province Quick Search -->
+    <section class="bg-surface rounded-2xl border border-line shadow-soft p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <!-- 5 Tabs: Tất cả + 4 vùng miền -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button"
+                        @click="selectRegion('')"
+                        :class="selectedRegionSlug === '' ? 'bg-primary-600 text-white border-primary-600 shadow-sm' : 'bg-surface-muted text-ink border-line hover:bg-primary-50 hover:text-primary-700'"
+                        class="px-3.5 py-2 rounded-xl border text-xs font-semibold transition flex items-center gap-2">
+                    <span>Tất cả</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                          :class="selectedRegionSlug === '' ? 'bg-surface/20 text-white' : 'bg-surface text-ink-muted'"
+                          th:text="${overview.totalProvinces}">34</span>
+                </button>
+
+                <button th:each="reg : ${overview.regions}"
+                        type="button"
+                        th:attr="data-region-slug=${reg.slug}, data-region-color=${reg.colorHex}"
+                        @click="selectRegion($el.dataset.regionSlug)"
+                        :style="selectedRegionSlug === $el.dataset.regionSlug ? 'background-color:' + $el.dataset.regionColor + '; border-color:' + $el.dataset.regionColor + '; color:#FFFFFF;' : ''"
+                        :class="selectedRegionSlug === $el.dataset.regionSlug ? 'shadow-sm' : 'bg-surface text-ink border-line hover:bg-surface-muted'"
+                        class="px-3.5 py-2 rounded-xl border text-xs font-semibold transition flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0 border border-white/60"
+                          th:style="'background-color: ' + ${reg.colorHex}"></span>
+                    <span th:text="${reg.name}">Miền Bắc</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                          :class="selectedRegionSlug === $el.dataset.regionSlug ? 'bg-black/15 text-white' : 'bg-surface-muted text-ink-muted'"
+                          th:text="${reg.provinceCount} + ' tỉnh'">15 tỉnh</span>
+                </button>
+            </div>
+
+            <!-- Tìm nhanh tỉnh thành (không phân biệt dấu) -->
+            <div class="relative w-full lg:w-72 shrink-0">
+                <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-ink-muted">
+                    <i data-lucide="search" class="w-4 h-4 text-primary-600"></i>
+                </span>
+                <input type="text"
+                       x-model="searchQuery"
+                       placeholder="Tìm nhanh tỉnh/thành (vd: Thai Nguyen, Hue...)"
+                       aria-label="Tìm nhanh tỉnh thành"
+                       class="input-field pl-9 pr-8 py-2 text-xs">
+                <button type="button"
+                        x-show="searchQuery.trim().length > 0"
+                        @click="searchQuery = ''"
+                        style="display: none;"
+                        aria-label="Xóa từ khóa tìm tỉnh"
+                        class="absolute inset-y-0 right-2.5 flex items-center text-ink-muted hover:text-ink">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main 2-Column Interactive Map & Province Detail Drawer -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Left Column: Interactive 4-Region SVG Map & 34-Province Pill Grid -->
+        <aside class="lg:col-span-5 bg-surface rounded-3xl border border-line shadow-soft p-5 sm:p-6 space-y-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="font-serif text-lg font-bold text-ink">Bản Đồ Vùng Miền</h2>
+                    <p class="text-[11px] text-ink-muted">Nhấn vào vùng hoặc điểm tỉnh nổi bật để lọc nhanh</p>
+                </div>
+                <span class="text-[11px] font-semibold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-full border border-primary-100">
+                    34 Tỉnh/Thành
+                </span>
+            </div>
+
+            <!-- Interactive Stylized 4-Region Vietnam SVG Map -->
+            <div class="bg-cream rounded-2xl border border-line p-3 relative overflow-hidden">
+                <svg viewBox="0 0 400 540" class="w-full h-auto max-h-[420px] mx-auto select-none" role="img" aria-label="Bản đồ 4 vùng đặc sản Việt Nam">
+                    <!-- Subtle background grid -->
+                    <rect x="0" y="0" width="400" height="540" rx="16" fill="#FFFCF5"/>
+
+                    <!-- Vùng 1: Miền Bắc (#0F9D8A) -->
+                    <g tabindex="0" role="button" aria-label="Chọn vùng Miền Bắc"
+                       @click="selectRegion('mien-bac')"
+                       @keydown.enter="selectRegion('mien-bac')"
+                       @keydown.space.prevent="selectRegion('mien-bac')"
+                       class="cursor-pointer transition-opacity duration-200 focus:outline-none">
+                        <polygon points="105,28 195,24 238,52 246,94 218,128 176,144 134,148 96,118 82,70"
+                                 fill="#0F9D8A"
+                                 :fill-opacity="(selectedRegionSlug === '' || selectedRegionSlug === 'mien-bac') ? '0.92' : '0.35'"
+                                 stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+                        <text x="155" y="72" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="700">MIỀN BẮC</text>
+                        <text x="155" y="88" text-anchor="middle" fill="#FFFFFF" font-size="10" opacity="0.9">15 tỉnh thành</text>
+                    </g>
+
+                    <!-- Vùng 2: Miền Trung (#E9A21F) -->
+                    <g tabindex="0" role="button" aria-label="Chọn vùng Miền Trung"
+                       @click="selectRegion('mien-trung')"
+                       @keydown.enter="selectRegion('mien-trung')"
+                       @keydown.space.prevent="selectRegion('mien-trung')"
+                       class="cursor-pointer transition-opacity duration-200 focus:outline-none">
+                        <polygon points="134,148 182,144 206,184 238,224 268,266 276,320 256,368 232,374 212,334 216,282 186,232 146,186"
+                                 fill="#E9A21F"
+                                 :fill-opacity="(selectedRegionSlug === '' || selectedRegionSlug === 'mien-trung') ? '0.92' : '0.35'"
+                                 stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+                        <text x="220" y="232" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">MIỀN TRUNG</text>
+                        <text x="224" y="247" text-anchor="middle" fill="#FFFFFF" font-size="9.5" opacity="0.95">8 tỉnh thành</text>
+                    </g>
+
+                    <!-- Vùng 3: Tây Nguyên (#8B5E3C) -->
+                    <g tabindex="0" role="button" aria-label="Chọn vùng Tây Nguyên"
+                       @click="selectRegion('tay-nguyen')"
+                       @keydown.enter="selectRegion('tay-nguyen')"
+                       @keydown.space.prevent="selectRegion('tay-nguyen')"
+                       class="cursor-pointer transition-opacity duration-200 focus:outline-none">
+                        <polygon points="186,268 220,264 236,314 230,372 188,386 168,342 172,296"
+                                 fill="#8B5E3C"
+                                 :fill-opacity="(selectedRegionSlug === '' || selectedRegionSlug === 'tay-nguyen') ? '0.92' : '0.35'"
+                                 stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+                        <text x="200" y="328" text-anchor="middle" fill="#FFFFFF" font-size="10.5" font-weight="700">TÂY NGUYÊN</text>
+                        <text x="200" y="342" text-anchor="middle" fill="#FFFFFF" font-size="9.5" opacity="0.9">3 tỉnh thành</text>
+                    </g>
+
+                    <!-- Vùng 4: Miền Nam (#E8704A) -->
+                    <g tabindex="0" role="button" aria-label="Chọn vùng Miền Nam"
+                       @click="selectRegion('mien-nam')"
+                       @keydown.enter="selectRegion('mien-nam')"
+                       @keydown.space.prevent="selectRegion('mien-nam')"
+                       class="cursor-pointer transition-opacity duration-200 focus:outline-none">
+                        <polygon points="168,376 232,374 252,402 228,448 184,484 146,512 124,492 112,442 132,396"
+                                 fill="#E8704A"
+                                 :fill-opacity="(selectedRegionSlug === '' || selectedRegionSlug === 'mien-nam') ? '0.92' : '0.35'"
+                                 stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+                        <text x="178" y="438" text-anchor="middle" fill="#FFFFFF" font-size="11.5" font-weight="700">MIỀN NAM</text>
+                        <text x="178" y="454" text-anchor="middle" fill="#FFFFFF" font-size="10" opacity="0.95">8 tỉnh thành</text>
+                    </g>
+
+                    <!-- Quần đảo Hoàng Sa & Trường Sa (Việt Nam) -->
+                    <g fill="#5B6660">
+                        <circle cx="322" cy="242" r="3" fill="#E9A21F"/>
+                        <circle cx="332" cy="248" r="2.5" fill="#E9A21F"/>
+                        <text x="326" y="264" text-anchor="middle" font-size="9.5" font-weight="600">Quần đảo Hoàng Sa</text>
+                        <text x="326" y="275" text-anchor="middle" font-size="8.5" opacity="0.8">(Đà Nẵng - Việt Nam)</text>
+
+                        <circle cx="326" cy="408" r="3" fill="#E9A21F"/>
+                        <circle cx="338" cy="415" r="2.5" fill="#E9A21F"/>
+                        <text x="330" y="432" text-anchor="middle" font-size="9.5" font-weight="600">Quần đảo Trường Sa</text>
+                        <text x="330" y="443" text-anchor="middle" font-size="8.5" opacity="0.8">(Khánh Hòa - Việt Nam)</text>
+                    </g>
+
+                    <!-- Clickable Flagship Province Hubs -->
+                    <g tabindex="0" role="button" aria-label="Chọn tỉnh Lào Cai"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('lao-cai')"
+                       @keydown.enter="selectProvince('lao-cai')"
+                       @keydown.space.prevent="selectProvince('lao-cai')">
+                        <circle cx="116" cy="54" r="5" :fill="selectedProvinceSlug === 'lao-cai' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.5"/>
+                        <text x="90" y="46" font-size="9" font-weight="600" fill="#1F2A24">Lào Cai</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn tỉnh Thái Nguyên"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('thai-nguyen')"
+                       @keydown.enter="selectProvince('thai-nguyen')"
+                       @keydown.space.prevent="selectProvince('thai-nguyen')">
+                        <circle cx="176" cy="56" r="5.5" :fill="selectedProvinceSlug === 'thai-nguyen' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.5"/>
+                        <text x="184" y="50" font-size="9" font-weight="700" fill="#1F2A24">Thái Nguyên</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn thành phố Hà Nội"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('ha-noi')"
+                       @keydown.enter="selectProvince('ha-noi')"
+                       @keydown.space.prevent="selectProvince('ha-noi')">
+                        <circle cx="168" cy="108" r="6" :fill="selectedProvinceSlug === 'ha-noi' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.8"/>
+                        <text x="177" y="112" font-size="9.5" font-weight="700" fill="#1F2A24">Hà Nội</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn thành phố Huế"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('hue')"
+                       @keydown.enter="selectProvince('hue')"
+                       @keydown.space.prevent="selectProvince('hue')">
+                        <circle cx="222" cy="212" r="5.5" :fill="selectedProvinceSlug === 'hue' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.5"/>
+                        <text x="232" y="210" font-size="9" font-weight="700" fill="#1F2A24">Huế</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn thành phố Đà Nẵng"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('da-nang')"
+                       @keydown.enter="selectProvince('da-nang')"
+                       @keydown.space.prevent="selectProvince('da-nang')">
+                        <circle cx="242" cy="256" r="5.5" :fill="selectedProvinceSlug === 'da-nang' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.5"/>
+                        <text x="252" y="260" font-size="9" font-weight="700" fill="#1F2A24">Đà Nẵng</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn tỉnh Khánh Hòa"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('khanh-hoa')"
+                       @keydown.enter="selectProvince('khanh-hoa')"
+                       @keydown.space.prevent="selectProvince('khanh-hoa')">
+                        <circle cx="264" cy="346" r="5" :fill="selectedProvinceSlug === 'khanh-hoa' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.5"/>
+                        <text x="272" y="349" font-size="9" font-weight="600" fill="#1F2A24">Khánh Hòa</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn tỉnh Đắk Lắk"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('dak-lak')"
+                       @keydown.enter="selectProvince('dak-lak')"
+                       @keydown.space.prevent="selectProvince('dak-lak')">
+                        <circle cx="204" cy="304" r="5" :fill="selectedProvinceSlug === 'dak-lak' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.5"/>
+                        <text x="148" y="308" font-size="9" font-weight="600" fill="#1F2A24">Đắk Lắk</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn tỉnh Lâm Đồng"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('lam-dong')"
+                       @keydown.enter="selectProvince('lam-dong')"
+                       @keydown.space.prevent="selectProvince('lam-dong')">
+                        <circle cx="202" cy="364" r="5" :fill="selectedProvinceSlug === 'lam-dong' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.5"/>
+                        <text x="142" y="368" font-size="9" font-weight="600" fill="#1F2A24">Lâm Đồng</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn TP. Hồ Chí Minh"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('tp-ho-chi-minh')"
+                       @keydown.enter="selectProvince('tp-ho-chi-minh')"
+                       @keydown.space.prevent="selectProvince('tp-ho-chi-minh')">
+                        <circle cx="200" cy="404" r="6" :fill="selectedProvinceSlug === 'tp-ho-chi-minh' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.8"/>
+                        <text x="210" y="407" font-size="9.5" font-weight="700" fill="#1F2A24">TP.HCM</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn thành phố Cần Thơ"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('can-tho')"
+                       @keydown.enter="selectProvince('can-tho')"
+                       @keydown.space.prevent="selectProvince('can-tho')">
+                        <circle cx="152" cy="466" r="5" :fill="selectedProvinceSlug === 'can-tho' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.5"/>
+                        <text x="94" y="470" font-size="9" font-weight="600" fill="#1F2A24">Cần Thơ</text>
+                    </g>
+                    <g tabindex="0" role="button" aria-label="Chọn tỉnh Cà Mau"
+                       class="cursor-pointer focus:outline-none"
+                       @click="selectProvince('ca-mau')"
+                       @keydown.enter="selectProvince('ca-mau')"
+                       @keydown.space.prevent="selectProvince('ca-mau')">
+                        <circle cx="142" cy="504" r="5.5" :fill="selectedProvinceSlug === 'ca-mau' ? '#F4B740' : '#FFFFFF'" stroke="#1F2A24" stroke-width="1.5"/>
+                        <text x="152" y="512" font-size="9" font-weight="700" fill="#1F2A24">Cà Mau</text>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- 34-Province Clickable Pill Grid (SSR + Alpine filter/selection) -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between border-b border-line pb-2">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-ink-muted">Danh sách 34 tỉnh/thành</h3>
+                    <span class="text-[11px] text-ink-muted" x-text="'Hiển thị ' + visibleProvinceCount + ' tỉnh'">Hiển thị 34 tỉnh</span>
+                </div>
+
+                <div class="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+                    <div th:each="reg : ${overview.regions}"
+                         th:attr="data-region-slug=${reg.slug}"
+                         x-show="isRegionGroupVisible($el.dataset.regionSlug)"
+                         class="space-y-2">
+                        <div class="flex items-center gap-2 text-xs font-bold text-ink">
+                            <span class="w-2.5 h-2.5 rounded-full shrink-0" th:style="'background-color: ' + ${reg.colorHex}"></span>
+                            <span th:text="${reg.name}">Miền Bắc</span>
+                            <span class="text-[11px] font-normal text-ink-muted" th:text="'(' + ${reg.provinceCount} + ')'">(15)</span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <button th:each="prov : ${reg.provinces}"
+                                    type="button"
+                                    th:attr="data-province-slug=${prov.slug}, data-region-slug=${reg.slug}, data-province-name=${prov.name}"
+                                    x-show="isProvinceVisible($el.dataset.provinceName, $el.dataset.regionSlug)"
+                                    @click="selectProvince($el.dataset.provinceSlug)"
+                                    :class="selectedProvinceSlug === $el.dataset.provinceSlug
+                                        ? 'border-primary-600 bg-primary-50 text-primary-700 font-bold shadow-xs'
+                                        : 'border-line bg-surface text-ink hover:bg-surface-muted'"
+                                    class="px-3 py-1.5 rounded-xl border text-xs transition inline-flex items-center gap-1.5">
+                                <span th:text="${prov.name}">Thái Nguyên</span>
+                                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                                      th:classappend="${prov.activeProductCount > 0} ? 'bg-primary-100 text-primary-700' : 'bg-surface-muted text-ink-muted'"
+                                      th:text="${prov.activeProductCount}">2</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div x-show="visibleProvinceCount === 0" style="display: none;"
+                         class="py-6 text-center text-xs text-ink-muted bg-surface-muted rounded-2xl border border-line">
+                        Không tìm thấy tỉnh/thành phù hợp với từ khóa tìm kiếm.
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Column: Province Detail Drawer -->
+        <section class="lg:col-span-7 space-y-5">
+
+            <!-- Drawer Header Card -->
+            <div class="bg-surface rounded-3xl border border-line shadow-soft p-5 sm:p-6 space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div class="space-y-2">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-white shadow-xs"
+                             :style="'background-color:' + (activeProvince?.regionColorHex || '#0F9D8A')"
+                             th:style="'background-color:' + (${selectedProvinceDetail != null ? selectedProvinceDetail.regionColorHex : '#0F9D8A'})">
+                            <span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>
+                            <span x-text="activeProvince?.regionName || 'Miền Bắc'"
+                                  th:text="${selectedProvinceDetail != null ? selectedProvinceDetail.regionName : 'Miền Bắc'}">Miền Bắc</span>
+                        </div>
+
+                        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-ink"
+                            x-text="activeProvince?.name || 'Đang tải...'"
+                            th:text="${selectedProvinceDetail != null ? selectedProvinceDetail.name : 'Thái Nguyên'}">Thái Nguyên</h2>
+                    </div>
+
+                    <!-- CTAs linking to /products with provinceSlug & regionSlug -->
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <a :href="activeProvince ? activeProvince.productsFilterUrl : '#'"
+                           th:href="${selectedProvinceDetail != null ? selectedProvinceDetail.productsFilterUrl : '/products'}"
+                           class="btn-primary text-xs px-4 py-2.5 flex items-center gap-1.5 shadow-sm">
+                            <span x-text="'Xem tất cả đặc sản ' + (activeProvince?.name || '')"
+                                  th:text="${selectedProvinceDetail != null ? 'Xem tất cả đặc sản ' + selectedProvinceDetail.name : 'Xem tất cả đặc sản'}">Xem tất cả đặc sản Thái Nguyên</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </a>
+                        <a :href="activeProvince ? ('/products?regionSlug=' + encodeURIComponent(activeProvince.regionSlug)) : '/products'"
+                           th:href="${selectedProvinceDetail != null ? '/products?regionSlug=' + selectedProvinceDetail.regionSlug : '/products'}"
+                           class="btn-outline text-xs px-3.5 py-2.5">
+                            <span x-text="'Đặc sản ' + (activeProvince?.regionName || 'vùng')"
+                                  th:text="${selectedProvinceDetail != null ? 'Đặc sản ' + selectedProvinceDetail.regionName : 'Đặc sản vùng'}">Đặc sản Miền Bắc</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 3 Stat Tiles -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-surface-muted rounded-2xl border border-line p-3.5">
+                        <div class="text-[11px] font-medium text-ink-muted">Đặc sản hoạt động</div>
+                        <div class="font-serif text-xl sm:text-2xl font-bold text-primary-700 mt-1"
+                             x-text="activeProvince ? activeProvince.activeProductCount : 0"
+                             th:text="${selectedProvinceDetail != null ? selectedProvinceDetail.activeProductCount : 0}">0</div>
+                    </div>
+                    <div class="bg-surface-muted rounded-2xl border border-line p-3.5">
+                        <div class="text-[11px] font-medium text-ink-muted">Sản phẩm OCOP</div>
+                        <div class="font-serif text-xl sm:text-2xl font-bold text-secondary-500 mt-1"
+                             x-text="activeProvince ? activeProvince.ocopProductCount : 0"
+                             th:text="${selectedProvinceDetail != null ? selectedProvinceDetail.ocopProductCount : 0}">0</div>
+                    </div>
+                    <div class="bg-surface-muted rounded-2xl border border-line p-3.5">
+                        <div class="text-[11px] font-medium text-ink-muted">Gian hàng HTX</div>
+                        <div class="font-serif text-xl sm:text-2xl font-bold text-ink mt-1"
+                             x-text="activeProvince ? activeProvince.approvedShopCount : 0"
+                             th:text="${selectedProvinceDetail != null ? selectedProvinceDetail.approvedShopCount : 0}">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved HTX Shops Strip (SSR initial + Dynamic Alpine) -->
+            <div x-show="!loadedFromApi && !loading"
+                 th:if="${selectedProvinceDetail != null and !selectedProvinceDetail.approvedShops.isEmpty()}"
+                 class="bg-surface rounded-2xl border border-line shadow-soft p-4 sm:p-5 space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-ink-muted flex items-center gap-1.5">
+                    <i data-lucide="store" class="w-4 h-4 text-primary-600"></i>
+                    <span>Hợp tác xã &amp; Gian hàng tiêu biểu</span>
+                </h3>
+                <div class="flex flex-wrap gap-2.5">
+                    <a th:each="shop : ${selectedProvinceDetail.approvedShops}"
+                       th:href="@{'/shops/' + ${shop.slug}}"
+                       class="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-line bg-surface-muted hover:bg-primary-50 hover:border-primary-500/40 transition">
+                        <span class="w-7 h-7 rounded-full bg-primary-100 text-primary-700 font-bold text-xs flex items-center justify-center shrink-0"
+                              th:text="${#strings.isEmpty(shop.name) ? 'H' : #strings.substring(shop.name, 0, 1)}">H</span>
+                        <span class="text-xs font-semibold text-ink" th:text="${shop.name}">HTX Trà Tân Cương</span>
+                        <span class="text-[11px] text-ink-muted" th:text="'(' + ${shop.activeProductCount} + ' món)'">(2 món)</span>
+                    </a>
+                </div>
+            </div>
+
+            <div x-show="loadedFromApi && !loading && activeProvince && activeProvince.approvedShops && activeProvince.approvedShops.length > 0"
+                 style="display: none;"
+                 class="bg-surface rounded-2xl border border-line shadow-soft p-4 sm:p-5 space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-ink-muted flex items-center gap-1.5">
+                    <i data-lucide="store" class="w-4 h-4 text-primary-600"></i>
+                    <span>Hợp tác xã &amp; Gian hàng tiêu biểu</span>
+                </h3>
+                <div class="flex flex-wrap gap-2.5">
+                    <template x-for="shop in (activeProvince?.approvedShops || [])" :key="shop.id">
+                        <a :href="'/shops/' + encodeURIComponent(shop.slug)"
+                           class="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl border border-line bg-surface-muted hover:bg-primary-50 hover:border-primary-500/40 transition">
+                            <span class="w-7 h-7 rounded-full bg-primary-100 text-primary-700 font-bold text-xs flex items-center justify-center shrink-0"
+                                  x-text="(shop.name || 'H').charAt(0).toUpperCase()">H</span>
+                            <span class="text-xs font-semibold text-ink" x-text="shop.name"></span>
+                            <span class="text-[11px] text-ink-muted" x-text="'(' + shop.activeProductCount + ' món)'"></span>
+                        </a>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Top Specialties Section -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-serif text-lg sm:text-xl font-bold text-ink">Đặc Sản Nổi Bật</h3>
+                    <span class="text-xs text-ink-muted"
+                          x-text="activeProvince && activeProvince.topSpecialties.length > 0 ? ('Hiển thị ' + activeProvince.topSpecialties.length + ' món tiêu biểu') : ''"
+                          th:text="${selectedProvinceDetail != null and !selectedProvinceDetail.topSpecialties.isEmpty()} ? ('Hiển thị ' + ${#lists.size(selectedProvinceDetail.topSpecialties)} + ' món tiêu biểu') : ''">
+                    </span>
+                </div>
+
+                <!-- Loading Skeleton -->
+                <div x-show="loading" style="display: none;" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-surface rounded-2xl border border-line p-4 space-y-3 animate-pulse">
+                        <div class="aspect-square rounded-xl bg-surface-muted"></div>
+                        <div class="h-4 bg-surface-muted rounded w-3/4"></div>
+                        <div class="h-4 bg-surface-muted rounded w-1/2"></div>
+                    </div>
+                    <div class="bg-surface rounded-2xl border border-line p-4 space-y-3 animate-pulse">
+                        <div class="aspect-square rounded-xl bg-surface-muted"></div>
+                        <div class="h-4 bg-surface-muted rounded w-3/4"></div>
+                        <div class="h-4 bg-surface-muted rounded w-1/2"></div>
+                    </div>
+                </div>
+
+                <!-- SSR Initial Cards -->
+                <div x-show="!loadedFromApi && !loading">
+                    <div th:if="${selectedProvinceDetail != null and !selectedProvinceDetail.topSpecialties.isEmpty()}"
+                         class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <th:block th:each="p : ${selectedProvinceDetail.topSpecialties}">
+                            <div th:replace="~{fragments/product-card :: productCard(${p})}"></div>
+                        </th:block>
+                    </div>
+
+                    <!-- SSR Empty State -->
+                    <div th:if="${selectedProvinceDetail == null or selectedProvinceDetail.topSpecialties.isEmpty()}"
+                         class="bg-surface rounded-2xl border border-line p-8 text-center space-y-3 shadow-soft">
+                        <div class="w-12 h-12 rounded-2xl bg-surface-muted border border-line mx-auto flex items-center justify-center text-ink-muted">
+                            <i data-lucide="package-open" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="font-serif text-lg font-bold text-ink">Chưa có đặc sản đang mở bán tại địa phương này</h4>
+                        <p class="text-xs text-ink-muted max-w-md mx-auto">
+                            Các hợp tác xã địa phương đang trong quá trình hoàn thiện hồ sơ chuẩn OCOP. Bạn có thể khám phá thêm các đặc sản cùng vùng miền bên dưới.
+                        </p>
+                        <div class="flex flex-wrap justify-center gap-2 pt-2">
+                            <a th:if="${selectedProvinceDetail != null}"
+                               th:href="@{'/products?regionSlug=' + ${selectedProvinceDetail.regionSlug}}"
+                               class="btn-primary text-xs px-4 py-2">
+                                <span th:text="'Khám phá đặc sản ' + ${selectedProvinceDetail.regionName}">Khám phá vùng miền</span>
+                            </a>
+                            <a th:href="@{/products}" class="btn-outline text-xs px-4 py-2">Xem tất cả đặc sản</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Alpine Cards -->
+                <div x-show="loadedFromApi && !loading && activeProvince && activeProvince.topSpecialties && activeProvince.topSpecialties.length > 0"
+                     style="display: none;"
+                     class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <template x-for="p in (activeProvince?.topSpecialties || [])" :key="p.id">
+                        <div class="card card-hover group flex flex-col h-full overflow-hidden bg-surface relative border border-line/80 rounded-2xl shadow-soft transition-all duration-300">
+                            <div class="relative w-full aspect-square bg-surface-muted overflow-hidden">
+                                <a :href="'/products/' + encodeURIComponent(p.slug)" class="block w-full h-full">
+                                    <img :src="p.primaryImageUrl || '/images/demo/placeholder.svg'"
+                                         :alt="p.name"
+                                         loading="lazy"
+                                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                         :class="p.stock <= 0 ? 'opacity-50 grayscale' : ''">
+                                </a>
+
+                                <!-- Region Badge -->
+                                <div class="absolute top-2.5 left-2.5 z-10">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white shadow-sm backdrop-blur-sm"
+                                          :style="'background-color:' + (p.regionColorHex || '#0F9D8A')">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                                        <span x-text="p.regionName"></span>
+                                    </span>
+                                </div>
+
+                                <!-- OCOP Badge -->
+                                <div x-show="p.ocopRating != null && p.ocopRating > 0" class="absolute top-2.5 right-2.5 z-10">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-secondary-400 text-ink shadow-sm">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                                        <span x-text="p.ocopRating + '★ OCOP'"></span>
+                                    </span>
+                                </div>
+
+                                <!-- Wishlist Button -->
+                                <button type="button"
+                                        :data-wishlist-id="p.id"
+                                        @click="window.toggleWishlistItem && window.toggleWishlistItem(p.id, $el)"
+                                        class="wishlist-btn absolute bottom-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-surface/90 backdrop-blur-sm text-ink-muted hover:text-danger hover:bg-surface flex items-center justify-center shadow-sm border border-line/60 transition active:scale-90"
+                                        title="Yêu thích đặc sản"
+                                        aria-label="Yêu thích đặc sản">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                                </button>
+
+                                <!-- Out of Stock Overlay -->
+                                <div x-show="p.stock <= 0" class="absolute inset-0 flex items-center justify-center bg-ink/40 backdrop-blur-[2px] z-20">
+                                    <span class="bg-surface/95 text-ink font-bold text-xs px-3.5 py-1.5 rounded-full shadow-md border border-line">
+                                        Tạm hết hàng
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 flex flex-col flex-1 justify-between gap-3">
+                                <div>
+                                    <div class="flex items-center gap-1 text-[11px] text-ink-muted mb-1.5">
+                                        <svg class="w-3 h-3 text-primary-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                        <span class="truncate font-medium" x-text="p.provinceName || p.originDetail || 'Đặc sản Việt Nam'"></span>
+                                    </div>
+                                    <h4 class="text-xs sm:text-sm font-semibold text-ink line-clamp-2 leading-snug group-hover:text-primary-700 transition">
+                                        <a :href="'/products/' + encodeURIComponent(p.slug)" x-text="p.name"></a>
+                                    </h4>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center gap-1.5 text-[11px] text-ink-muted mb-2">
+                                        <div class="flex items-center text-secondary-500 font-semibold">
+                                            <svg class="w-3 h-3 fill-secondary-400 text-secondary-400" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                            <span class="ml-1 text-ink" x-text="p.avgRating"></span>
+                                        </div>
+                                        <span class="text-line">•</span>
+                                        <span x-text="'Đã bán ' + (p.soldCount || 0)"></span>
+                                    </div>
+
+                                    <div class="flex items-center justify-between pt-2 border-t border-line/60">
+                                        <div>
+                                            <span class="text-sm sm:text-base font-bold text-primary-700 font-serif"
+                                                  x-text="p.formattedPrice || (window.format ? window.format.vnd(p.price) : (p.price + '₫'))"></span>
+                                            <span class="text-[10px] text-ink-muted block -mt-0.5" x-text="'/' + p.unit"></span>
+                                        </div>
+
+                                        <button x-show="p.stock > 0"
+                                                type="button"
+                                                @click="window.quickAddToCart && window.quickAddToCart(p.id)"
+                                                class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary-50 text-primary-700 hover:bg-primary-600 hover:text-white flex items-center justify-center transition shadow-2xs active:scale-90"
+                                                title="Thêm vào giỏ hàng"
+                                                aria-label="Thêm vào giỏ hàng">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Dynamic Alpine Empty State -->
+                <div x-show="loadedFromApi && !loading && activeProvince && (!activeProvince.topSpecialties || activeProvince.topSpecialties.length === 0)"
+                     style="display: none;"
+                     class="bg-surface rounded-2xl border border-line p-8 text-center space-y-3 shadow-soft">
+                    <div class="w-12 h-12 rounded-2xl bg-surface-muted border border-line mx-auto flex items-center justify-center text-ink-muted">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22v-9"/><path d="M15.17 2.21a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.655 1.655 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z"/><path d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13"/></svg>
+                    </div>
+                    <h4 class="font-serif text-lg font-bold text-ink"
+                        x-text="'Chưa có đặc sản đang mở bán tại ' + (activeProvince?.name || 'địa phương này')"></h4>
+                    <p class="text-xs text-ink-muted max-w-md mx-auto">
+                        Các hợp tác xã địa phương đang trong quá trình hoàn thiện hồ sơ chuẩn OCOP. Bạn có thể khám phá thêm các đặc sản cùng vùng miền bên dưới.
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-2 pt-2">
+                        <a :href="activeProvince ? ('/products?regionSlug=' + encodeURIComponent(activeProvince.regionSlug)) : '/products'"
+                           class="btn-primary text-xs px-4 py-2">
+                            <span x-text="'Khám phá đặc sản ' + (activeProvince?.regionName || 'vùng miền')"></span>
+                        </a>
+                        <a th:href="@{/products}" class="btn-outline text-xs px-4 py-2">Xem tất cả đặc sản</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<th:block id="exploreJs">
+    <script th:inline="javascript">
+        const INITIAL_OVERVIEW = /*[[${overview}]]*/ { regions: [] };
+        const INITIAL_REGION_SLUG = /*[[${selectedRegionSlug}]]*/ '';
+        const INITIAL_PROVINCE = /*[[${selectedProvinceDetail}]]*/ null;
+
+        function explorePage() {
+            return {
+                overview: INITIAL_OVERVIEW || { regions: [] },
+                selectedRegionSlug: INITIAL_REGION_SLUG || '',
+                selectedProvinceSlug: INITIAL_PROVINCE ? INITIAL_PROVINCE.slug : '',
+                activeProvince: INITIAL_PROVINCE,
+                searchQuery: '',
+                loading: false,
+                loadedFromApi: false,
+                requestSeq: 0,
+
+                normalizeText(value) {
+                    return (value || '')
+                        .toLowerCase()
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/đ/g, 'd')
+                        .trim();
+                },
+
+                isProvinceVisible(provinceName, regionSlug) {
+                    if (this.selectedRegionSlug && this.selectedRegionSlug !== regionSlug) {
+                        return false;
+                    }
+                    const q = this.normalizeText(this.searchQuery);
+                    if (!q) {
+                        return true;
+                    }
+                    return this.normalizeText(provinceName).includes(q);
+                },
+
+                isRegionGroupVisible(regionSlug) {
+                    if (this.selectedRegionSlug && this.selectedRegionSlug !== regionSlug) {
+                        return false;
+                    }
+                    const regions = this.overview?.regions || [];
+                    const reg = regions.find(r => r.slug === regionSlug);
+                    if (!reg || !reg.provinces) {
+                        return false;
+                    }
+                    return reg.provinces.some(p => this.isProvinceVisible(p.name, regionSlug));
+                },
+
+                get visibleProvinceCount() {
+                    const regions = this.overview?.regions || [];
+                    let count = 0;
+                    for (const reg of regions) {
+                        for (const prov of (reg.provinces || [])) {
+                            if (this.isProvinceVisible(prov.name, reg.slug)) {
+                                count++;
+                            }
+                        }
+                    }
+                    return count;
+                },
+
+                selectRegion(regionSlug) {
+                    const target = regionSlug || '';
+                    this.selectedRegionSlug = target;
+                    if (!target) {
+                        return;
+                    }
+                    const regions = this.overview?.regions || [];
+                    const regionObj = regions.find(r => r.slug === target);
+                    if (!regionObj || !regionObj.provinces || regionObj.provinces.length === 0) {
+                        return;
+                    }
+                    const currentBelongsToRegion = regionObj.provinces.some(p => p.slug === this.selectedProvinceSlug);
+                    if (!currentBelongsToRegion) {
+                        const firstActive = regionObj.provinces.find(p => p.activeProductCount > 0) || regionObj.provinces[0];
+                        if (firstActive) {
+                            this.selectProvince(firstActive.slug);
+                        }
+                    }
+                },
+
+                async selectProvince(slug) {
+                    if (!slug || (this.selectedProvinceSlug === slug && this.loadedFromApi && !this.loading)) {
+                        return;
+                    }
+                    const previousSlug = this.selectedProvinceSlug;
+                    const seq = ++this.requestSeq;
+                    this.selectedProvinceSlug = slug;
+                    this.loading = true;
+                    try {
+                        const res = await window.api.get('/api/explore/provinces/' + encodeURIComponent(slug));
+                        if (seq !== this.requestSeq) {
+                            return;
+                        }
+                        if (res && res.success && res.data) {
+                            this.activeProvince = res.data;
+                            this.loadedFromApi = true;
+                            if (this.selectedRegionSlug && this.selectedRegionSlug !== 'all' && this.selectedRegionSlug !== res.data.regionSlug) {
+                                this.selectedRegionSlug = res.data.regionSlug;
+                            }
+                            const url = '/explore?province=' + encodeURIComponent(slug);
+                            if (window.history && window.history.replaceState) {
+                                window.history.replaceState(null, '', url);
+                            }
+                            this.$nextTick(() => {
+                                if (window.lucide) {
+                                    window.lucide.createIcons();
+                                }
+                                if (window.syncWishlistButtons) {
+                                    window.syncWishlistButtons();
+                                }
+                            });
+                        } else {
+                            this.selectedProvinceSlug = this.activeProvince?.slug || previousSlug;
+                            window.toast?.error('Không thể tải thông tin tỉnh/thành phố');
+                        }
+                    } catch (err) {
+                        if (seq !== this.requestSeq) {
+                            return;
+                        }
+                        this.selectedProvinceSlug = this.activeProvince?.slug || previousSlug;
+                        window.toast?.error(err.message || 'Không thể tải thông tin tỉnh/thành phố');
+                    } finally {
+                        if (seq === this.requestSeq) {
+                            this.loading = false;
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+</th:block>
+</html>

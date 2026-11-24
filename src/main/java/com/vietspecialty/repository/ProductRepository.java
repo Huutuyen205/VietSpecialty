@@ -54,5 +54,46 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Product p SET p.avgRating = :avgRating, p.reviewCount = :reviewCount WHERE p.id = :id")
     void updateProductRatingStats(@Param("id") Long id, @Param("avgRating") java.math.BigDecimal avgRating, @Param("reviewCount") Integer reviewCount);
+
+    interface ProvinceProductStatsProjection {
+        Integer getProvinceId();
+        long getActiveProductCount();
+        long getOcopProductCount();
+    }
+
+    @Query("""
+        SELECT p.province.id AS provinceId,
+               COUNT(p.id) AS activeProductCount,
+               COALESCE(SUM(CASE WHEN p.ocopRating IS NOT NULL AND p.ocopRating >= 3 THEN 1 ELSE 0 END), 0) AS ocopProductCount
+        FROM Product p
+        WHERE p.status = com.vietspecialty.domain.enums.ProductStatus.ACTIVE
+          AND p.shop.status = com.vietspecialty.domain.enums.ShopStatus.APPROVED
+        GROUP BY p.province.id
+        """)
+    List<ProvinceProductStatsProjection> countActiveAndOcopProductsByProvince();
+
+    @Query("""
+        SELECT p.province.id AS provinceId,
+               COUNT(p.id) AS activeProductCount,
+               COALESCE(SUM(CASE WHEN p.ocopRating IS NOT NULL AND p.ocopRating >= 3 THEN 1 ELSE 0 END), 0) AS ocopProductCount
+        FROM Product p
+        WHERE p.province.id = :provinceId
+          AND p.status = com.vietspecialty.domain.enums.ProductStatus.ACTIVE
+          AND p.shop.status = com.vietspecialty.domain.enums.ShopStatus.APPROVED
+        GROUP BY p.province.id
+        """)
+    Optional<ProvinceProductStatsProjection> countActiveAndOcopProductsForProvince(@Param("provinceId") Integer provinceId);
+
+    @Query("""
+        SELECT p FROM Product p
+        JOIN FETCH p.shop s
+        JOIN FETCH p.province pr
+        JOIN FETCH pr.region r
+        WHERE pr.id = :provinceId
+          AND p.status = com.vietspecialty.domain.enums.ProductStatus.ACTIVE
+          AND s.status = com.vietspecialty.domain.enums.ShopStatus.APPROVED
+        ORDER BY p.soldCount DESC, p.avgRating DESC, p.id DESC
+        """)
+    List<Product> findTopActiveByProvinceId(@Param("provinceId") Integer provinceId, Pageable pageable);
 }
 

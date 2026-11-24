@@ -4,6 +4,7 @@ import com.vietspecialty.config.AppProperties;
 import com.vietspecialty.domain.entity.*;
 import com.vietspecialty.domain.enums.*;
 import com.vietspecialty.dto.request.CheckoutFormRequest;
+import com.vietspecialty.dto.request.ShopPackageGiftRequest;
 import com.vietspecialty.dto.response.*;
 import com.vietspecialty.exception.BusinessException;
 import com.vietspecialty.exception.ErrorCode;
@@ -210,6 +211,22 @@ public class OrderServiceImpl implements OrderService {
                 ? ShippingMethod.EXPRESS
                 : ShippingMethod.STANDARD;
 
+        // Nhóm theo Shop và kiểm tra/chuẩn hóa quà biếu trước khi trừ kho & dùng voucher
+        Map<Long, List<CartItem>> itemsByShop = new LinkedHashMap<>();
+        for (CartItem ci : cartItems) {
+            Long shopId = ci.getProduct().getShop().getId();
+            itemsByShop.computeIfAbsent(shopId, k -> new ArrayList<>()).add(ci);
+        }
+
+        Map<Long, ResolvedGiftOption> resolvedGifts = new LinkedHashMap<>();
+        BigDecimal giftFeeTotal = BigDecimal.ZERO;
+        for (Long shopId : itemsByShop.keySet()) {
+            ShopPackageGiftRequest giftReq = req.shopGifts() != null ? req.shopGifts().get(shopId) : null;
+            ResolvedGiftOption resolved = resolveAndValidateGift(giftReq);
+            resolvedGifts.put(shopId, resolved);
+            giftFeeTotal = giftFeeTotal.add(resolved.giftFee());
+        }
+
         // 2. Trừ kho nguyên tử - SẮP XẾP TĂNG DẦN THEO PRODUCT ID ĐỂ CHỐNG DEADLOCK
         Map<Long, Integer> productQuantities = new HashMap<>();
         for (CartItem ci : cartItems) {
@@ -229,12 +246,7 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // 3. Phân nhóm theo Shop để tính phí ship & tách đơn
-        Map<Long, List<CartItem>> itemsByShop = new LinkedHashMap<>();
-        for (CartItem ci : cartItems) {
-            Long shopId = ci.getProduct().getShop().getId();
-            itemsByShop.computeIfAbsent(shopId, k -> new ArrayList<>()).add(ci);
-        }
+        // 3. Tính phí ship, voucher và tổng tiền theo từng shop
 
         BigDecimal baseShippingFee = (shippingMethod == ShippingMethod.EXPRESS)
                 ? appProperties.getShipping().getExpressFee()
@@ -281,7 +293,7 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        BigDecimal grandTotal = itemsSubtotal.add(shippingTotal).subtract(shopDiscountTotal).subtract(platformDiscountTotal);
+        BigDecimal grandTotal = itemsSubtotal.add(shippingTotal).add(giftFeeTotal).subtract(shopDiscountTotal).subtract(platformDiscountTotal);
         if (grandTotal.compareTo(BigDecimal.ZERO) < 0) {
             grandTotal = BigDecimal.ZERO;
         }
@@ -346,7 +358,10 @@ public class OrderServiceImpl implements OrderService {
                         .divide(itemsSubtotal, 0, java.math.RoundingMode.HALF_UP);
             }
 
-            BigDecimal shopTotalAmount = shopGoodsTotal.add(shopShip).subtract(shopDisc).subtract(shopPlatformDisc);
+            ResolvedGiftOption giftOption = resolvedGifts.getOrDefault(shopId, ResolvedGiftOption.nonGift());
+            BigDecimal shopGiftFee = giftOption.giftFee();
+
+            BigDecimal shopTotalAmount = shopGoodsTotal.add(shopShip).add(shopGiftFee).subtract(shopDisc).subtract(shopPlatformDisc);
             if (shopTotalAmount.compareTo(BigDecimal.ZERO) < 0) {
                 shopTotalAmount = BigDecimal.ZERO;
             }
@@ -372,6 +387,12 @@ public class OrderServiceImpl implements OrderService {
                     .paymentStatus(OrderPaymentStatus.UNPAID)
                     .status(initialStatus)
                     .note(req.note())
+                    .isGift(giftOption.isGift())
+                    .giftOccasion(giftOption.giftOccasion())
+                    .giftWrapType(giftOption.giftWrapType())
+                    .giftFee(shopGiftFee)
+                    .giftRecipientName(giftOption.giftRecipientName())
+                    .giftMessage(giftOption.giftMessage())
                     .build();
 
             Order savedOrder = orderRepository.save(order);
@@ -607,10 +628,16 @@ public class OrderServiceImpl implements OrderService {
             if (items == null || items.isEmpty()) {
                 items = orderItemRepository.findByOrderId(order.getId());
             }
+            List<Map.Entry<Long, Integer>> soldUpdates = items.stream()
+                    .map(item -> Map.entry(item.getProduct().getId(), item.getQuantity()))
+                    .toList();
+            orderRepository.saveAndFlush(order);
             // Tăng số lượng đã bán cho sản phẩm
-            for (OrderItem item : items) {
-                productRepository.incrementSoldCount(item.getProduct().getId(), item.getQuantity());
+            for (Map.Entry<Long, Integer> entry : soldUpdates) {
+                productRepository.incrementSoldCount(entry.getKey(), entry.getValue());
             }
+            order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         } else if (newStatus == OrderStatus.CANCELLED) {
             order.setCancelledAt(now);
             order.setCancelReason(cancelReason);
@@ -623,18 +650,29 @@ public class OrderServiceImpl implements OrderService {
             if (items == null || items.isEmpty()) {
                 items = orderItemRepository.findByOrderId(order.getId());
             }
+            List<Map.Entry<Long, Integer>> stockRestores = items.stream()
+                    .map(item -> Map.entry(item.getProduct().getId(), item.getQuantity()))
+                    .toList();
+            Long shopVoucherId = order.getShopVoucher() != null ? order.getShopVoucher().getId() : null;
+            Long platformVoucherId = (order.getOrderGroup() != null && order.getOrderGroup().getPlatformVoucher() != null)
+                    ? order.getOrderGroup().getPlatformVoucher().getId()
+                    : null;
+            orderRepository.saveAndFlush(order);
+
             // Hoàn lại tồn kho nguyên tử
-            for (OrderItem item : items) {
-                productRepository.incrementStockAtomic(item.getProduct().getId(), item.getQuantity());
+            for (Map.Entry<Long, Integer> entry : stockRestores) {
+                productRepository.incrementStockAtomic(entry.getKey(), entry.getValue());
             }
 
             // Hoàn lại voucher nếu có
-            if (order.getShopVoucher() != null) {
-                voucherService.releaseVoucher(order.getShopVoucher().getId());
+            if (shopVoucherId != null) {
+                voucherService.releaseVoucher(shopVoucherId);
             }
-            if (order.getOrderGroup() != null && order.getOrderGroup().getPlatformVoucher() != null) {
-                voucherService.releaseVoucher(order.getOrderGroup().getPlatformVoucher().getId());
+            if (platformVoucherId != null) {
+                voucherService.releaseVoucher(platformVoucherId);
             }
+            order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         }
 
         orderRepository.save(order);
@@ -807,6 +845,63 @@ public class OrderServiceImpl implements OrderService {
             log.info("Auto delivering order: {} after {} days of shipping", order.getCode(), days);
             changeOrderStatus(order.getId(), OrderStatus.DELIVERED, ActorType.SYSTEM, null,
                     "Hệ thống tự động xác nhận đã giao hàng sau " + days + " ngày vận chuyển", null);
+        }
+    }
+
+    private ResolvedGiftOption resolveAndValidateGift(ShopPackageGiftRequest entry) {
+        if (entry == null || !Boolean.TRUE.equals(entry.getIsGift())) {
+            return ResolvedGiftOption.nonGift();
+        }
+
+        String rawOccasion = entry.getGiftOccasion() != null ? entry.getGiftOccasion().trim() : "";
+        if (rawOccasion.isEmpty()) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Vui lòng chọn dịp tặng quà cho gói quà biếu");
+        }
+        GiftOccasion occasion;
+        try {
+            occasion = GiftOccasion.valueOf(rawOccasion.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Dịp tặng quà không hợp lệ: " + rawOccasion);
+        }
+
+        String rawWrapType = entry.getGiftWrapType() != null ? entry.getGiftWrapType().trim() : "";
+        GiftWrapType wrapType;
+        if (rawWrapType.isEmpty()) {
+            wrapType = GiftWrapType.STANDARD_BOX;
+        } else {
+            try {
+                wrapType = GiftWrapType.valueOf(rawWrapType.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ex) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Hình thức gói quà không hợp lệ: " + rawWrapType);
+            }
+        }
+
+        String recipientName = entry.getGiftRecipientName() != null ? entry.getGiftRecipientName().trim() : "";
+        if (recipientName.length() > 100) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Tên người nhận quà tối đa 100 ký tự");
+        }
+        String normalizedRecipient = recipientName.isEmpty() ? null : recipientName;
+
+        String message = entry.getGiftMessage() != null ? entry.getGiftMessage().trim() : "";
+        if (message.length() > 300) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Lời chúc trên thiệp tối đa 300 ký tự");
+        }
+        String normalizedMessage = message.isEmpty() ? null : message;
+
+        BigDecimal fee = wrapType.getFee() != null ? wrapType.getFee() : BigDecimal.ZERO;
+        return new ResolvedGiftOption(true, occasion, wrapType, fee, normalizedRecipient, normalizedMessage);
+    }
+
+    private record ResolvedGiftOption(
+            boolean isGift,
+            GiftOccasion giftOccasion,
+            GiftWrapType giftWrapType,
+            BigDecimal giftFee,
+            String giftRecipientName,
+            String giftMessage
+    ) {
+        static ResolvedGiftOption nonGift() {
+            return new ResolvedGiftOption(false, null, null, BigDecimal.ZERO, null, null);
         }
     }
 }

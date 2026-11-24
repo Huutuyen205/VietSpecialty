@@ -35,6 +35,13 @@ public class SitemapController {
         xml.append("    <priority>1.0</priority>\n");
         xml.append("  </url>\n");
 
+        // Bản đồ khám phá đặc sản 4 miền & 34 tỉnh thành
+        xml.append("  <url>\n");
+        xml.append("    <loc>https://vietspecialty.vn/explore</loc>\n");
+        xml.append("    <changefreq>weekly</changefreq>\n");
+        xml.append("    <priority>0.9</priority>\n");
+        xml.append("  </url>\n");
+
         // Trang danh mục
         List<Category> categories = categoryRepository.findAll();
         for (Category cat : categories) {

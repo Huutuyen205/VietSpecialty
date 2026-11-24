@@ -1,6 +1,8 @@
 package com.vietspecialty.dto.response;
 
 import com.vietspecialty.domain.enums.ActorType;
+import com.vietspecialty.domain.enums.GiftOccasion;
+import com.vietspecialty.domain.enums.GiftWrapType;
 import com.vietspecialty.domain.enums.OrderPaymentStatus;
 import com.vietspecialty.domain.enums.OrderStatus;
 import com.vietspecialty.domain.enums.PaymentMethod;
@@ -41,8 +43,58 @@ public record OrderDetailResponse(
         LocalDateTime cancelledAt,
         LocalDateTime createdAt,
         List<OrderItemDetail> items,
-        List<OrderStatusHistoryDetail> histories
+        List<OrderStatusHistoryDetail> histories,
+        Boolean isGift,
+        GiftOccasion giftOccasion,
+        String giftOccasionLabel,
+        GiftWrapType giftWrapType,
+        String giftWrapTypeLabel,
+        BigDecimal giftFee,
+        String formattedGiftFee,
+        String giftRecipientName,
+        String giftMessage
 ) {
+    public OrderDetailResponse(
+            Long id,
+            String code,
+            String groupCode,
+            Long shopId,
+            String shopName,
+            String receiverName,
+            String receiverPhone,
+            String shippingAddress,
+            ShippingMethod shippingMethod,
+            BigDecimal itemsSubtotal,
+            BigDecimal shippingFee,
+            BigDecimal shopDiscount,
+            BigDecimal platformDiscount,
+            BigDecimal totalAmount,
+            String formattedTotalAmount,
+            PaymentMethod paymentMethod,
+            OrderPaymentStatus paymentStatus,
+            OrderStatus status,
+            String statusDescription,
+            String carrierName,
+            String trackingCode,
+            String note,
+            String cancelReason,
+            ActorType cancelledBy,
+            LocalDateTime confirmedAt,
+            LocalDateTime shippedAt,
+            LocalDateTime deliveredAt,
+            LocalDateTime cancelledAt,
+            LocalDateTime createdAt,
+            List<OrderItemDetail> items,
+            List<OrderStatusHistoryDetail> histories
+    ) {
+        this(id, code, groupCode, shopId, shopName, receiverName, receiverPhone, shippingAddress,
+                shippingMethod, itemsSubtotal, shippingFee, shopDiscount, platformDiscount,
+                totalAmount, formattedTotalAmount, paymentMethod, paymentStatus, status,
+                statusDescription, carrierName, trackingCode, note, cancelReason, cancelledBy,
+                confirmedAt, shippedAt, deliveredAt, cancelledAt, createdAt, items, histories,
+                false, null, null, null, null, BigDecimal.ZERO, "0₫", null, null);
+    }
+
     public record OrderItemDetail(
             Long id,
             Long productId,

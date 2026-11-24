@@ -69,7 +69,10 @@ public enum ErrorCode {
     // Đánh giá & Bình luận
     REVIEW_NOT_ELIGIBLE("REV_001", "Chỉ có thể đánh giá sản phẩm sau khi đơn hàng đã được giao thành công", HttpStatus.BAD_REQUEST),
     REVIEW_ALREADY_EXISTS("REV_002", "Bạn đã đánh giá sản phẩm này cho đơn hàng tương ứng", HttpStatus.CONFLICT),
-    ADDRESS_NOT_FOUND("ADDR_001", "Không tìm thấy địa chỉ nhận hàng", HttpStatus.NOT_FOUND);
+    ADDRESS_NOT_FOUND("ADDR_001", "Không tìm thấy địa chỉ nhận hàng", HttpStatus.NOT_FOUND),
+
+    // Địa lý (Region / Province)
+    PROVINCE_NOT_FOUND("GEO_001", "Không tìm thấy tỉnh/thành phố", HttpStatus.NOT_FOUND);
 
     private final String code;
     private final String defaultMessage;

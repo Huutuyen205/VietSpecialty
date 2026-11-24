@@ -13,6 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,13 @@ public class GlobalApiExceptionHandler {
         }
         log.warn("Validation failed for API request: {}", errors);
         ApiResponse<Void> response = ApiResponse.error("Dữ liệu gửi lên không hợp lệ", errors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        log.warn("Type mismatch for API parameter {}: {}", ex.getName(), ex.getMessage());
+        ApiResponse<Void> response = ApiResponse.error("Tham số không hợp lệ: " + ex.getName());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 

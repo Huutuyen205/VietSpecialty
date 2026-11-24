@@ -22,6 +22,20 @@ public record CheckoutFormRequest(
         @NotBlank(message = "Phiên đặt hàng không hợp lệ")
         String checkoutToken,
 
-        String note
-) {}
+        String note,
+
+        Map<Long, ShopPackageGiftRequest> shopGifts
+) {
+    public CheckoutFormRequest(
+            Long addressId,
+            String paymentMethod,
+            String shippingMethod,
+            String systemVoucherCode,
+            Map<Long, String> shopVoucherCodes,
+            String checkoutToken,
+            String note
+    ) {
+        this(addressId, paymentMethod, shippingMethod, systemVoucherCode, shopVoucherCodes, checkoutToken, note, null);
+    }
+}
 

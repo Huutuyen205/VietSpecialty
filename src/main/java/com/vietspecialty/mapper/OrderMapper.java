@@ -82,6 +82,8 @@ public final class OrderMapper {
                     ))
                     .toList();
 
+        java.math.BigDecimal giftFee = o.getGiftFee() != null ? o.getGiftFee() : java.math.BigDecimal.ZERO;
+
         return new OrderDetailResponse(
                 o.getId(),
                 o.getCode(),
@@ -113,7 +115,16 @@ public final class OrderMapper {
                 o.getCancelledAt(),
                 o.getCreatedAt(),
                 itemDetails,
-                histories
+                histories,
+                Boolean.TRUE.equals(o.getIsGift()),
+                o.getGiftOccasion(),
+                o.getGiftOccasion() != null ? o.getGiftOccasion().getDescription() : null,
+                o.getGiftWrapType(),
+                o.getGiftWrapType() != null ? o.getGiftWrapType().getDescription() : null,
+                giftFee,
+                MoneyUtils.formatVnd(giftFee),
+                o.getGiftRecipientName(),
+                o.getGiftMessage()
         );
     }
 }

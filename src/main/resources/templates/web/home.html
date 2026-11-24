@@ -132,10 +132,16 @@
                 <h2 class="font-serif text-2xl sm:text-3xl font-bold text-ink mt-1">Đặc Sản 4 Vùng Miền</h2>
                 <p class="text-xs sm:text-sm text-ink-muted mt-1">Hương sắc địa phương gắn liền với chiều dài đất nước và văn hóa làng nghề</p>
             </div>
-            <a th:href="@{/products}" class="text-xs font-bold text-primary-700 hover:text-primary-800 flex items-center gap-1 group">
-                <span>Xem tất cả đặc sản</span>
-                <i data-lucide="chevron-right" class="w-4 h-4 transition-transform group-hover:translate-x-1"></i>
-            </a>
+            <div class="flex flex-wrap items-center gap-3">
+                <a th:href="@{/explore}" class="btn-primary text-xs px-4 py-2 flex items-center gap-1.5 shadow-sm whitespace-nowrap">
+                    <i data-lucide="map" class="w-3.5 h-3.5"></i>
+                    <span>Mở bản đồ 34 tỉnh thành</span>
+                </a>
+                <a th:href="@{/products}" class="text-xs font-bold text-primary-700 hover:text-primary-800 flex items-center gap-1 group">
+                    <span>Xem tất cả đặc sản</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 transition-transform group-hover:translate-x-1"></i>
+                </a>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
