@@ -27,3 +27,4 @@ public class VietSpecialtyApplication {
         SpringApplication.run(VietSpecialtyApplication.class, args);
     }
 }
+// adune
