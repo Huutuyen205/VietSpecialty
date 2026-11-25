@@ -29,6 +29,7 @@ public class AuthController {
             @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "logout", required = false) String logout,
             @RequestParam(value = "registered", required = false) String registered,
+            @RequestParam(value = "expired", required = false) String expired,
             Model model
     ) {
         if (SecurityUtils.isAuthenticated()) {
@@ -37,6 +38,9 @@ public class AuthController {
 
         if (error != null) {
             model.addAttribute("errorMessage", error);
+        }
+        if (expired != null) {
+            model.addAttribute("errorMessage", "Phiên đăng nhập của bạn đã hết hạn hoặc bị đăng xuất bởi hệ thống. Vui lòng đăng nhập lại.");
         }
         if (email != null && !email.isBlank()) {
             model.addAttribute("email", email.trim());

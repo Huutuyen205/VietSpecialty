@@ -52,8 +52,9 @@
 
                     <!-- Số điện thoại -->
                     <div>
-                        <label for="phone" class="block text-xs font-semibold text-ink mb-1">Số điện thoại</label>
+                        <label for="phone" class="block text-xs font-semibold text-ink mb-1">Số điện thoại <span class="font-normal text-ink-muted">(không bắt buộc)</span></label>
                         <input type="tel" id="phone" th:field="*{phone}"
+                               placeholder="VD: 0912345678"
                                class="input-field text-sm"
                                th:classappend="${#fields.hasErrors('phone')} ? 'input-error' : ''">
                         <p th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="text-xs text-danger mt-1"></p>

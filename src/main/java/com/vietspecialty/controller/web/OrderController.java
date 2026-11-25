@@ -4,6 +4,7 @@ import com.vietspecialty.domain.entity.Order;
 import com.vietspecialty.domain.entity.OrderItem;
 import com.vietspecialty.domain.enums.OrderPaymentStatus;
 import com.vietspecialty.domain.enums.OrderStatus;
+import com.vietspecialty.domain.enums.ProductStatus;
 import com.vietspecialty.dto.ApiResponse;
 import com.vietspecialty.dto.request.CartItemRequest;
 import com.vietspecialty.dto.response.OrderDetailResponse;
@@ -76,7 +77,6 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/reorder")
-    @Transactional
     public Object reorder(
             @PathVariable Long id,
             @CurrentUser CustomUserDetails userDetails,
@@ -90,7 +90,7 @@ public class OrderController {
             return "redirect:/login?redirect=/orders";
         }
 
-        Order order = orderRepository.findById(id)
+        Order order = orderRepository.findWithItemsAndProductsById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         if (!order.getUser().getId().equals(userDetails.getId())) {
@@ -100,18 +100,23 @@ public class OrderController {
         int addedCount = 0;
         if (order.getItems() != null) {
             for (OrderItem item : order.getItems()) {
-                if (item.getProduct() != null && item.getProduct().getStock() > 0) {
+                if (item.getProduct() != null
+                        && item.getProduct().getStatus() == ProductStatus.ACTIVE
+                        && item.getProduct().getStock() > 0) {
                     int qty = Math.min(item.getQuantity(), item.getProduct().getStock());
                     try {
                         cartService.addToCart(userDetails.getId(), new CartItemRequest(item.getProduct().getId(), qty));
                         addedCount++;
-                    } catch (Exception ignored) {}
+                    } catch (BusinessException ignored) {}
                 }
             }
         }
 
         if (isJson) {
-            return ResponseEntity.ok(ApiResponse.success("Đã thêm " + addedCount + " đặc sản vào giỏ hàng", null));
+            if (addedCount > 0) {
+                return ResponseEntity.ok(ApiResponse.success("Đã thêm " + addedCount + " đặc sản vào giỏ hàng", null));
+            }
+            return ResponseEntity.badRequest().body(ApiResponse.error("Không có sản phẩm nào còn kinh doanh hoặc còn hàng để mua lại"));
         }
 
         return "redirect:/cart";
@@ -138,6 +143,17 @@ public class OrderController {
 
         if (!order.getUser().getId().equals(userDetails.getId())) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED, "Bạn không có quyền thao tác trên đơn hàng này");
+        }
+
+        boolean isEligible = order.getPaymentStatus() == OrderPaymentStatus.PAID
+                && (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELLED);
+        if (!isEligible) {
+            String msg = "Chỉ có thể yêu cầu hoàn tiền cho đơn hàng đã thanh toán và đã giao hoặc đã hủy";
+            if (isJson) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(msg));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", msg);
+            return "redirect:/orders/" + order.getCode();
         }
 
         order.setPaymentStatus(OrderPaymentStatus.REFUND_PENDING);

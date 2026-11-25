@@ -9,9 +9,12 @@ public record ProfileUpdateRequest(
         @Size(min = 2, max = 100, message = "Họ và tên phải từ 2 đến 100 ký tự")
         String fullName,
 
-        @NotBlank(message = "Số điện thoại không được để trống")
-        @Pattern(regexp = "^(0|\\+84)[3|5|7|8|9][0-9]{8}$", message = "Số điện thoại không đúng định dạng Việt Nam")
+        @Pattern(regexp = "^$|^(0|\\+84)[35789][0-9]{8}$", message = "Số điện thoại không đúng định dạng Việt Nam")
         String phone
 ) {
+    public ProfileUpdateRequest {
+        fullName = fullName != null ? fullName.trim() : null;
+        phone = (phone == null || phone.isBlank()) ? "" : phone.trim();
+    }
 }
 

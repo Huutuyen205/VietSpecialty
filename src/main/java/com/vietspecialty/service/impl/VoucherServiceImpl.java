@@ -5,6 +5,7 @@ import com.vietspecialty.domain.entity.User;
 import com.vietspecialty.domain.entity.Voucher;
 import com.vietspecialty.domain.enums.DiscountType;
 import com.vietspecialty.domain.enums.VoucherScope;
+import com.vietspecialty.domain.enums.VoucherUsageStatus;
 import com.vietspecialty.dto.request.VoucherCreateRequest;
 import com.vietspecialty.dto.response.VoucherResponse;
 import com.vietspecialty.exception.BusinessException;
@@ -13,6 +14,7 @@ import com.vietspecialty.mapper.VoucherMapper;
 import com.vietspecialty.repository.ShopRepository;
 import com.vietspecialty.repository.UserRepository;
 import com.vietspecialty.repository.VoucherRepository;
+import com.vietspecialty.repository.VoucherUsageRepository;
 import com.vietspecialty.service.VoucherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,7 @@ import java.util.List;
 public class VoucherServiceImpl implements VoucherService {
 
     private final VoucherRepository voucherRepository;
+    private final VoucherUsageRepository voucherUsageRepository;
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
 
@@ -69,6 +72,14 @@ public class VoucherServiceImpl implements VoucherService {
         if (voucher.getScope() == VoucherScope.SHOP) {
             if (voucher.getShop() == null || shopId == null || !voucher.getShop().getId().equals(shopId)) {
                 throw new BusinessException(ErrorCode.VOUCHER_SHOP_MISMATCH);
+            }
+        }
+
+        if (userId != null && voucher.getPerUserLimit() != null && voucher.getPerUserLimit() > 0) {
+            long userUsedCount = voucherUsageRepository.countByVoucherIdAndUserIdAndStatus(
+                    voucher.getId(), userId, VoucherUsageStatus.APPLIED);
+            if (userUsedCount >= voucher.getPerUserLimit()) {
+                throw new BusinessException(ErrorCode.VOUCHER_USER_LIMIT_EXCEEDED);
             }
         }
 
@@ -120,13 +131,35 @@ public class VoucherServiceImpl implements VoucherService {
 
     @Override
     public List<Voucher> getAvailableSystemVouchers() {
-        return voucherRepository.findByScopeAndIsActiveTrue(VoucherScope.PLATFORM);
+        LocalDateTime now = LocalDateTime.now();
+        return voucherRepository.findByScopeAndIsActiveTrue(VoucherScope.PLATFORM).stream()
+                .filter(v -> isVoucherCurrentlyAvailable(v, now))
+                .toList();
     }
 
     @Override
     public List<Voucher> getAvailableShopVouchers(Long shopId) {
         if (shopId == null) return List.of();
-        return voucherRepository.findByShopIdAndIsActiveTrue(shopId);
+        LocalDateTime now = LocalDateTime.now();
+        return voucherRepository.findByShopIdAndIsActiveTrue(shopId).stream()
+                .filter(v -> isVoucherCurrentlyAvailable(v, now))
+                .toList();
+    }
+
+    private boolean isVoucherCurrentlyAvailable(Voucher v, LocalDateTime now) {
+        if (!Boolean.TRUE.equals(v.getIsActive())) {
+            return false;
+        }
+        if (v.getStartAt() != null && now.isBefore(v.getStartAt())) {
+            return false;
+        }
+        if (v.getEndAt() != null && now.isAfter(v.getEndAt())) {
+            return false;
+        }
+        if (v.getUsageLimit() != null && v.getUsedCount() >= v.getUsageLimit()) {
+            return false;
+        }
+        return true;
     }
 
     @Override

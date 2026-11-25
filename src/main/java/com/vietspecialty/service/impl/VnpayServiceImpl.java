@@ -81,7 +81,7 @@ public class VnpayServiceImpl implements VnpayService {
     @Transactional(noRollbackFor = BusinessException.class)
     public boolean processReturn(Map<String, String> params) {
         log.info("Processing VNPay Return URL callback: {}", params);
-        return handleVnpayCallback(params);
+        return handleVnpayCallback(params, false);
     }
 
     @Override
@@ -91,21 +91,25 @@ public class VnpayServiceImpl implements VnpayService {
         Map<String, String> response = new HashMap<>();
 
         try {
-            boolean success = handleVnpayCallback(params);
-            if (success) {
-                response.put("RspCode", "00");
-                response.put("Message", "Confirm Success");
-            } else {
+            handleVnpayCallback(params, true);
+            response.put("RspCode", "00");
+            response.put("Message", "Confirm Success");
+        } catch (BusinessException e) {
+            ErrorCode errorCode = e.getErrorCode();
+            if (errorCode == ErrorCode.PAYMENT_INVALID_SIGNATURE) {
                 response.put("RspCode", "97");
                 response.put("Message", "Invalid Checksum");
-            }
-        } catch (BusinessException e) {
-            if (e.getErrorCode() == ErrorCode.PAYMENT_ALREADY_PROCESSED) {
-                response.put("RspCode", "02");
-                response.put("Message", "Order already confirmed");
-            } else if (e.getErrorCode() == ErrorCode.ORDER_NOT_FOUND) {
+            } else if (errorCode == ErrorCode.ORDER_GROUP_NOT_FOUND
+                    || errorCode == ErrorCode.ORDER_NOT_FOUND
+                    || errorCode == ErrorCode.PAYMENT_TRANSACTION_NOT_FOUND) {
                 response.put("RspCode", "01");
                 response.put("Message", "Order not found");
+            } else if (errorCode == ErrorCode.PAYMENT_AMOUNT_MISMATCH) {
+                response.put("RspCode", "04");
+                response.put("Message", "Invalid amount");
+            } else if (errorCode == ErrorCode.PAYMENT_ALREADY_PROCESSED) {
+                response.put("RspCode", "02");
+                response.put("Message", "Order already confirmed");
             } else {
                 response.put("RspCode", "99");
                 response.put("Message", "Unknown error");
@@ -119,7 +123,7 @@ public class VnpayServiceImpl implements VnpayService {
         return response;
     }
 
-    private boolean handleVnpayCallback(Map<String, String> params) {
+    private boolean handleVnpayCallback(Map<String, String> params, boolean isIpn) {
         String vnpSecureHash = params.get("vnp_SecureHash");
         if (vnpSecureHash == null || vnpSecureHash.isBlank()) {
             throw new BusinessException(ErrorCode.PAYMENT_INVALID_SIGNATURE);
@@ -148,8 +152,37 @@ public class VnpayServiceImpl implements VnpayService {
         String bankCode = params.get("vnp_BankCode");
         String payDate = params.get("vnp_PayDate");
 
+        if (groupCode == null || groupCode.isBlank()) {
+            throw new BusinessException(ErrorCode.ORDER_GROUP_NOT_FOUND);
+        }
+
         OrderGroup orderGroup = orderGroupRepository.findByCode(groupCode)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_GROUP_NOT_FOUND));
+
+        long expectedAmount = orderGroup.getGrandTotal().multiply(BigDecimal.valueOf(100)).longValue();
+        String vnpAmountStr = params.get("vnp_Amount");
+        if (isIpn || "00".equals(responseCode)) {
+            if (vnpAmountStr == null || vnpAmountStr.isBlank()) {
+                throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+            }
+            try {
+                long receivedAmount = Long.parseLong(vnpAmountStr.trim());
+                if (receivedAmount != expectedAmount) {
+                    throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+                }
+            } catch (NumberFormatException ex) {
+                throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+            }
+        } else if (vnpAmountStr != null && !vnpAmountStr.isBlank()) {
+            try {
+                long receivedAmount = Long.parseLong(vnpAmountStr.trim());
+                if (receivedAmount != expectedAmount) {
+                    throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+                }
+            } catch (NumberFormatException ex) {
+                throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+            }
+        }
 
         Payment payment = paymentRepository.findTopByOrderGroupIdOrderByCreatedAtDesc(orderGroup.getId())
                 .orElse(null);
@@ -157,6 +190,9 @@ public class VnpayServiceImpl implements VnpayService {
         // Idempotent: Nếu đã thành công trước đó thì không xử lý lại
         if (orderGroup.getPaymentStatus() == OrderGroupPaymentStatus.PAID) {
             log.info("OrderGroup {} already paid, skipping duplicate update", groupCode);
+            if (isIpn) {
+                throw new BusinessException(ErrorCode.PAYMENT_ALREADY_PROCESSED);
+            }
             return true;
         }
 

@@ -20,7 +20,8 @@ public final class UserMapper {
                 user.getAvatarUrl(),
                 user.getRole(),
                 user.getStatus(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getPasswordSet() == null || Boolean.TRUE.equals(user.getPasswordSet())
         );
     }
 }

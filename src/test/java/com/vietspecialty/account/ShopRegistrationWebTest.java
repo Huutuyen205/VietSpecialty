@@ -10,6 +10,7 @@ import com.vietspecialty.repository.ProvinceRepository;
 import com.vietspecialty.repository.ShopRepository;
 import com.vietspecialty.repository.UserRepository;
 import com.vietspecialty.security.CustomUserDetails;
+import com.vietspecialty.service.ShopService;
 import com.vietspecialty.service.StorageService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
@@ -22,6 +23,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
@@ -69,6 +71,9 @@ class ShopRegistrationWebTest {
 
     @Autowired
     private StorageService storageService;
+
+    @Autowired
+    private ShopService shopService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -263,5 +268,125 @@ class ShopRegistrationWebTest {
                 .andExpect(model().attributeHasFieldErrors("shopRequest", "name", "provinceId"));
 
         assertTrue(shopRepository.findByOwnerId(buyer.getId()).isEmpty());
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DisplayName("DEF-05 (Non-Transactional): SĐT hotline sai định dạng bị Bean Validation chặn; trùng tên/file giả mạo/resubmit không gây UnexpectedRollbackException 500")
+    void testShopRegistrationNonTransactionalRollbackAndPhoneValidation() throws Exception {
+        User buyer = null;
+        Shop createdShop = null;
+        try {
+            buyer = createFreshBuyer("shopreg_def05");
+            Province province = provinceRepository.findAll().get(0);
+            User admin = userRepository.findByEmailIgnoreCase("admin@vietspecialty.vn").orElseThrow();
+            Shop existingShop = shopRepository.findAll().stream().findFirst().orElseThrow();
+            CustomUserDetails buyerDetails = new CustomUserDetails(buyer);
+
+            // 1. Invalid hotline format -> Bean Validation rejects hotline field (including literal '|' in prefix)
+            for (String invalidHotline : List.of("12345", "0|12345678", "+84|12345678")) {
+                mockMvc.perform(multipart("/account/shop-registration")
+                                .with(user(buyerDetails))
+                                .with(csrf())
+                                .param("name", "HTX SĐT Sai " + UUID.randomUUID().toString().substring(0, 6))
+                                .param("description", "Mô tả hợp lệ")
+                                .param("pickupAddress", "123 Đường Test")
+                                .param("hotline", invalidHotline)
+                                .param("provinceId", String.valueOf(province.getId())))
+                        .andExpect(status().isOk())
+                        .andExpect(view().name("account/shop-registration"))
+                        .andExpect(model().attributeHasFieldErrors("shopRequest", "hotline"));
+            }
+
+            // 2. Duplicate shop name -> 200 OK with errorMessage (NO UnexpectedRollbackException 500)
+            mockMvc.perform(multipart("/account/shop-registration")
+                            .with(user(buyerDetails))
+                            .with(csrf())
+                            .param("name", existingShop.getName())
+                            .param("description", "Mô tả hợp lệ")
+                            .param("pickupAddress", "123 Đường Test")
+                            .param("hotline", "0912345678")
+                            .param("provinceId", String.valueOf(province.getId())))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("account/shop-registration"))
+                    .andExpect(model().attributeExists("errorMessage"));
+
+            // 3. Disguised file -> 200 OK with errorMessage (NO UnexpectedRollbackException 500)
+            byte[] fakeExe = "MZ\u0090\u0000FAKE_EXE_LOGO".getBytes(StandardCharsets.ISO_8859_1);
+            MockMultipartFile badLogo = new MockMultipartFile("logo", "bad.png", "image/png", fakeExe);
+            mockMvc.perform(multipart("/account/shop-registration")
+                            .file(badLogo)
+                            .with(user(buyerDetails))
+                            .with(csrf())
+                            .param("name", "HTX Logo Sai " + UUID.randomUUID().toString().substring(0, 6))
+                            .param("description", "Mô tả hợp lệ")
+                            .param("pickupAddress", "123 Đường Test")
+                            .param("hotline", "0912345678")
+                            .param("provinceId", String.valueOf(province.getId())))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("account/shop-registration"))
+                    .andExpect(model().attribute("errorMessage", containsString("hình ảnh hợp lệ")));
+
+            // 4. Valid submit -> PENDING, reject -> REJECTED, resubmit duplicate fails gracefully, resubmit new name updates slug
+            String uid = UUID.randomUUID().toString().substring(0, 6);
+            String initialName = "HTX Gốc DEF05 " + uid;
+            mockMvc.perform(multipart("/account/shop-registration")
+                            .with(user(buyerDetails))
+                            .with(csrf())
+                            .param("name", initialName)
+                            .param("description", "Mô tả ban đầu")
+                            .param("pickupAddress", "123 Đường Test")
+                            .param("hotline", "0912345678")
+                            .param("provinceId", String.valueOf(province.getId())))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/account/shop-registration"));
+
+            createdShop = shopRepository.findByOwnerId(buyer.getId()).orElseThrow();
+            String originalSlug = createdShop.getSlug();
+            shopService.rejectShop(createdShop.getId(), admin.getId(), "Thiếu thông tin");
+
+            // Resubmit with duplicate existing shop name -> 200 OK with errorMessage (NO 500)
+            mockMvc.perform(multipart("/account/shop-registration")
+                            .with(user(buyerDetails))
+                            .with(csrf())
+                            .param("name", existingShop.getName())
+                            .param("description", "Bổ sung mô tả")
+                            .param("pickupAddress", "456 Đường Mới")
+                            .param("hotline", "0987654321")
+                            .param("provinceId", String.valueOf(province.getId())))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("account/shop-registration"))
+                    .andExpect(model().attributeExists("errorMessage"));
+
+            // Resubmit with new valid name -> 302 redirect, status=PENDING, rejectReason=null, slug regenerated
+            String renamed = "HTX Đổi Tên DEF05 " + uid;
+            mockMvc.perform(multipart("/account/shop-registration")
+                            .with(user(buyerDetails))
+                            .with(csrf())
+                            .param("name", renamed)
+                            .param("description", "Bổ sung mô tả đầy đủ")
+                            .param("pickupAddress", "456 Đường Mới")
+                            .param("hotline", "0987654321")
+                            .param("provinceId", String.valueOf(province.getId())))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/account/shop-registration"))
+                    .andExpect(flash().attributeExists("successMessage"));
+
+            Shop updated = shopRepository.findById(createdShop.getId()).orElseThrow();
+            assertEquals(ShopStatus.PENDING, updated.getStatus());
+            assertNull(updated.getRejectReason());
+            assertEquals(renamed, updated.getName());
+            assertNotEquals(originalSlug, updated.getSlug());
+        } finally {
+            if (createdShop != null && createdShop.getId() != null) {
+                shopRepository.deleteById(createdShop.getId());
+            } else if (buyer != null && buyer.getId() != null) {
+                shopRepository.findByOwnerId(buyer.getId())
+                        .ifPresent(s -> shopRepository.deleteById(s.getId()));
+            }
+            if (buyer != null && buyer.getId() != null) {
+                userRepository.deleteById(buyer.getId());
+            }
+        }
     }
 }

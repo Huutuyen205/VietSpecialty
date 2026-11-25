@@ -496,4 +496,60 @@ class SellerProductWebTest {
         assertEquals("Đặc Sản Bảo Vệ IDOR", unchanged.getName());
         assertEquals(ProductStatus.ACTIVE, unchanged.getStatus());
     }
+
+    @Test
+    @DisplayName("DEF-12: Shop SUSPENDED hoặc PENDING bị chặn với SHOP_004 trên tất cả endpoint /seller/products")
+    void testSuspendedAndPendingShopBlockedOnSellerProducts() throws Exception {
+        Province province = provinceRepository.findAll().get(0);
+
+        User suspendedSeller = createUser("prod_susp_s", Role.SELLER);
+        Shop suspendedShop = shopRepository.save(Shop.builder()
+                .name("Shop Suspended " + UUID.randomUUID().toString().substring(0, 6))
+                .slug("shop-susp-" + UUID.randomUUID().toString().substring(0, 6))
+                .owner(suspendedSeller)
+                .province(province)
+                .addressDetail("123 Đường")
+                .phone("0912345678")
+                .status(ShopStatus.SUSPENDED)
+                .build());
+        Product prod = createProduct(suspendedShop, "Sản Phẩm Shop Đình Chỉ");
+
+        User pendingSeller = createUser("prod_pend_s", Role.SELLER);
+        shopRepository.save(Shop.builder()
+                .name("Shop Pending " + UUID.randomUUID().toString().substring(0, 6))
+                .slug("shop-pend-" + UUID.randomUUID().toString().substring(0, 6))
+                .owner(pendingSeller)
+                .province(province)
+                .addressDetail("123 Đường")
+                .phone("0912345678")
+                .status(ShopStatus.PENDING)
+                .build());
+        entityManager.flush();
+        entityManager.clear();
+
+        CustomUserDetails suspendedDetails = new CustomUserDetails(suspendedSeller);
+        CustomUserDetails pendingDetails = new CustomUserDetails(pendingSeller);
+
+        mockMvc.perform(get("/seller/products").with(user(suspendedDetails)))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("error/500"))
+                .andExpect(model().attribute("errorCode", "SHOP_004"));
+
+        mockMvc.perform(get("/seller/products/create").with(user(suspendedDetails)))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("error/500"))
+                .andExpect(model().attribute("errorCode", "SHOP_004"));
+
+        mockMvc.perform(post("/seller/products/" + prod.getId() + "/toggle")
+                        .with(user(suspendedDetails))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("error/500"))
+                .andExpect(model().attribute("errorCode", "SHOP_004"));
+
+        mockMvc.perform(get("/seller/products").with(user(pendingDetails)))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("error/500"))
+                .andExpect(model().attribute("errorCode", "SHOP_004"));
+    }
 }

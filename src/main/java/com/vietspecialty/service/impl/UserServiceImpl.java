@@ -42,7 +42,10 @@ public class UserServiceImpl implements UserService {
         User user = getUserOrThrow(userId);
 
         user.setFullName(request.fullName().trim());
-        user.setPhone(request.phone().trim());
+        String normalizedPhone = (request.phone() != null && !request.phone().isBlank())
+                ? request.phone().trim()
+                : null;
+        user.setPhone(normalizedPhone);
 
         User updatedUser = userRepository.save(user);
         log.info("Updated profile for user id={}", userId);
@@ -53,10 +56,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void changePassword(Long userId, ChangePasswordRequest request) {
         User user = getUserOrThrow(userId);
+        boolean hasPassword = user.getPasswordSet() == null || Boolean.TRUE.equals(user.getPasswordSet());
 
-        // Kiểm tra mật khẩu cũ
-        if (!passwordEncoder.matches(request.oldPassword(), user.getPasswordHash())) {
-            throw new BusinessException(ErrorCode.WRONG_PASSWORD);
+        // Kiểm tra mật khẩu cũ (chỉ bắt buộc khi tài khoản đã có mật khẩu)
+        if (hasPassword) {
+            if (request.oldPassword() == null || request.oldPassword().isBlank()
+                    || !passwordEncoder.matches(request.oldPassword(), user.getPasswordHash())) {
+                throw new BusinessException(ErrorCode.WRONG_PASSWORD);
+            }
         }
 
         // Kiểm tra mật khẩu mới trùng khớp
@@ -64,14 +71,15 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Mật khẩu xác nhận không khớp");
         }
 
-        // Kiểm tra mật khẩu mới không được trùng mật khẩu cũ
-        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+        // Kiểm tra mật khẩu mới không được trùng mật khẩu cũ (khi đã có mật khẩu)
+        if (hasPassword && passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Mật khẩu mới không được trùng với mật khẩu cũ");
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.setPasswordSet(true);
         userRepository.save(user);
-        log.info("Changed password for user id={}", userId);
+        log.info("Changed password for user id={} (initialSetup={})", userId, !hasPassword);
     }
 
     @Override

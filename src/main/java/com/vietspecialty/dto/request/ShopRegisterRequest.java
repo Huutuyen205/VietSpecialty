@@ -2,6 +2,7 @@ package com.vietspecialty.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ShopRegisterRequest(
@@ -16,6 +17,8 @@ public record ShopRegisterRequest(
         String pickupAddress,
 
         @NotBlank(message = "Số điện thoại hotline gian hàng không được để trống")
+        @Pattern(regexp = "^(0|\\+84)[35789][0-9]{8}$", message = "Số điện thoại không đúng định dạng Việt Nam")
+        @Size(max = 15, message = "Số điện thoại tối đa 15 ký tự")
         String hotline,
 
         @NotNull(message = "Vui lòng chọn tỉnh/thành phố đặt gian hàng")

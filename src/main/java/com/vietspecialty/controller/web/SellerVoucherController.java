@@ -2,6 +2,7 @@ package com.vietspecialty.controller.web;
 
 import com.vietspecialty.domain.enums.DiscountType;
 import com.vietspecialty.domain.enums.ShopStatus;
+import com.vietspecialty.domain.enums.VoucherScope;
 import com.vietspecialty.dto.request.VoucherCreateRequest;
 import com.vietspecialty.dto.response.ShopResponse;
 import com.vietspecialty.dto.response.VoucherResponse;
@@ -24,7 +25,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Slf4j
 @Controller
@@ -62,10 +65,27 @@ public class SellerVoucherController {
             throw new BusinessException(ErrorCode.SHOP_NOT_APPROVED);
         }
 
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        if (!model.containsAttribute("voucherForm")) {
+            model.addAttribute("voucherForm", new VoucherCreateRequest(
+                    "",
+                    "",
+                    DiscountType.PERCENT,
+                    null,
+                    null,
+                    BigDecimal.ZERO,
+                    null,
+                    1,
+                    now,
+                    now.plusMonths(1),
+                    VoucherScope.SHOP
+            ));
+        }
+
         model.addAttribute("shop", shop);
         model.addAttribute("activeNav", "vouchers");
         model.addAttribute("discountTypes", DiscountType.values());
-        model.addAttribute("now", LocalDateTime.now());
+        model.addAttribute("now", now);
         return "seller/vouchers/form";
     }
 
@@ -83,7 +103,7 @@ public class SellerVoucherController {
             model.addAttribute("shop", shop);
             model.addAttribute("activeNav", "vouchers");
             model.addAttribute("discountTypes", DiscountType.values());
-            model.addAttribute("now", LocalDateTime.now());
+            model.addAttribute("now", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
             return "seller/vouchers/form";
         }
 
@@ -96,7 +116,7 @@ public class SellerVoucherController {
             model.addAttribute("shop", shop);
             model.addAttribute("activeNav", "vouchers");
             model.addAttribute("discountTypes", DiscountType.values());
-            model.addAttribute("now", LocalDateTime.now());
+            model.addAttribute("now", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
             return "seller/vouchers/form";
         }
     }

@@ -22,15 +22,19 @@ import com.vietspecialty.security.CurrentUser;
 import com.vietspecialty.security.CustomUserDetails;
 import com.vietspecialty.service.CatalogService;
 import com.vietspecialty.service.ProductService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
@@ -106,8 +110,20 @@ public class ProductController {
     }
 
     @GetMapping("/products/{slug}")
-    public String productDetail(@PathVariable String slug, Model model) {
-        ProductDetailResponse product = productService.getProductBySlug(slug);
+    public Object productDetail(@PathVariable String slug, HttpServletRequest request, Model model) {
+        ProductDetailResponse product;
+        try {
+            product = productService.getProductBySlug(slug);
+        } catch (BusinessException ex) {
+            if (ex.getErrorCode() == ErrorCode.PRODUCT_NOT_FOUND) {
+                ModelAndView mav = new ModelAndView("error/404", HttpStatus.NOT_FOUND);
+                mav.addObject("errorCode", ex.getErrorCode().getCode());
+                mav.addObject("errorMessage", ex.getMessage());
+                mav.addObject("requestUri", request.getRequestURI());
+                return mav;
+            }
+            throw ex;
+        }
         productService.incrementViewCount(product.id());
 
         Integer categoryId = product.category() != null ? product.category().id() : null;
@@ -127,36 +143,56 @@ public class ProductController {
         return "web/product-detail";
     }
 
+    @PostMapping(value = "/products/{id}/comments", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<?> postProductCommentJson(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> jsonBody,
+            @CurrentUser CustomUserDetails userDetails
+    ) {
+        String text = null;
+        Long pId = null;
+        if (jsonBody != null) {
+            if (jsonBody.get("content") != null) {
+                text = jsonBody.get("content").toString();
+            }
+            if (jsonBody.get("parentId") != null) {
+                try {
+                    pId = Long.valueOf(jsonBody.get("parentId").toString());
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return (ResponseEntity<?>) processProductComment(id, text, pId, userDetails, true, null);
+    }
+
     @PostMapping("/products/{id}/comments")
     @Transactional
-    public Object postProductComment(
+    public Object postProductCommentForm(
             @PathVariable Long id,
             @RequestParam(required = false) String content,
             @RequestParam(required = false) Long parentId,
-            @RequestBody(required = false) Map<String, Object> jsonBody,
             @CurrentUser CustomUserDetails userDetails,
             @RequestHeader(value = "Accept", required = false) String acceptHeader,
             RedirectAttributes redirectAttributes
     ) {
         boolean isJsonRequest = acceptHeader != null && acceptHeader.contains("application/json");
+        return processProductComment(id, content, parentId, userDetails, isJsonRequest, redirectAttributes);
+    }
+
+    private Object processProductComment(
+            Long id,
+            String text,
+            Long pId,
+            CustomUserDetails userDetails,
+            boolean isJsonRequest,
+            RedirectAttributes redirectAttributes
+    ) {
         if (userDetails == null) {
             if (isJsonRequest) {
                 return ResponseEntity.status(401).body(ApiResponse.error("Vui lòng đăng nhập để gửi câu hỏi"));
             }
             return "redirect:/login";
-        }
-
-        String text = content;
-        Long pId = parentId;
-        if (jsonBody != null) {
-            if (text == null && jsonBody.get("content") != null) {
-                text = jsonBody.get("content").toString();
-            }
-            if (pId == null && jsonBody.get("parentId") != null) {
-                try {
-                    pId = Long.valueOf(jsonBody.get("parentId").toString());
-                } catch (NumberFormatException ignored) {}
-            }
         }
 
         Product product = productRepository.findById(id)
@@ -167,6 +203,7 @@ public class ProductController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Vui lòng nhập nội dung câu hỏi"));
             }
             redirectAttributes.addFlashAttribute("commentError", "Vui lòng nhập nội dung câu hỏi");
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng nhập nội dung câu hỏi");
             return "redirect:/products/" + product.getSlug() + "#qa-section";
         }
 
@@ -175,6 +212,7 @@ public class ProductController {
                 return ResponseEntity.badRequest().body(ApiResponse.error("Nội dung câu hỏi không được vượt quá 1000 ký tự"));
             }
             redirectAttributes.addFlashAttribute("commentError", "Nội dung câu hỏi không được vượt quá 1000 ký tự");
+            redirectAttributes.addFlashAttribute("errorMessage", "Nội dung câu hỏi không được vượt quá 1000 ký tự");
             return "redirect:/products/" + product.getSlug() + "#qa-section";
         }
 
@@ -213,6 +251,7 @@ public class ProductController {
         }
 
         redirectAttributes.addFlashAttribute("commentSuccess", "Đã gửi câu hỏi về đặc sản cho gian hàng!");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã gửi câu hỏi về đặc sản cho gian hàng!");
         return "redirect:/products/" + product.getSlug() + "#qa-section";
     }
 

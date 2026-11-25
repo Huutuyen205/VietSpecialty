@@ -419,7 +419,7 @@ public class VietSpecialtyRagEngine {
      * Nhận diện khách hỏi món ăn tươi / món chưa mở bán trên sàn VietSpecialty (Zero-Hallucination Guardrail)
      */
     public Optional<String> detectUnavailableSpecialtyRequest(String message, List<Product> directMatches) {
-        if (message == null || message.isBlank() || !directMatches.isEmpty()) {
+        if (message == null || message.isBlank()) {
             return Optional.empty();
         }
         String norm = VietnameseTextUtils.normalizeSearchText(message);
@@ -441,8 +441,12 @@ public class VietSpecialtyRagEngine {
         unavailableDishes.put("lau tuoi", "Lẩu tươi nấu sẵn");
 
         for (Map.Entry<String, String> entry : unavailableDishes.entrySet()) {
-            if (norm.contains(entry.getKey())) {
-                return Optional.of(entry.getValue());
+            if (containsWord(norm, entry.getKey())) {
+                boolean exactProductMatched = directMatches != null && directMatches.stream()
+                        .anyMatch(p -> VietnameseTextUtils.normalizeSearchText(p.getName()).contains(entry.getKey()));
+                if (!exactProductMatched) {
+                    return Optional.of(entry.getValue());
+                }
             }
         }
         return Optional.empty();
@@ -817,16 +821,74 @@ public class VietSpecialtyRagEngine {
                         || (v.getShop() != null && targetProduct.getShop() != null && v.getShop().getId().equals(targetProduct.getShop().getId())))
                 .toList();
 
-        if (!applicableVouchers.isEmpty()) {
-            Voucher bestVoucher = applicableVouchers.get(0);
-            BigDecimal bestDiscount = BigDecimal.ZERO;
-            for (Voucher v : applicableVouchers) {
-                BigDecimal disc = calculateVoucherDiscount(v, subtotal);
-                if (disc.compareTo(bestDiscount) > 0) {
-                    bestDiscount = disc;
-                    bestVoucher = v;
+        Voucher bestVoucher = null;
+        BigDecimal bestDiscount = BigDecimal.ZERO;
+        for (Voucher v : applicableVouchers) {
+            BigDecimal disc = calculateVoucherDiscount(v, subtotal);
+            if (disc.compareTo(bestDiscount) > 0) {
+                bestDiscount = disc;
+                bestVoucher = v;
+            }
+        }
+
+        RequestedVoucherMatch requestedVoucher = detectRequestedVoucher(userMessage, activeVouchers);
+
+        if (requestedVoucher != null) {
+            if (requestedVoucher.voucher() != null) {
+                Voucher rv = requestedVoucher.voucher();
+                boolean scopeOk = rv.getScope() == VoucherScope.PLATFORM
+                        || (rv.getShop() != null && targetProduct.getShop() != null
+                        && rv.getShop().getId().equals(targetProduct.getShop().getId()));
+                boolean minOk = subtotal.compareTo(rv.getMinOrderValue()) >= 0;
+
+                if (scopeOk && minOk) {
+                    BigDecimal reqDiscount = calculateVoucherDiscount(rv, subtotal);
+                    BigDecimal finalPayable = totalBeforeVoucher.subtract(reqDiscount).max(BigDecimal.ZERO);
+                    sb.append("\n3. **Áp dụng mã giảm giá theo yêu cầu (`").append(rv.getCode()).append("`):**\n")
+                            .append("   ● Mã **`").append(rv.getCode()).append("`** (").append(rv.getName())
+                            .append(" - đơn tối thiểu ").append(MoneyUtils.formatVnd(rv.getMinOrderValue()))
+                            .append(") đủ điều kiện áp dụng, giảm ngay **").append(MoneyUtils.formatVnd(reqDiscount)).append("**.\n")
+                            .append("   👉 **Tổng thanh toán thực tế sau khi áp mã `").append(rv.getCode()).append("`: ")
+                            .append(MoneyUtils.formatVnd(finalPayable)).append("**!");
+                    if (bestVoucher != null && !bestVoucher.getId().equals(rv.getId())
+                            && bestDiscount.compareTo(reqDiscount) > 0) {
+                        BigDecimal bestPayable = totalBeforeVoucher.subtract(bestDiscount).max(BigDecimal.ZERO);
+                        sb.append("\n   ● *Mẹo tiết kiệm thêm:* Nếu muốn giảm nhiều hơn, mã **`")
+                                .append(bestVoucher.getCode()).append("`** cũng áp dụng được cho đơn này (giảm **")
+                                .append(MoneyUtils.formatVnd(bestDiscount)).append("**, tổng còn **")
+                                .append(MoneyUtils.formatVnd(bestPayable)).append("**).");
+                    }
+                } else {
+                    sb.append("\n3. **Kiểm tra mã giảm giá bạn yêu cầu (`").append(rv.getCode()).append("`):**\n");
+                    if (!scopeOk) {
+                        String voucherShopName = rv.getShop() != null ? rv.getShop().getName() : "gian hàng khác";
+                        sb.append("   ● Rất tiếc, mã **`").append(rv.getCode()).append("`** chỉ áp dụng riêng cho **")
+                                .append(voucherShopName).append("**, không áp dụng cho gian hàng **").append(shopName).append("**.\n");
+                    } else {
+                        BigDecimal lacking = rv.getMinOrderValue().subtract(subtotal).max(BigDecimal.ZERO);
+                        sb.append("   ● Rất tiếc, mã **`").append(rv.getCode()).append("`** yêu cầu đơn tối thiểu **")
+                                .append(MoneyUtils.formatVnd(rv.getMinOrderValue())).append("** (tạm tính hiện tại là **")
+                                .append(MoneyUtils.formatVnd(subtotal)).append("**, còn thiếu **")
+                                .append(MoneyUtils.formatVnd(lacking)).append("**).\n");
+                    }
+                    if (bestVoucher != null) {
+                        BigDecimal bestPayable = totalBeforeVoucher.subtract(bestDiscount).max(BigDecimal.ZERO);
+                        sb.append("   ● Thay vào đó, bạn có thể áp mã **`").append(bestVoucher.getCode()).append("`** để được giảm **")
+                                .append(MoneyUtils.formatVnd(bestDiscount)).append("** (tổng còn **")
+                                .append(MoneyUtils.formatVnd(bestPayable)).append("**).");
+                    }
+                }
+            } else {
+                sb.append("\n3. **Kiểm tra mã giảm giá bạn yêu cầu (`").append(requestedVoucher.rawCode()).append("`):**\n")
+                        .append("   ● Mã **`").append(requestedVoucher.rawCode()).append("`** hiện không tồn tại hoặc đã hết hiệu lực trên hệ thống.\n");
+                if (bestVoucher != null) {
+                    BigDecimal bestPayable = totalBeforeVoucher.subtract(bestDiscount).max(BigDecimal.ZERO);
+                    sb.append("   ● Thay vào đó, bạn đủ điều kiện dùng mã **`").append(bestVoucher.getCode()).append("`** để giảm ngay **")
+                            .append(MoneyUtils.formatVnd(bestDiscount)).append("** (tổng còn **")
+                            .append(MoneyUtils.formatVnd(bestPayable)).append("**).");
                 }
             }
+        } else if (bestVoucher != null) {
             BigDecimal finalPayable = totalBeforeVoucher.subtract(bestDiscount).max(BigDecimal.ZERO);
             sb.append("\n3. **Gợi ý áp mã giảm giá tiết kiệm nhất:**\n")
                     .append("   ● Bạn đủ điều kiện nhập mã **`").append(bestVoucher.getCode()).append("`** (")
@@ -903,12 +965,26 @@ public class VietSpecialtyRagEngine {
             List<Product> allProducts,
             List<Product> outSuggestedProducts
     ) {
-        BigDecimal refPrice = referenceProduct != null ? referenceProduct.getPrice() : BigDecimal.valueOf(300000);
+        return synthesizeCheaperAlternatives(null, referenceProduct, allProducts, outSuggestedProducts);
+    }
+
+    public String synthesizeCheaperAlternatives(
+            String userMessage,
+            Product referenceProduct,
+            List<Product> allProducts,
+            List<Product> outSuggestedProducts
+    ) {
+        BudgetFilter budgetFilter = extractBudgetFilter(userMessage);
+        BigDecimal refPrice = referenceProduct != null
+                ? referenceProduct.getPrice()
+                : (budgetFilter.maxPrice() != null ? budgetFilter.maxPrice() : BigDecimal.valueOf(300000));
         Long refCategoryId = (referenceProduct != null && referenceProduct.getCategory() != null)
                 ? referenceProduct.getCategory().getId().longValue() : null;
 
         List<Product> cheaper = allProducts.stream()
-                .filter(p -> p.getPrice().compareTo(refPrice) < 0)
+                .filter(p -> referenceProduct == null || !p.getId().equals(referenceProduct.getId()))
+                .filter(p -> referenceProduct == null || p.getPrice().compareTo(refPrice) < 0)
+                .filter(p -> !budgetFilter.hasConstraint() || budgetFilter.matches(p.getPrice()))
                 .sorted((a, b) -> {
                     boolean aSameCat = refCategoryId != null && a.getCategory() != null && a.getCategory().getId().longValue() == refCategoryId;
                     boolean bSameCat = refCategoryId != null && b.getCategory() != null && b.getCategory().getId().longValue() == refCategoryId;
@@ -917,6 +993,14 @@ public class VietSpecialtyRagEngine {
                 })
                 .limit(3)
                 .toList();
+
+        if (cheaper.isEmpty() && budgetFilter.hasConstraint()) {
+            String budgetDesc = budgetFilter.maxPrice() != null
+                    ? ("dưới **" + MoneyUtils.formatVnd(budgetFilter.maxPrice()) + "**")
+                    : "trong mức ngân sách bạn yêu cầu";
+            return "Dạ, hiện tại trong kho VietSpecialty chưa có sản phẩm nào phù hợp " + budgetDesc
+                    + ". Bạn có thể nâng nhẹ ngân sách để mình gợi ý thêm các đặc sản OCOP chất lượng nhất nhé!";
+        }
 
         if (cheaper.isEmpty()) {
             cheaper = allProducts.stream()
@@ -928,10 +1012,18 @@ public class VietSpecialtyRagEngine {
         outSuggestedProducts.addAll(cheaper);
 
         StringBuilder sb = new StringBuilder();
-        if (referenceProduct != null) {
+        if (referenceProduct != null && budgetFilter.hasConstraint() && budgetFilter.maxPrice() != null) {
+            sb.append("Dạ, nếu bạn muốn tìm phương án giá mềm hơn món **").append(referenceProduct.getName())
+                    .append("** (**").append(MoneyUtils.formatVnd(refPrice))
+                    .append("**) và nằm gọn trong ngân sách **dưới ").append(MoneyUtils.formatVnd(budgetFilter.maxPrice()))
+                    .append("**, thì trên sàn **VietSpecialty** đang có những đặc sản chuẩn OCOP phù hợp dưới đây ạ:\n\n");
+        } else if (referenceProduct != null) {
             sb.append("Dạ, nếu bạn muốn tìm phương án có mức giá mềm hơn món **").append(referenceProduct.getName())
                     .append("** (**").append(MoneyUtils.formatVnd(refPrice))
                     .append("**), thì trên sàn **VietSpecialty** đang có những đặc sản chuẩn OCOP giá cực kỳ hợp lý dưới đây ạ:\n\n");
+        } else if (budgetFilter.hasConstraint() && budgetFilter.maxPrice() != null) {
+            sb.append("Dạ, mình xin gợi ý cho bạn các món đặc sản chuẩn vị truyền thống có mức giá tiết kiệm **dưới ")
+                    .append(MoneyUtils.formatVnd(budgetFilter.maxPrice())).append("** trên sàn **VietSpecialty**:\n\n");
         } else {
             sb.append("Dạ, mình xin gợi ý cho bạn các món đặc sản chuẩn vị truyền thống có mức giá tiết kiệm nhất trên sàn **VietSpecialty**:\n\n");
         }
@@ -1001,7 +1093,9 @@ public class VietSpecialtyRagEngine {
         String norm = VietnameseTextUtils.normalizeSearchText(unavailableDishName);
         List<Product> alternatives = new ArrayList<>();
 
-        if (norm.contains("sau rieng")) {
+        if (norm.contains("tra sua")) {
+            addMatchingProducts(allProducts, alternatives, List.of("trà cung đình", "trà đinh", "cà phê", "kẹo dừa", "mè xửng"), 3);
+        } else if (norm.contains("sau rieng")) {
             addMatchingProducts(allProducts, alternatives, List.of("kẹo dừa sầu riêng", "bánh pía", "xoài cát chu"), 3);
         } else if (norm.contains("pho") || norm.contains("bun") || norm.contains("lau")) {
             addMatchingProducts(allProducts, alternatives, List.of("miến dong phia đén", "nước mắm nam ô", "tôm chua"), 3);
@@ -1550,6 +1644,37 @@ public class VietSpecialtyRagEngine {
     private boolean isStopWord(String token) {
         return Set.of("giup", "minh", "cho", "hoi", "muon", "tim", "mon", "nao", "nhung", "cua", "tren", "san", "voi", "nhu", "the", "hay", "con", "khong").contains(token);
     }
+
+    private RequestedVoucherMatch detectRequestedVoucher(String userMessage, List<Voucher> activeVouchers) {
+        if (userMessage == null || userMessage.isBlank()) {
+            return null;
+        }
+        if (activeVouchers != null) {
+            for (Voucher v : activeVouchers) {
+                if (v.getCode() == null || v.getCode().isBlank()) continue;
+                Pattern p = Pattern.compile("(?i)(?:^|[^A-Za-z0-9_-])" + Pattern.quote(v.getCode().trim()) + "(?:$|[^A-Za-z0-9_-])");
+                if (p.matcher(userMessage).find()) {
+                    return new RequestedVoucherMatch(v, v.getCode().trim().toUpperCase());
+                }
+            }
+        }
+        Pattern explicitCodePattern = Pattern.compile("(?i)(?:áp\\s*dụng\\s*mã|áp\\s*mã|nhập\\s*mã|dùng\\s*mã|mã\\s*voucher)\\s*:?\\s*([A-Za-z0-9_-]{4,30})");
+        Matcher m = explicitCodePattern.matcher(userMessage);
+        if (m.find()) {
+            String token = m.group(1).trim();
+            String normToken = VietnameseTextUtils.normalizeSearchText(token);
+            Set<String> nonCodeWords = Set.of("giam", "khuyen", "uu", "nao", "nay", "moi", "cua", "cho", "shop", "san", "duoc", "khong");
+            boolean looksLikeCode = token.chars().anyMatch(Character::isDigit)
+                    || token.equals(token.toUpperCase())
+                    || !nonCodeWords.contains(normToken);
+            if (looksLikeCode && !nonCodeWords.contains(normToken)) {
+                return new RequestedVoucherMatch(null, token.toUpperCase());
+            }
+        }
+        return null;
+    }
+
+    private record RequestedVoucherMatch(Voucher voucher, String rawCode) {}
 
     private record ScoredProduct(Product product, int score) {}
 }

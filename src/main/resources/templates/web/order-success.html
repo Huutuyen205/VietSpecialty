@@ -5,7 +5,7 @@
         content=~{::#successContent},
         pageMeta=~{},
         extraCss=~{},
-        extraJs=~{}
+        extraJs=~{::#orderSuccessJs}
       )}">
 
 <div id="successContent" class="max-w-2xl mx-auto py-8 space-y-6">
@@ -79,5 +79,14 @@
     </div>
 
 </div>
+
+<th:block id="orderSuccessJs">
+<script>
+    try {
+        sessionStorage.removeItem('vs_checkout_gifts');
+        sessionStorage.removeItem('vs_checkout_form_state');
+    } catch (e) {}
+</script>
+</th:block>
 </html>
 

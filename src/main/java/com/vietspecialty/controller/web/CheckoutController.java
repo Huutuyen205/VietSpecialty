@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,10 +114,13 @@ public class CheckoutController {
 
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getFieldErrors().stream()
+                    .filter(fe -> !fe.isBindingFailure())
+                    .filter(fe -> fe.getCodes() == null || Arrays.stream(fe.getCodes())
+                            .noneMatch(code -> code != null && code.startsWith("typeMismatch")))
                     .map(FieldError::getDefaultMessage)
                     .filter(m -> m != null && !m.isBlank())
                     .findFirst()
-                    .orElse("Vui lòng chọn đầy đủ địa chỉ nhận hàng và hình thức thanh toán.");
+                    .orElse("Vui lòng kiểm tra lại thông tin đặt hàng (địa chỉ, hình thức thanh toán hoặc thông tin quà biếu).");
             redirectAttributes.addFlashAttribute("errorMessage", message);
             return "redirect:/checkout";
         }

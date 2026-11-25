@@ -126,7 +126,7 @@ class PublicCatalogAndCartApiTest {
     }
 
     @Test
-    @DisplayName("ShopController GET /shops/{slug}: approved (200), non-existent (400 SHOP_001), suspended (400 SHOP_004)")
+    @DisplayName("DEF-24: ShopController GET /shops/{slug}: approved (200), non-existent (404 SHOP_001), suspended/pending (404 SHOP_004)")
     void testShopDetailAndStatusHandling() throws Exception {
         // Approved seeded shop
         mockMvc.perform(get("/shops/htx-tra-tan-cuong-thai-nguyen"))
@@ -134,13 +134,13 @@ class PublicCatalogAndCartApiTest {
                 .andExpect(view().name("web/shop-detail"))
                 .andExpect(model().attributeExists("shop", "productPage", "filter", "categories"));
 
-        // Non-existent shop -> 400 error/500 SHOP_001
+        // Non-existent shop -> 404 error/404 SHOP_001
         mockMvc.perform(get("/shops/non-existent-shop-999"))
-                .andExpect(status().isBadRequest())
-                .andExpect(view().name("error/500"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"))
                 .andExpect(model().attribute("errorCode", "SHOP_001"));
 
-        // Suspended shop -> 400 error/500 SHOP_004
+        // Suspended shop -> 404 error/404 SHOP_004
         String uid = UUID.randomUUID().toString().substring(0, 8);
         User suspendedOwner = userRepository.save(User.builder()
                 .fullName("Suspended Owner")
@@ -159,8 +159,29 @@ class PublicCatalogAndCartApiTest {
                 .build());
 
         mockMvc.perform(get("/shops/" + suspendedShop.getSlug()))
-                .andExpect(status().isBadRequest())
-                .andExpect(view().name("error/500"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"))
+                .andExpect(model().attribute("errorCode", "SHOP_004"));
+
+        // Pending shop -> 404 error/404 SHOP_004
+        User pendingOwner = userRepository.save(User.builder()
+                .fullName("Pending Owner")
+                .email("pending_owner_" + uid + "@vietspecialty.vn")
+                .passwordHash(passwordEncoder.encode("Password123@"))
+                .role(Role.USER)
+                .status(UserStatus.ACTIVE)
+                .build());
+        Shop pendingShop = shopRepository.save(Shop.builder()
+                .owner(pendingOwner)
+                .name("Shop Chờ Duyệt " + uid)
+                .slug("shop-cho-duyet-" + uid)
+                .province(province)
+                .status(ShopStatus.PENDING)
+                .build());
+
+        mockMvc.perform(get("/shops/" + pendingShop.getSlug()))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"))
                 .andExpect(model().attribute("errorCode", "SHOP_004"));
     }
 

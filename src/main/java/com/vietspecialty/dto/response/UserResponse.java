@@ -13,7 +13,8 @@ public record UserResponse(
         String avatarUrl,
         Role role,
         UserStatus status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        boolean passwordSet
 ) {
 }
 

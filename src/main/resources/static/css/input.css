@@ -5,14 +5,30 @@
 @layer base {
   body {
     @apply bg-cream text-ink font-sans antialiased selection:bg-primary-100 selection:text-primary-700;
-    background-color: #FFFCF5;
-    background-image: radial-gradient(#E8E2D6 0.75px, transparent 0.75px);
+    background-color: #FAF6EE;
+    background-image: radial-gradient(rgba(227, 218, 201, 0.55) 0.75px, transparent 0.75px);
     background-size: 24px 24px;
     background-attachment: fixed;
   }
 
   h1, h2, h3, .font-serif {
     font-family: 'Lora', Georgia, serif;
+  }
+
+  /* Custom subtle warm scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #F3EDE0;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #CFC4B0;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #1F6E43;
   }
 }
 
@@ -59,22 +75,22 @@
     @apply bg-surface/95 backdrop-blur-sm rounded-2xl border border-line/80 shadow-soft transition-all duration-300 hover:shadow-lift hover:-translate-y-1.5;
   }
 
-  /* Regional Badges & Seals */
+  /* Regional Badges & Seals (WCAG 2.1 AA Verified) */
   .badge-seal-ocop {
-    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-ink shadow-sm tracking-wide;
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-secondary-100 text-secondary-700 border border-secondary-400/50 shadow-sm tracking-wide;
   }
 
   .badge-region-bac {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#0F9D8A] shadow-xs;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#0D7A6B] shadow-xs;
   }
   .badge-region-trung {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#E9A21F] shadow-xs;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#A86708] shadow-xs;
   }
   .badge-region-taynguyen {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#8B5E3C] shadow-xs;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#7B5033] shadow-xs;
   }
   .badge-region-nam {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#E8704A] shadow-xs;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white bg-[#B8472A] shadow-xs;
   }
 
   /* Status Chips */
@@ -139,15 +155,15 @@
 
 /* Heritage Pattern Overlays */
 .bg-heritage-pattern {
-  background-color: #FFFCF5;
-  background-image: radial-gradient(#2F9E55 0.7px, transparent 0.7px), radial-gradient(#D9583B 0.7px, #FFFCF5 0.7px);
+  background-color: #FAF6EE;
+  background-image: radial-gradient(rgba(31, 110, 67, 0.22) 0.75px, transparent 0.75px), radial-gradient(rgba(185, 73, 34, 0.16) 0.75px, #FAF6EE 0.75px);
   background-size: 28px 28px;
   background-position: 0 0, 14px 14px;
 }
 
 .bg-pattern-woven {
-  background-color: #F7F3EA;
-  background-image: repeating-linear-gradient(45deg, #E8E2D6 0, #E8E2D6 1px, transparent 0, transparent 50%);
+  background-color: #F3EDE0;
+  background-image: repeating-linear-gradient(45deg, rgba(227, 218, 201, 0.7) 0, rgba(227, 218, 201, 0.7) 1px, transparent 0, transparent 50%);
   background-size: 10px 10px;
 }
 

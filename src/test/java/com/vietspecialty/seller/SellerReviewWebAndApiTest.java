@@ -313,4 +313,44 @@ class SellerReviewWebAndApiTest {
                 .andExpect(jsonPath("$.data.totalElements").value(2))
                 .andExpect(jsonPath("$.data.content", hasSize(2)));
     }
+
+    @Test
+    @DisplayName("DEF-19 & DEF-20: GET /seller/reviews hiển thị đúng số sao theo rev.rating và truyền quotes/newline qua data-*")
+    void testSellerReviewsExactStarsAndSafeDataAttributes() throws Exception {
+        User seller = createUser("rev_def19", Role.SELLER);
+        Shop shop = createApprovedShop(seller, "revdef19");
+        User buyer = createUser("rev_def19_b", Role.USER);
+        Product product = createProduct(shop);
+
+        Review threeStar = createReviewForProduct(
+                buyer,
+                shop,
+                product,
+                3,
+                ReviewStatus.VISIBLE,
+                "Hương vị \"ngon\"\nnhưng hơi ngọt"
+        );
+        threeStar.setSellerReply("Cảm ơn \"bạn\"\nShop sẽ lưu ý!");
+        reviewRepository.save(threeStar);
+        entityManager.flush();
+        entityManager.clear();
+
+        CustomUserDetails sellerDetails = new CustomUserDetails(seller);
+        String html = mockMvc.perform(get("/seller/reviews").with(user(sellerDetails)))
+                .andExpect(status().isOk())
+                .andExpect(view().name("seller/reviews/index"))
+                .andExpect(content().string(containsString("3/5")))
+                .andExpect(content().string(containsString("openReply(Number($el.dataset.id)")))
+                .andExpect(content().string(containsString("data-content=\"Hương vị &quot;ngon&quot;\nnhưng hơi ngọt\"")))
+                .andExpect(content().string(containsString("data-reply=\"Cảm ơn &quot;bạn&quot;\nShop sẽ lưu ý!\"")))
+                .andExpect(content().string(not(containsString("openReply([["))))
+                .andExpect(content().string(not(containsString("x-for=\"i in 5\""))))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        // Exactly 3 filled stars and 2 unfilled stars for the single 3-star review
+        assertEquals(3, html.split("text-amber-400 fill-amber-400", -1).length - 1);
+        assertEquals(2, html.split("class=\"w-4 h-4 text-line\"", -1).length - 1);
+    }
 }

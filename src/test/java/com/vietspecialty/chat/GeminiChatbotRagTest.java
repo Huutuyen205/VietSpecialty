@@ -10,6 +10,7 @@ import com.vietspecialty.dto.response.ChatResponse;
 import com.vietspecialty.dto.response.CheckoutPreviewResponse;
 import com.vietspecialty.dto.response.ProductCardResponse;
 import com.vietspecialty.repository.*;
+import com.vietspecialty.security.CustomUserDetails;
 import com.vietspecialty.service.CartService;
 import com.vietspecialty.service.ChatService;
 import com.vietspecialty.service.OrderService;
@@ -26,12 +27,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -78,7 +82,11 @@ class GeminiChatbotRagTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private VoucherRepository voucherRepository;
+
     private User buyer;
+    private Shop shop;
     private Order sampleOrder;
 
     @BeforeEach
@@ -95,7 +103,7 @@ class GeminiChatbotRagTest {
                 .status(UserStatus.ACTIVE)
                 .build());
 
-        Shop shop = shopRepository.save(Shop.builder()
+        shop = shopRepository.save(Shop.builder()
                 .name("Trà Tân Cương Chính Hiệu")
                 .slug("tra-tan-cuong-chat-test")
                 .owner(seller)
@@ -380,8 +388,29 @@ class GeminiChatbotRagTest {
         // Gửi 1 lượt chat có gợi ý sản phẩm
         chatService.sendMessage(buyer.getId(), new ChatRequest("Tư vấn Trà Tân Cương Thái Nguyên", chatKey));
 
-        // GET /api/chat/history phải trả về cả tin nhắn user, bot và danh sách suggestedProducts
+        // DEF-16: GET /api/chat/history kiểm tra quyền sở hữu: guest -> 401, người khác -> 403, chủ sở hữu -> 200
         mockMvc.perform(get("/api/chat/history").param("chatKey", chatKey))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+
+        User otherUser = userRepository.save(User.builder()
+                .fullName("Other Chat User")
+                .email("other_chat_" + UUID.randomUUID().toString().substring(0, 6) + "@vietspecialty.vn")
+                .passwordHash("hashed")
+                .phone("0912345679")
+                .role(Role.USER)
+                .status(UserStatus.ACTIVE)
+                .build());
+        mockMvc.perform(get("/api/chat/history")
+                        .with(user(new CustomUserDetails(otherUser)))
+                        .param("chatKey", chatKey))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false));
+
+        // GET /api/chat/history phải trả về cả tin nhắn user, bot và danh sách suggestedProducts cho đúng chủ sở hữu
+        mockMvc.perform(get("/api/chat/history")
+                        .with(user(new CustomUserDetails(buyer)))
+                        .param("chatKey", chatKey))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data", hasSize(2)))
@@ -450,5 +479,83 @@ class GeminiChatbotRagTest {
         assertNotNull(shortDotsRes);
         assertNotNull(shortDotsRes.reply());
         assertTrue(shortDotsRes.reply().length() < 400, "Phản hồi cho '..' phải ngắn gọn, thân thiện");
+    }
+
+    @Test
+    @DisplayName("DEF-17: Tính tổng tiền ưu tiên đúng mã voucher khách yêu cầu (VIETSPECIALTY) và giải thích rõ khi mã không hợp lệ")
+    void testExplicitRequestedVoucherInCalculation() {
+        // Tạo 1 voucher shop giảm sâu hơn (100.000₫) để đảm bảo engine không tự ý ghi đè lựa chọn VIETSPECIALTY (50.000₫)
+        voucherRepository.save(Voucher.builder()
+                .code("SHOPBIG100_" + UUID.randomUUID().toString().substring(0, 4).toUpperCase())
+                .name("Giảm 100k gian hàng trà")
+                .scope(VoucherScope.SHOP)
+                .shop(shop)
+                .discountType(DiscountType.FIXED)
+                .discountValue(BigDecimal.valueOf(100000))
+                .minOrderValue(BigDecimal.valueOf(500000))
+                .usageLimit(100)
+                .usedCount(0)
+                .perUserLimit(5)
+                .isActive(true)
+                .createdBy(buyer)
+                .startAt(LocalDateTime.now().minusDays(1))
+                .endAt(LocalDateTime.now().plusDays(10))
+                .build());
+
+        String chatKey = "def17_explicit_voucher_01";
+        chatService.sendMessage(null, new ChatRequest("Tư vấn giúp mình Trà Đinh Tân Cương Thượng Hạng", chatKey));
+
+        ChatResponse calcWithRequested = chatService.sendMessage(
+                null,
+                new ChatRequest("Nếu mình lấy 2 hộp này áp mã VIETSPECIALTY thì tổng bao nhiêu tiền?", chatKey)
+        );
+        assertNotNull(calcWithRequested.reply());
+        assertTrue(calcWithRequested.reply().contains("VIETSPECIALTY"),
+                "Phải áp dụng đúng mã VIETSPECIALTY khách đã yêu cầu. Reply: " + calcWithRequested.reply());
+        assertTrue(calcWithRequested.reply().contains("1.650.000₫"),
+                "Tổng thanh toán sau khi trừ VIETSPECIALTY (50.000₫) trên 1.700.000₫ phải là 1.650.000₫. Reply: " + calcWithRequested.reply());
+
+        // Mã không tồn tại -> thông báo rõ mã không hợp lệ và gợi ý mã thay thế
+        ChatResponse calcWithInvalid = chatService.sendMessage(
+                null,
+                new ChatRequest("Nếu mình lấy 2 hộp này áp mã KHONGTONTAI99 thì tổng bao nhiêu tiền?", chatKey)
+        );
+        assertTrue(calcWithInvalid.reply().contains("KHONGTONTAI99"),
+                "Phải nhắc tên mã không hợp lệ KHONGTONTAI99. Reply: " + calcWithInvalid.reply());
+        assertTrue(calcWithInvalid.reply().toLowerCase().contains("không tồn tại")
+                        || calcWithInvalid.reply().toLowerCase().contains("hết hiệu lực"),
+                "Phải giải thích rõ mã không tồn tại hoặc hết hiệu lực. Reply: " + calcWithInvalid.reply());
+    }
+
+    @Test
+    @DisplayName("DEF-18: Nhận diện 'trà sữa' chưa mở bán và lọc đúng ngân sách 'rẻ hơn dưới 200k'")
+    void testUnavailableTraSuaAndCheaperWithinBudget() {
+        // Part A: "trà sữa" không bị short-circuit bởi từ khóa chung "trà"
+        ChatResponse traSuaRes = chatService.sendMessage(
+                null,
+                new ChatRequest("Tôi muốn mua trà sữa trân châu", "def18_trasua_01")
+        );
+        assertNotNull(traSuaRes);
+        assertEquals(ChatIntent.PRODUCT_ADVICE, traSuaRes.intent());
+        assertTrue(traSuaRes.reply().toLowerCase().contains("chưa mở bán"),
+                "Phải trung thực báo chưa mở bán Trà sữa trân châu. Reply: " + traSuaRes.reply());
+        assertFalse(traSuaRes.suggestedProducts().isEmpty(),
+                "Phải gợi ý đặc sản trà/đồ ngọt thay thế có sẵn trên sàn");
+
+        // Part B: "rẻ hơn dưới 200k" chỉ trả về sản phẩm <= 200.000₫
+        String cheaperChatKey = "def18_cheaper_200k_01";
+        chatService.sendMessage(null, new ChatRequest("Tư vấn giúp mình Trà Đinh Tân Cương Thượng Hạng", cheaperChatKey));
+
+        ChatResponse cheaperRes = chatService.sendMessage(
+                null,
+                new ChatRequest("Có món nào rẻ hơn dưới 200k không?", cheaperChatKey)
+        );
+        assertNotNull(cheaperRes);
+        assertEquals(ChatIntent.PRODUCT_ADVICE, cheaperRes.intent());
+        assertFalse(cheaperRes.suggestedProducts().isEmpty(), "Phải gợi ý được sản phẩm dưới 200k");
+        for (ProductCardResponse card : cheaperRes.suggestedProducts()) {
+            assertTrue(card.price().compareTo(BigDecimal.valueOf(200000)) <= 0,
+                    "Sản phẩm gợi ý cho 'rẻ hơn dưới 200k' phải <= 200.000₫, nhưng gặp: " + card.name() + " (" + card.price() + ")");
+        }
     }
 }

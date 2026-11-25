@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -173,7 +174,31 @@ class SellerVoucherAndAnalyticsWebTest {
                         .param("endAt", endStr))
                 .andExpect(status().isOk())
                 .andExpect(view().name("seller/vouchers/form"))
-                .andExpect(model().attributeHasFieldErrors("voucherForm", "code", "discountValue"));
+                .andExpect(model().attributeHasFieldErrors("voucherForm", "code", "discountValue"))
+                .andExpect(content().string(containsString("Mã voucher không được để trống")))
+                .andExpect(content().string(containsString("Giá trị giảm phải lớn hơn 0")))
+                .andExpect(content().string(containsString("value=\"Lỗi validation\"")));
+    }
+
+    @Test
+    @DisplayName("DEF-21: GET /seller/vouchers/create và /new trả 200 OK với voucherForm mặc định")
+    void testGetSellerVoucherCreateAndNewDefaults() throws Exception {
+        User seller = createUser("vchr_get", Role.SELLER);
+        createApprovedShop(seller, "vchrget");
+        entityManager.flush();
+        entityManager.clear();
+
+        CustomUserDetails sellerDetails = new CustomUserDetails(seller);
+
+        for (String path : new String[]{"/seller/vouchers/create", "/seller/vouchers/new"}) {
+            mockMvc.perform(get(path).with(user(sellerDetails)))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("seller/vouchers/form"))
+                    .andExpect(model().attributeExists("voucherForm"))
+                    .andExpect(content().string(containsString("name=\"code\"")))
+                    .andExpect(content().string(containsString("name=\"name\"")))
+                    .andExpect(content().string(containsString("name=\"discountValue\"")));
+        }
     }
 
     @Test

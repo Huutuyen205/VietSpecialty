@@ -23,7 +23,7 @@
                 </h1>
 
                 <p class="text-sm sm:text-base text-ink-muted leading-relaxed max-w-xl">
-                    Khám phá và thưởng thức hàng trăm thức quà truyền thống từ các hợp tác xã, làng nghề cổ truyền và các thương hiệu đạt chuẩn OCOP 3–5 sao trên khắp 63 tỉnh thành Việt Nam.
+                    Khám phá và thưởng thức hàng trăm thức quà truyền thống từ các hợp tác xã, làng nghề cổ truyền và các thương hiệu đạt chuẩn OCOP 3–5 sao trên khắp 34 tỉnh thành Việt Nam.
                 </p>
 
                 <div class="flex flex-wrap items-center gap-3 pt-2">
@@ -31,11 +31,16 @@
                         <span>Khám phá đặc sản ngay</span>
                         <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     </a>
+
+                    <a th:href="@{/explore}" class="btn-accent text-xs sm:text-sm px-5 py-3.5 font-semibold flex items-center gap-2 shadow-sm hover:shadow-md">
+                        <i data-lucide="map" class="w-4 h-4"></i>
+                        <span>Bản đồ 4 miền</span>
+                    </a>
                     
                     <button type="button" onclick="document.querySelector('#chatbot-toggle-btn')?.click()"
                             class="btn-outline text-xs sm:text-sm px-5 py-3.5 flex items-center gap-2 bg-surface hover:bg-surface-muted shadow-2xs">
                         <i data-lucide="bot" class="w-4 h-4 text-primary-600"></i>
-                        <span>Hỏi Trợ lý AI gợi ý quà</span>
+                        <span>Hỏi Trợ lý AI</span>
                     </button>
                 </div>
 
@@ -75,32 +80,32 @@
             <div class="lg:col-span-5 relative">
                 <div class="grid grid-cols-2 gap-3.5">
                     <!-- Bắc -->
-                    <div class="bg-surface p-4 rounded-2xl border-l-4 border-l-[#0F9D8A] border border-line shadow-sm hover:shadow-md transition group">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#0F9D8A]">Miền Bắc</span>
-                        <h4 class="font-serif font-bold text-sm text-ink mt-0.5 group-hover:text-[#0F9D8A] transition">Chè & Cốm Xanh</h4>
-                        <p class="text-[11px] text-ink-muted mt-1">Hương cốm Mễ Trì, Trà Tân Cương thơm mát tiền chát hậu ngọt.</p>
-                    </div>
+                    <a th:href="@{/products(regionSlug='mien-bac')}" class="block bg-surface p-4 rounded-2xl border-l-4 border-l-[#0D7A6B] border border-line shadow-sm hover:shadow-lift hover:-translate-y-0.5 transition group">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#0D7A6B]">Miền Bắc</span>
+                        <h4 class="font-serif font-bold text-sm text-ink mt-0.5 group-hover:text-[#0D7A6B] transition">Chè & Cốm Xanh</h4>
+                        <p class="text-[11px] text-ink-muted mt-1 leading-relaxed">Hương cốm Mễ Trì, Trà Tân Cương thơm mát tiền chát hậu ngọt.</p>
+                    </a>
 
                     <!-- Trung -->
-                    <div class="bg-surface p-4 rounded-2xl border-l-4 border-l-[#E9A21F] border border-line shadow-sm hover:shadow-md transition group">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#E9A21F]">Miền Trung</span>
-                        <h4 class="font-serif font-bold text-sm text-ink mt-0.5 group-hover:text-[#E9A21F] transition">Mắm Cốt & Mè Xửng</h4>
-                        <p class="text-[11px] text-ink-muted mt-1">Đậm đà nắng gió duyên hải, tỏi cô đơn và mè xửng Cố Đô.</p>
-                    </div>
+                    <a th:href="@{/products(regionSlug='mien-trung')}" class="block bg-surface p-4 rounded-2xl border-l-4 border-l-[#A86708] border border-line shadow-sm hover:shadow-lift hover:-translate-y-0.5 transition group">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#A86708]">Miền Trung</span>
+                        <h4 class="font-serif font-bold text-sm text-ink mt-0.5 group-hover:text-[#A86708] transition">Mắm Cốt & Mè Xửng</h4>
+                        <p class="text-[11px] text-ink-muted mt-1 leading-relaxed">Đậm đà nắng gió duyên hải, tỏi cô đơn và mè xửng Cố Đô.</p>
+                    </a>
 
                     <!-- Tây Nguyên -->
-                    <div class="bg-surface p-4 rounded-2xl border-l-4 border-l-[#8B5E3C] border border-line shadow-sm hover:shadow-md transition group">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#8B5E3C]">Tây Nguyên</span>
-                        <h4 class="font-serif font-bold text-sm text-ink mt-0.5 group-hover:text-[#8B5E3C] transition">Cà Phê & Mật Ong</h4>
-                        <p class="text-[11px] text-ink-muted mt-1">Đất đỏ bazan trù phú, hạt tiêu thơm cay và cà phê mộc đậm vị.</p>
-                    </div>
+                    <a th:href="@{/products(regionSlug='tay-nguyen')}" class="block bg-surface p-4 rounded-2xl border-l-4 border-l-[#7B5033] border border-line shadow-sm hover:shadow-lift hover:-translate-y-0.5 transition group">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#7B5033]">Tây Nguyên</span>
+                        <h4 class="font-serif font-bold text-sm text-ink mt-0.5 group-hover:text-[#7B5033] transition">Cà Phê & Mật Ong</h4>
+                        <p class="text-[11px] text-ink-muted mt-1 leading-relaxed">Đất đỏ bazan trù phú, hạt tiêu thơm cay và cà phê mộc đậm vị.</p>
+                    </a>
 
                     <!-- Nam -->
-                    <div class="bg-surface p-4 rounded-2xl border-l-4 border-l-[#E8704A] border border-line shadow-sm hover:shadow-md transition group">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#E8704A]">Miền Nam</span>
-                        <h4 class="font-serif font-bold text-sm text-ink mt-0.5 group-hover:text-[#E8704A] transition">Bánh Pía & Kẹo Dừa</h4>
-                        <p class="text-[11px] text-ink-muted mt-1">Sông nước miệt vườn Cửu Long ngọt ngào, thơm béo ngậy khó quên.</p>
-                    </div>
+                    <a th:href="@{/products(regionSlug='mien-nam')}" class="block bg-surface p-4 rounded-2xl border-l-4 border-l-[#B8472A] border border-line shadow-sm hover:shadow-lift hover:-translate-y-0.5 transition group">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#B8472A]">Miền Nam</span>
+                        <h4 class="font-serif font-bold text-sm text-ink mt-0.5 group-hover:text-[#B8472A] transition">Bánh Pía & Kẹo Dừa</h4>
+                        <p class="text-[11px] text-ink-muted mt-1 leading-relaxed">Sông nước miệt vườn Cửu Long ngọt ngào, thơm béo ngậy khó quên.</p>
+                    </a>
                 </div>
 
                 <!-- Tag chứng nhận OCOP nổi bật -->

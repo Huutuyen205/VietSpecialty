@@ -180,9 +180,39 @@
     <script th:src="@{/js/core/toast.js}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
+            if (!window.lucide) return;
+            window.lucide.createIcons();
+
+            if (!document.body || typeof MutationObserver === 'undefined') return;
+            let rafId = null;
+            const hasPendingLucide = (node) => {
+                if (!node || node.nodeType !== 1) return false;
+                const tag = node.tagName ? node.tagName.toLowerCase() : '';
+                if (tag !== 'svg' && node.hasAttribute('data-lucide')) return true;
+                return Boolean(node.querySelector('[data-lucide]:not(svg)'));
+            };
+            const observer = new MutationObserver((mutations) => {
+                let needsIcons = false;
+                for (const m of mutations) {
+                    if (m.type !== 'childList' || !m.addedNodes || m.addedNodes.length === 0) continue;
+                    for (const node of m.addedNodes) {
+                        if (hasPendingLucide(node)) {
+                            needsIcons = true;
+                            break;
+                        }
+                    }
+                    if (needsIcons) break;
+                }
+                if (needsIcons && rafId === null) {
+                    rafId = window.requestAnimationFrame(() => {
+                        rafId = null;
+                        if (window.lucide) {
+                            window.lucide.createIcons();
+                        }
+                    });
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
         });
     </script>
     <th:block th:replace="${extraJs}"></th:block>

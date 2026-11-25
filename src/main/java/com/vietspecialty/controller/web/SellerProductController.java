@@ -1,12 +1,14 @@
 package com.vietspecialty.controller.web;
 
 import com.vietspecialty.domain.enums.ProductStatus;
+import com.vietspecialty.domain.enums.ShopStatus;
 import com.vietspecialty.dto.request.ProductCreateRequest;
 import com.vietspecialty.dto.request.ProductUpdateRequest;
 import com.vietspecialty.dto.response.ProductCardResponse;
 import com.vietspecialty.dto.response.ProductDetailResponse;
 import com.vietspecialty.dto.response.ShopResponse;
 import com.vietspecialty.exception.BusinessException;
+import com.vietspecialty.exception.ErrorCode;
 import com.vietspecialty.security.CurrentUser;
 import com.vietspecialty.security.CustomUserDetails;
 import com.vietspecialty.service.CatalogService;
@@ -39,6 +41,14 @@ public class SellerProductController {
     private final ShopService shopService;
     private final CatalogService catalogService;
 
+    private ShopResponse requireApprovedShop(Long userId) {
+        ShopResponse shop = shopService.getShopByOwnerId(userId);
+        if (shop.status() != ShopStatus.APPROVED) {
+            throw new BusinessException(ErrorCode.SHOP_NOT_APPROVED);
+        }
+        return shop;
+    }
+
     @GetMapping
     public String listProducts(
             @CurrentUser CustomUserDetails userDetails,
@@ -48,7 +58,7 @@ public class SellerProductController {
             @RequestParam(defaultValue = "10") int size,
             Model model
     ) {
-        ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
+        ShopResponse shop = requireApprovedShop(userDetails.getId());
         ProductStatus parsedStatus = parseProductStatus(status);
         Page<ProductCardResponse> products = productService.getSellerProducts(
                 shop.id(), keyword, parsedStatus, PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.DESC, "createdAt"))
@@ -80,7 +90,7 @@ public class SellerProductController {
 
     @GetMapping({"/create", "/new"})
     public String createProductForm(@CurrentUser CustomUserDetails userDetails, Model model) {
-        ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
+        ShopResponse shop = requireApprovedShop(userDetails.getId());
 
         model.addAttribute("shop", shop);
         model.addAttribute("productRequest", new ProductCreateRequest("", "", "", null, null, "", null, "", "", "", null, null, null));
@@ -101,7 +111,7 @@ public class SellerProductController {
             Model model,
             RedirectAttributes redirectAttributes
     ) {
-        ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
+        ShopResponse shop = requireApprovedShop(userDetails.getId());
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("shop", shop);
@@ -133,7 +143,7 @@ public class SellerProductController {
             @PathVariable Long id,
             Model model
     ) {
-        ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
+        ShopResponse shop = requireApprovedShop(userDetails.getId());
         ProductDetailResponse product = productService.getProductById(id);
 
         // Chống IDOR: kiểm tra sản phẩm thuộc shop
@@ -181,7 +191,7 @@ public class SellerProductController {
             Model model,
             RedirectAttributes redirectAttributes
     ) {
-        ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
+        ShopResponse shop = requireApprovedShop(userDetails.getId());
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("shop", shop);
@@ -215,7 +225,7 @@ public class SellerProductController {
             @PathVariable Long id,
             RedirectAttributes redirectAttributes
     ) {
-        ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
+        ShopResponse shop = requireApprovedShop(userDetails.getId());
         productService.toggleProductStatus(shop.id(), id);
         redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật trạng thái hiển thị của sản phẩm!");
         return "redirect:/seller/products";
@@ -227,7 +237,7 @@ public class SellerProductController {
             @PathVariable Long id,
             RedirectAttributes redirectAttributes
     ) {
-        ShopResponse shop = shopService.getShopByOwnerId(userDetails.getId());
+        ShopResponse shop = requireApprovedShop(userDetails.getId());
         productService.deleteProduct(shop.id(), id);
         redirectAttributes.addFlashAttribute("successMessage", "Đã xóa sản phẩm khỏi danh mục gian hàng!");
         return "redirect:/seller/products";

@@ -1,6 +1,7 @@
 package com.vietspecialty.repository;
 
 import com.vietspecialty.domain.entity.Address;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +16,7 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
 
     List<Address> findByUserIdOrderByIsDefaultDescCreatedAtDesc(Long userId);
 
+    @EntityGraph(attributePaths = {"province"})
     Optional<Address> findByIdAndUserId(Long id, Long userId);
 
     Optional<Address> findByUserIdAndIsDefaultTrue(Long userId);

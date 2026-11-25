@@ -1,27 +1,20 @@
 package com.vietspecialty.controller.web;
 
-import com.vietspecialty.domain.entity.Province;
 import com.vietspecialty.domain.entity.Shop;
-import com.vietspecialty.domain.entity.User;
 import com.vietspecialty.domain.enums.Role;
 import com.vietspecialty.domain.enums.ShopStatus;
 import com.vietspecialty.dto.request.ShopRegisterRequest;
 import com.vietspecialty.dto.response.ShopResponse;
 import com.vietspecialty.exception.BusinessException;
-import com.vietspecialty.repository.ProvinceRepository;
 import com.vietspecialty.repository.ShopRepository;
-import com.vietspecialty.repository.UserRepository;
 import com.vietspecialty.security.CurrentUser;
 import com.vietspecialty.security.CustomUserDetails;
 import com.vietspecialty.service.CatalogService;
 import com.vietspecialty.service.ShopService;
-import com.vietspecialty.service.StorageService;
-import com.vietspecialty.util.SlugUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,9 +34,6 @@ public class ShopRegistrationController {
     private final ShopService shopService;
     private final CatalogService catalogService;
     private final ShopRepository shopRepository;
-    private final UserRepository userRepository;
-    private final ProvinceRepository provinceRepository;
-    private final StorageService storageService;
 
     @GetMapping("/account/shop-registration")
     public String shopRegistrationPage(
@@ -97,7 +87,6 @@ public class ShopRegistrationController {
     }
 
     @PostMapping("/account/shop-registration")
-    @Transactional
     public String handleShopRegistration(
             @CurrentUser CustomUserDetails userDetails,
             @Valid @ModelAttribute("shopRequest") ShopRegisterRequest request,
@@ -120,57 +109,19 @@ public class ShopRegistrationController {
         }
 
         try {
-            Optional<Shop> existingOpt = shopRepository.findByOwnerId(userDetails.getId());
-            if (existingOpt.isPresent()) {
-                Shop existingShop = existingOpt.get();
-                if (existingShop.getStatus() == ShopStatus.REJECTED) {
-                    resubmitRejectedShop(existingShop, request, logoFile);
-                    redirectAttributes.addFlashAttribute("successMessage", "Hồ sơ đăng ký gian hàng đã được cập nhật và gửi lại để chờ xét duyệt!");
-                    return "redirect:/account/shop-registration";
-                }
-            }
+            boolean isResubmit = shopRepository.findByOwnerId(userDetails.getId())
+                    .map(s -> s.getStatus() == ShopStatus.REJECTED)
+                    .orElse(false);
 
             shopService.registerShop(userDetails.getId(), request, logoFile);
-            redirectAttributes.addFlashAttribute("successMessage", "Hồ sơ đăng ký gian hàng đã được gửi thành công và đang chờ xét duyệt!");
+            redirectAttributes.addFlashAttribute("successMessage", isResubmit
+                    ? "Hồ sơ đăng ký gian hàng đã được cập nhật và gửi lại để chờ xét duyệt!"
+                    : "Hồ sơ đăng ký gian hàng đã được gửi thành công và đang chờ xét duyệt!");
             return "redirect:/account/shop-registration";
         } catch (BusinessException e) {
             model.addAttribute("errorMessage", e.getMessage());
             model.addAttribute("provinces", catalogService.getAllProvinces());
             return "account/shop-registration";
         }
-    }
-
-    private void resubmitRejectedShop(Shop shop, ShopRegisterRequest request, MultipartFile logoFile) {
-        String shopName = request.name().trim();
-        if (!shop.getName().equalsIgnoreCase(shopName) && shopRepository.existsByNameIgnoreCase(shopName)) {
-            throw new BusinessException(com.vietspecialty.exception.ErrorCode.SHOP_NAME_EXISTS);
-        }
-
-        Province province = provinceRepository.findById(request.provinceId())
-                .orElseThrow(() -> new BusinessException(com.vietspecialty.exception.ErrorCode.VALIDATION_ERROR, "Tỉnh/thành phố không hợp lệ"));
-
-        if (logoFile != null && !logoFile.isEmpty()) {
-            String logoUrl = storageService.uploadImage(logoFile, "shops");
-            shop.setLogoUrl(logoUrl);
-        }
-
-        if (!shop.getName().equalsIgnoreCase(shopName)) {
-            String baseSlug = SlugUtils.toSlug(shopName);
-            String slug = baseSlug;
-            int counter = 1;
-            while (shopRepository.findBySlug(slug).isPresent()) {
-                slug = baseSlug + "-" + counter++;
-            }
-            shop.setSlug(slug);
-        }
-
-        shop.setName(shopName);
-        shop.setDescription(request.description() != null ? request.description().trim() : null);
-        shop.setAddressDetail(request.pickupAddress().trim());
-        shop.setPhone(request.hotline().trim());
-        shop.setProvince(province);
-        shop.setStatus(ShopStatus.PENDING);
-        shop.setRejectReason(null);
-        shopRepository.save(shop);
     }
 }

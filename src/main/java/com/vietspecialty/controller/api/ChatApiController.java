@@ -1,5 +1,6 @@
 package com.vietspecialty.controller.api;
 
+import com.vietspecialty.domain.entity.ChatConversation;
 import com.vietspecialty.domain.entity.ChatMessage;
 import com.vietspecialty.domain.entity.Product;
 import com.vietspecialty.dto.ApiResponse;
@@ -16,6 +17,7 @@ import com.vietspecialty.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +48,7 @@ public class ChatApiController {
     @GetMapping("/history")
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getHistory(
+            @CurrentUser CustomUserDetails userDetails,
             @RequestParam String chatKey
     ) {
         if (chatKey == null || chatKey.isBlank()) {
@@ -57,7 +60,19 @@ public class ChatApiController {
             return ResponseEntity.ok(ApiResponse.success(List.of()));
         }
 
-        List<ChatMessage> messages = messageRepository.findRecentMessages(convOpt.get().getId(), PageRequest.of(0, 20));
+        ChatConversation conv = convOpt.get();
+        if (conv.getUser() != null) {
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Vui lòng đăng nhập để xem lịch sử trò chuyện này"));
+            }
+            if (!conv.getUser().getId().equals(userDetails.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("Bạn không có quyền xem lịch sử trò chuyện này"));
+            }
+        }
+
+        List<ChatMessage> messages = messageRepository.findRecentMessages(conv.getId(), PageRequest.of(0, 20));
 
         // Tập hợp toàn bộ productId từ lịch sử để truy vấn 1 lần
         Set<Long> allProductIds = new LinkedHashSet<>();

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -30,6 +31,7 @@ public class AdminModerationController {
     private final ProductCommentService productCommentService;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public String moderationPage(
             @RequestParam(value = "tab", defaultValue = "reviews") String tab,
             @RequestParam(value = "reviewPage", defaultValue = "0") int reviewPage,

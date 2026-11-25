@@ -113,6 +113,9 @@ public class AccountController {
 
     @GetMapping("/password")
     public String passwordPage(Model model) {
+        Long userId = SecurityUtils.getUserId().orElseThrow();
+        boolean hasPassword = userService.getProfile(userId).passwordSet();
+        model.addAttribute("hasPassword", hasPassword);
         model.addAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
         return "account/password";
     }
@@ -121,20 +124,29 @@ public class AccountController {
     public String changePassword(
             @Valid @ModelAttribute("passwordRequest") ChangePasswordRequest request,
             BindingResult bindingResult,
-            RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes,
+            Model model
     ) {
+        Long userId = SecurityUtils.getUserId().orElseThrow();
+        boolean hasPassword = userService.getProfile(userId).passwordSet();
+
+        if (hasPassword && (request.oldPassword() == null || request.oldPassword().isBlank())) {
+            bindingResult.rejectValue("oldPassword", "error.oldPassword", "Vui lòng nhập mật khẩu hiện tại");
+        }
+
         if (!request.isPasswordMatching()) {
             bindingResult.rejectValue("confirmNewPassword", "error.confirmNewPassword", "Mật khẩu xác nhận không khớp");
         }
 
         if (bindingResult.hasErrors()) {
+            model.addAttribute("hasPassword", hasPassword);
             return "account/password";
         }
 
-        Long userId = SecurityUtils.getUserId().orElseThrow();
         try {
             userService.changePassword(userId, request);
-            redirectAttributes.addFlashAttribute("successMessage", "Đổi mật khẩu thành công");
+            redirectAttributes.addFlashAttribute("successMessage",
+                    hasPassword ? "Đổi mật khẩu thành công" : "Thiết lập mật khẩu thành công");
             return "redirect:/account/password";
         } catch (BusinessException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

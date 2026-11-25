@@ -8,7 +8,9 @@
         extraJs=~{::#checkoutJs}
       )}">
 
-<div id="checkoutContent" class="space-y-6" x-data="{ submitting: false }">
+<div id="checkoutContent" class="space-y-6"
+     x-data="checkoutPage()"
+     th:attr="data-subtotal=${preview.subtotal}, data-total-shipping=${preview.totalShippingFee}, data-system-discount=${preview.systemDiscount}, data-total-shop-discount=${preview.totalShopDiscount}, data-grand-total=${preview.grandTotal}">
 
     <!-- BREADCRUMB -->
     <nav class="flex text-xs text-ink-muted" aria-label="Breadcrumb">
@@ -89,7 +91,9 @@
                 </div>
 
                 <div class="space-y-4">
-                    <div th:each="sg : ${preview.shopGroups}" class="border border-line rounded-2xl overflow-hidden shadow-2xs">
+                    <div th:each="sg : ${preview.shopGroups}"
+                         th:attr="data-shop-card=${sg.shopId}, data-goods-total=${sg.goodsTotal}, data-shipping-fee=${sg.shippingFee}, data-shop-discount=${sg.shopDiscount}"
+                         class="border border-line rounded-2xl overflow-hidden shadow-2xs">
                         <!-- Header shop -->
                         <div class="bg-surface-muted/60 p-3.5 flex items-center justify-between text-xs border-b border-line">
                             <div class="flex items-center gap-2">
@@ -137,6 +141,164 @@
                                         class="btn btn-outline py-1 px-2.5 text-[11px] font-semibold">
                                     Áp dụng
                                 </button>
+                            </div>
+                        </div>
+
+                        <!-- Gói làm quà biếu & Viết thiệp chúc mừng -->
+                        <div th:attr="data-gift-shop-id=${sg.shopId}"
+                             x-data="{ sid: $el.dataset.giftShopId }"
+                             class="border-t border-secondary-400/50 bg-secondary-100/40">
+                            <input type="hidden"
+                                   th:name="'shopGifts[' + ${sg.shopId} + '].isGift'"
+                                   :value="isGiftEnabled(sid) ? 'true' : 'false'">
+
+                            <label class="px-4 py-3 flex items-center justify-between gap-3 cursor-pointer select-none">
+                                <div class="flex items-center gap-2.5 text-xs">
+                                    <input type="checkbox"
+                                           :checked="isGiftEnabled(sid)"
+                                           @change="toggleGift(sid, $event.target.checked)"
+                                           class="rounded border-secondary-400 text-primary-600 focus:ring-primary-500">
+                                    <i data-lucide="gift" class="w-4 h-4 text-accent-600 shrink-0"></i>
+                                    <div>
+                                        <span class="font-bold text-ink">Gói làm quà biếu &amp; Viết thiệp chúc mừng</span>
+                                        <span class="block text-[11px] text-ink-muted">Chọn hộp quà đặc sản &amp; gửi kèm lời chúc riêng cho kiện hàng này</span>
+                                    </div>
+                                </div>
+                                <span x-show="shopGiftFee(sid) > 0"
+                                      style="display: none;"
+                                      class="px-2.5 py-0.5 rounded-full bg-secondary-100 border border-secondary-400 text-[11px] font-bold text-ink shrink-0">
+                                    +25.000₫
+                                </span>
+                            </label>
+
+                            <div x-show="isGiftEnabled(sid)"
+                                 style="display: none;"
+                                 x-transition
+                                 class="px-4 pb-4 pt-2 border-t border-secondary-400/50 space-y-4 text-xs">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Dịp tặng quà & Kiểu gói -->
+                                    <div class="space-y-3">
+                                        <div class="space-y-1.5">
+                                            <label th:for="'giftOccasion-' + ${sg.shopId}" class="block font-bold text-ink">Dịp tặng quà:</label>
+                                            <select th:id="'giftOccasion-' + ${sg.shopId}"
+                                                    th:name="'shopGifts[' + ${sg.shopId} + '].giftOccasion'"
+                                                    x-model="gifts[sid].giftOccasion"
+                                                    @change="saveGiftDraft()"
+                                                    class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-ink focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                                                <option value="TET">Tết &amp; Lễ hội</option>
+                                                <option value="FAMILY">Biếu gia đình</option>
+                                                <option value="PARTNER">Đối tác &amp; Khách quý</option>
+                                                <option value="CELEBRATION">Chúc mừng &amp; Kỷ niệm</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="space-y-1.5">
+                                            <span class="block font-bold text-ink">Hình thức gói quà:</span>
+                                            <div class="grid grid-cols-1 gap-2">
+                                                <label class="p-3 rounded-xl border cursor-pointer flex items-start justify-between gap-2 transition bg-surface"
+                                                       :class="gifts[sid]?.giftWrapType === 'STANDARD_BOX' ? 'border-primary-600 ring-1 ring-primary-500/30 bg-primary-50/40' : 'border-line hover:border-secondary-400'">
+                                                    <div class="flex items-start gap-2.5">
+                                                        <input type="radio"
+                                                               th:name="'shopGifts[' + ${sg.shopId} + '].giftWrapType'"
+                                                               value="STANDARD_BOX"
+                                                               x-model="gifts[sid].giftWrapType"
+                                                               @change="saveGiftDraft()"
+                                                               class="mt-0.5 text-primary-600 focus:ring-primary-500">
+                                                        <div>
+                                                            <div class="font-bold text-ink">Hộp quà truyền thống</div>
+                                                            <div class="text-[11px] text-ink-muted">Hộp giấy mỹ thuật + thiệp in tiêu chuẩn</div>
+                                                        </div>
+                                                    </div>
+                                                    <span class="font-bold text-primary-700 shrink-0">0₫</span>
+                                                </label>
+
+                                                <label class="p-3 rounded-xl border cursor-pointer flex items-start justify-between gap-2 transition bg-surface"
+                                                       :class="gifts[sid]?.giftWrapType === 'BAMBOO_PREMIUM' ? 'border-secondary-400 ring-1 ring-secondary-400/50 bg-secondary-100/40' : 'border-line hover:border-secondary-400'">
+                                                    <div class="flex items-start gap-2.5">
+                                                        <input type="radio"
+                                                               th:name="'shopGifts[' + ${sg.shopId} + '].giftWrapType'"
+                                                               value="BAMBOO_PREMIUM"
+                                                               x-model="gifts[sid].giftWrapType"
+                                                               @change="saveGiftDraft()"
+                                                               class="mt-0.5 text-primary-600 focus:ring-primary-500">
+                                                        <div>
+                                                            <div class="font-bold text-ink">Hộp tre đan cao cấp</div>
+                                                            <div class="text-[11px] text-ink-muted">Giỏ tre thủ công, ruy băng lụa &amp; thiệp mỹ thuật</div>
+                                                        </div>
+                                                    </div>
+                                                    <span class="font-bold text-accent-600 shrink-0">+25.000₫</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tên người nhận & Lời chúc -->
+                                    <div class="space-y-3">
+                                        <div class="space-y-1.5">
+                                            <label th:for="'giftRecipient-' + ${sg.shopId}" class="block font-bold text-ink">
+                                                Tên người nhận trên thiệp <span class="font-normal text-ink-muted">(tối đa 100 ký tự)</span>:
+                                            </label>
+                                            <input type="text"
+                                                   th:id="'giftRecipient-' + ${sg.shopId}"
+                                                   th:name="'shopGifts[' + ${sg.shopId} + '].giftRecipientName'"
+                                                   x-model="gifts[sid].giftRecipientName"
+                                                   @input="saveGiftDraft()"
+                                                   maxlength="100"
+                                                   placeholder="Ví dụ: Bố mẹ kính yêu / Anh Minh - Công ty ABC"
+                                                   class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-ink focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                                        </div>
+
+                                        <div class="space-y-1.5">
+                                            <div class="flex items-center justify-between">
+                                                <label th:for="'giftMessage-' + ${sg.shopId}" class="block font-bold text-ink">Lời chúc trên thiệp:</label>
+                                                <span class="text-[11px] text-ink-muted" x-text="(gifts[sid]?.giftMessage?.length || 0) + '/300'">0/300</span>
+                                            </div>
+                                            <textarea th:id="'giftMessage-' + ${sg.shopId}"
+                                                      th:name="'shopGifts[' + ${sg.shopId} + '].giftMessage'"
+                                                      x-model="gifts[sid].giftMessage"
+                                                      @input="saveGiftDraft()"
+                                                      maxlength="300"
+                                                      rows="3"
+                                                      placeholder="Viết lời chúc chân thành để gian hàng in trang trọng trên thiệp..."
+                                                      class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-ink focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Xem trước thiệp chúc mừng trực tiếp -->
+                                <div class="bg-cream border-2 border-secondary-400 rounded-2xl p-4 font-serif space-y-2 shadow-2xs">
+                                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-secondary-400/50">
+                                        <div class="flex items-center gap-1.5 font-sans text-[11px] font-bold text-ink">
+                                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-secondary-500"></i>
+                                            <span>Xem trước thiệp chúc mừng</span>
+                                        </div>
+                                        <span class="px-2.5 py-0.5 rounded-full bg-secondary-100 text-ink font-sans text-[10px] font-bold"
+                                              x-text="occasionLabel(gifts[sid]?.giftOccasion)">Tết &amp; Lễ hội</span>
+                                    </div>
+                                    <div class="text-xs text-ink-muted">
+                                        Thân gửi:
+                                        <span class="font-bold text-ink"
+                                              x-text="(gifts[sid]?.giftRecipientName || '').trim() || 'Người thương mến'">Người thương mến</span>
+                                    </div>
+                                    <p class="text-xs text-ink leading-relaxed whitespace-pre-line italic"
+                                       x-text="(gifts[sid]?.giftMessage || '').trim() || 'Lời chúc chân thành của bạn sẽ được in trang trọng trên thiệp kèm đặc sản quê hương...'"></p>
+                                    <div class="pt-1 flex flex-wrap items-center justify-between gap-2 text-[11px] text-ink-muted font-sans">
+                                        <span>Gói bởi: <strong class="text-ink" th:text="${sg.shopName}">Gian hàng</strong></span>
+                                        <span class="font-semibold text-primary-700"
+                                              x-text="gifts[sid]?.giftWrapType === 'BAMBOO_PREMIUM' ? 'Hộp tre đan cao cấp (+25.000₫)' : 'Hộp quà truyền thống (0₫)'">Hộp quà truyền thống (0₫)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tổng kiện hàng theo từng gian hàng -->
+                            <div class="px-4 py-2.5 bg-surface border-t border-line flex flex-wrap items-center justify-between gap-2 text-xs">
+                                <span class="text-ink-muted">
+                                    Tổng kiện hàng shop
+                                    <span x-show="shopGiftFee(sid) > 0" style="display: none;" class="text-accent-600 font-semibold">(đã gồm +25.000₫ hộp tre đan)</span>:
+                                </span>
+                                <strong class="font-serif text-sm text-primary-700"
+                                        x-text="formatVnd(shopPackageTotal(sid))"
+                                        th:text="${sg.groupTotalFormatted}">380.000₫</strong>
                             </div>
                         </div>
                     </div>
@@ -285,6 +447,13 @@
                         <strong class="text-ink" th:text="${preview.totalShippingFeeFormatted}">30.000₫</strong>
                     </div>
 
+                    <div class="flex items-center justify-between text-accent-600"
+                         x-show="totalGiftFee() > 0"
+                         style="display: none;">
+                        <span>Phí gói quà &amp; Thiệp:</span>
+                        <strong x-text="'+' + formatVnd(totalGiftFee())">+25.000₫</strong>
+                    </div>
+
                     <div th:if="${preview.systemDiscount != null and preview.systemDiscount.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
                          class="flex items-center justify-between text-primary-700">
                         <span>Giảm giá sàn:</span>
@@ -301,9 +470,11 @@
                 <div class="pt-4 border-t border-line flex items-baseline justify-between">
                     <div>
                         <span class="text-xs font-bold text-ink block">Tổng thanh toán:</span>
-                        <span class="text-[10px] text-ink-muted">(Đã gồm phí vận chuyển)</span>
+                        <span class="text-[10px] text-ink-muted" x-text="totalGiftFee() > 0 ? '(Đã gồm phí vận chuyển &amp; gói quà)' : '(Đã gồm phí vận chuyển)'">(Đã gồm phí vận chuyển)</span>
                     </div>
-                    <span class="text-2xl font-serif font-extrabold text-primary-700" th:text="${preview.grandTotalFormatted}">380.000₫</span>
+                    <span class="text-2xl font-serif font-extrabold text-primary-700"
+                          x-text="formatVnd(computedGrandTotal())"
+                          th:text="${preview.grandTotalFormatted}">380.000₫</span>
                 </div>
 
                 <!-- Nút Đặt hàng -->
@@ -329,13 +500,202 @@
 
 <th:block id="checkoutJs">
 <script>
+    const CHECKOUT_FORM_STATE_KEY = 'vs_checkout_form_state';
+
+    function saveCheckoutFormState() {
+        try {
+            const selectedAddr = document.querySelector('input[name="addressId"]:checked');
+            const selectedPay = document.querySelector('input[name="paymentMethod"]:checked');
+            const noteEl = document.querySelector('input[name="note"]');
+            const state = {
+                addressId: selectedAddr ? String(selectedAddr.value) : null,
+                paymentMethod: selectedPay ? String(selectedPay.value) : null,
+                note: noteEl ? String(noteEl.value || '') : ''
+            };
+            sessionStorage.setItem(CHECKOUT_FORM_STATE_KEY, JSON.stringify(state));
+        } catch (e) {}
+    }
+
+    function restoreCheckoutFormState(root) {
+        try {
+            const scope = root || document;
+            const raw = sessionStorage.getItem(CHECKOUT_FORM_STATE_KEY);
+            if (!raw) return;
+            const state = JSON.parse(raw);
+            if (!state || typeof state !== 'object') return;
+
+            if (state.addressId) {
+                const addrRadio = Array.from(scope.querySelectorAll('input[name="addressId"]'))
+                    .find((el) => String(el.value) === String(state.addressId));
+                if (addrRadio) {
+                    addrRadio.checked = true;
+                }
+            }
+
+            if (state.paymentMethod) {
+                const payRadio = Array.from(scope.querySelectorAll('input[name="paymentMethod"]'))
+                    .find((el) => String(el.value) === String(state.paymentMethod));
+                if (payRadio) {
+                    payRadio.checked = true;
+                }
+            }
+
+            if (typeof state.note === 'string') {
+                const noteEl = scope.querySelector('input[name="note"]');
+                if (noteEl) {
+                    noteEl.value = state.note;
+                }
+            }
+        } catch (e) {}
+    }
+
+    function checkoutPage() {
+        const DRAFT_KEY = 'vs_checkout_gifts';
+        const OCCASION_LABELS = {
+            TET: 'Tết & Lễ hội',
+            FAMILY: 'Biếu gia đình',
+            PARTNER: 'Đối tác & Khách quý',
+            CELEBRATION: 'Chúc mừng & Kỷ niệm'
+        };
+
+        return {
+            submitting: false,
+            baseSubtotal: 0,
+            baseTotalShipping: 0,
+            baseSystemDiscount: 0,
+            baseTotalShopDiscount: 0,
+            shopTotals: {},
+            gifts: {},
+
+            init() {
+                const root = this.$el;
+                this.baseSubtotal = Number(root.dataset.subtotal || 0);
+                this.baseTotalShipping = Number(root.dataset.totalShipping || 0);
+                this.baseSystemDiscount = Number(root.dataset.systemDiscount || 0);
+                this.baseTotalShopDiscount = Number(root.dataset.totalShopDiscount || 0);
+
+                restoreCheckoutFormState(root);
+                root.querySelectorAll('input[name="addressId"], input[name="paymentMethod"]').forEach((el) => {
+                    el.addEventListener('change', saveCheckoutFormState);
+                });
+                const noteInput = root.querySelector('input[name="note"]');
+                if (noteInput) {
+                    noteInput.addEventListener('input', saveCheckoutFormState);
+                    noteInput.addEventListener('change', saveCheckoutFormState);
+                }
+
+                let savedDraft = {};
+                try {
+                    const raw = sessionStorage.getItem(DRAFT_KEY);
+                    if (raw) {
+                        savedDraft = JSON.parse(raw) || {};
+                    }
+                } catch (e) {}
+
+                const cards = root.querySelectorAll('[data-shop-card]');
+                cards.forEach((card) => {
+                    const sid = String(card.dataset.shopCard);
+                    this.shopTotals[sid] = {
+                        goodsTotal: Number(card.dataset.goodsTotal || 0),
+                        shippingFee: Number(card.dataset.shippingFee || 0),
+                        shopDiscount: Number(card.dataset.shopDiscount || 0)
+                    };
+                    const prev = savedDraft[sid];
+                    this.gifts[sid] = {
+                        isGift: prev ? Boolean(prev.isGift) : false,
+                        giftOccasion: (prev && prev.giftOccasion) ? prev.giftOccasion : 'TET',
+                        giftWrapType: (prev && prev.giftWrapType) ? prev.giftWrapType : 'STANDARD_BOX',
+                        giftRecipientName: (prev && typeof prev.giftRecipientName === 'string') ? prev.giftRecipientName : '',
+                        giftMessage: (prev && typeof prev.giftMessage === 'string') ? prev.giftMessage : ''
+                    };
+                });
+            },
+
+            isGiftEnabled(shopId) {
+                const g = this.gifts[String(shopId)];
+                return Boolean(g && g.isGift);
+            },
+
+            toggleGift(shopId, checked) {
+                const sid = String(shopId);
+                if (!this.gifts[sid]) {
+                    this.gifts[sid] = {
+                        isGift: false,
+                        giftOccasion: 'TET',
+                        giftWrapType: 'STANDARD_BOX',
+                        giftRecipientName: '',
+                        giftMessage: ''
+                    };
+                }
+                this.gifts[sid].isGift = Boolean(checked);
+                if (this.gifts[sid].isGift) {
+                    if (!this.gifts[sid].giftOccasion) this.gifts[sid].giftOccasion = 'TET';
+                    if (!this.gifts[sid].giftWrapType) this.gifts[sid].giftWrapType = 'STANDARD_BOX';
+                }
+                this.saveGiftDraft();
+            },
+
+            shopGiftFee(shopId) {
+                const g = this.gifts[String(shopId)];
+                if (!g || !g.isGift) return 0;
+                return g.giftWrapType === 'BAMBOO_PREMIUM' ? 25000 : 0;
+            },
+
+            shopPackageTotal(shopId) {
+                const s = this.shopTotals[String(shopId)];
+                if (!s) return 0;
+                return Math.max(0, s.goodsTotal + s.shippingFee + this.shopGiftFee(shopId) - s.shopDiscount);
+            },
+
+            totalGiftFee() {
+                return Object.keys(this.gifts).reduce((sum, sid) => sum + this.shopGiftFee(sid), 0);
+            },
+
+            computedGrandTotal() {
+                return Math.max(0,
+                    this.baseSubtotal
+                    + this.baseTotalShipping
+                    + this.totalGiftFee()
+                    - this.baseTotalShopDiscount
+                    - this.baseSystemDiscount
+                );
+            },
+
+            occasionLabel(code) {
+                return OCCASION_LABELS[code] || 'Tết & Lễ hội';
+            },
+
+            formatVnd(amount) {
+                const num = Math.max(0, Math.round(Number(amount || 0)));
+                if (window.format && typeof window.format.vnd === 'function') {
+                    return window.format.vnd(num);
+                }
+                return new Intl.NumberFormat('vi-VN').format(num) + '₫';
+            },
+
+            saveGiftDraft() {
+                try {
+                    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(this.gifts));
+                } catch (e) {}
+            },
+
+            clearGiftDraft() {
+                try {
+                    sessionStorage.removeItem(DRAFT_KEY);
+                } catch (e) {}
+            }
+        };
+    }
+
     function updateShipping(val) {
+        saveCheckoutFormState();
         const url = new URL(window.location.href);
         url.searchParams.set('shippingMethod', val);
         window.location.href = url.toString();
     }
 
     function applyVoucher() {
+        saveCheckoutFormState();
         const code = document.getElementById('voucherInput').value.trim();
         const url = new URL(window.location.href);
         if (code) {
@@ -347,6 +707,7 @@
     }
 
     function applyShopVoucher(shopId) {
+        saveCheckoutFormState();
         const input = document.getElementById('shopVoucherInput-' + shopId);
         const code = input ? input.value.trim() : '';
         const url = new URL(window.location.href);

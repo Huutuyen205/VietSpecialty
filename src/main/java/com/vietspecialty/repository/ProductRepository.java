@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -95,5 +96,16 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         ORDER BY p.soldCount DESC, p.avgRating DESC, p.id DESC
         """)
     List<Product> findTopActiveByProvinceId(@Param("provinceId") Integer provinceId, Pageable pageable);
+
+    @Query("""
+        SELECT DISTINCT p FROM Product p
+        LEFT JOIN FETCH p.images
+        LEFT JOIN FETCH p.shop
+        LEFT JOIN FETCH p.province pr
+        LEFT JOIN FETCH pr.region
+        WHERE p.id IN :ids
+          AND p.status = com.vietspecialty.domain.enums.ProductStatus.ACTIVE
+        """)
+    List<Product> findActiveWithDetailsByIds(@Param("ids") Collection<Long> ids);
 }
 

@@ -16,7 +16,7 @@
         editIcon: 'tag',
         openEdit(id, name, desc, icon) {
             this.editId = id;
-            this.editName = name;
+            this.editName = name || '';
             this.editDescription = desc || '';
             this.editIcon = icon || 'tag';
             this.editModalOpen = true;
@@ -94,7 +94,8 @@
                             <td class="py-3.5 px-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <button type="button"
-                                            @click="openEdit([[${cat.id}]], [[${cat.name}]], [[${cat.description}]], [[${cat.icon}]])"
+                                            th:attr="data-id=${cat.id}, data-name=${cat.name}, data-description=${cat.description}, data-icon=${cat.icon}"
+                                            @click="openEdit(Number($el.dataset.id), $el.dataset.name || '', $el.dataset.description || '', $el.dataset.icon || 'tag')"
                                             class="px-2.5 py-1 rounded-lg border border-stone-200 hover:bg-stone-100 text-stone-700 font-semibold text-xs">
                                         Sửa
                                     </button>

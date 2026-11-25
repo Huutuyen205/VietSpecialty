@@ -7,39 +7,46 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        cream: '#FFFCF5',
+        cream: '#FAF6EE',
         surface: {
           DEFAULT: '#FFFFFF',
-          muted: '#F7F3EA',
+          muted: '#F3EDE0',
         },
-        line: '#E8E2D6',
+        line: '#E3DAC9',
         ink: {
-          DEFAULT: '#1F2A24',
-          muted: '#5B6660',
+          DEFAULT: '#1E2420',
+          muted: '#57605A',
         },
         primary: {
-          50: '#EEF8F0',
-          100: '#D3EEDB',
-          500: '#2F9E55',
-          600: '#23864A',
-          700: '#1C6B3C',
+          50: '#EBF5EE',
+          100: '#D2EAD9',
+          200: '#A9D9B8',
+          500: '#278450',
+          600: '#1F6E43',
+          700: '#175734',
+          800: '#114227',
         },
         secondary: {
-          100: '#FDF1D6',
-          400: '#F4B740',
-          500: '#E9A21F',
+          50: '#FEF9EC',
+          100: '#FEF6E4',
+          200: '#FCE8B6',
+          400: '#E5A52E',
+          500: '#D9911A',
+          600: '#A86708',
+          700: '#6E4306',
         },
         accent: {
-          50: '#FDEDE8',
-          500: '#D9583B',
-          600: '#B84528',
+          50: '#FDF0EB',
+          100: '#FAE0D6',
+          500: '#B94922',
+          600: '#9A3B19',
         },
-        danger: '#DC2626',
+        danger: '#B91C1C',
         region: {
-          bac: '#0F9D8A',
-          trung: '#E9A21F',
-          taynguyen: '#8B5E3C',
-          nam: '#E8704A',
+          bac: '#0D7A6B',
+          trung: '#A86708',
+          taynguyen: '#7B5033',
+          nam: '#B8472A',
         }
       },
       fontFamily: {
@@ -47,8 +54,8 @@ module.exports = {
         serif: ['Lora', 'Georgia', 'serif'],
       },
       boxShadow: {
-        'soft': '0 1px 2px rgba(31,42,36,.06), 0 8px 24px rgba(31,42,36,.06)',
-        'lift': '0 12px 32px rgba(31,42,36,.10)',
+        'soft': '0 1px 3px rgba(30,36,32,.05), 0 8px 24px rgba(30,36,32,.05)',
+        'lift': '0 14px 34px rgba(30,36,32,.10), 0 2px 6px rgba(30,36,32,.04)',
       },
       borderRadius: {
         'xl': '0.75rem',

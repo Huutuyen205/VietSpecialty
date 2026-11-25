@@ -10,6 +10,7 @@ import com.vietspecialty.dto.response.CheckoutPreviewResponse;
 import com.vietspecialty.repository.*;
 import com.vietspecialty.security.CustomUserDetails;
 import com.vietspecialty.service.AddressService;
+import com.vietspecialty.service.AuthService;
 import com.vietspecialty.service.CartService;
 import com.vietspecialty.service.OrderService;
 import jakarta.persistence.EntityManager;
@@ -70,6 +71,9 @@ class BuyerOrdersAndAccountWebTest {
 
     @Autowired
     private AddressService addressService;
+
+    @Autowired
+    private AuthService authService;
 
     @Autowired
     private CartService cartService;
@@ -415,11 +419,112 @@ class BuyerOrdersAndAccountWebTest {
         assertNotNull(conv.getUser());
         assertEquals(u1.getId(), conv.getUser().getId());
 
-        MvcResult histRes = mockMvc.perform(get("/api/chat/history").param("chatKey", chatKey))
+        // DEF-16: Owner retrieves history (200), guest gets 401, other user gets 403
+        mockMvc.perform(get("/api/chat/history").param("chatKey", chatKey))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+
+        mockMvc.perform(get("/api/chat/history")
+                        .with(user(d2))
+                        .param("chatKey", chatKey))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false));
+
+        mockMvc.perform(post("/api/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"chatKey\":\"" + chatKey + "\",\"message\":\"xin chào\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+
+        mockMvc.perform(post("/api/chat")
+                        .with(user(d2))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"chatKey\":\"" + chatKey + "\",\"message\":\"xin chào\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false));
+
+        MvcResult histRes = mockMvc.perform(get("/api/chat/history")
+                        .with(user(d1))
+                        .param("chatKey", chatKey))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data", hasSize(greaterThanOrEqualTo(2))))
                 .andReturn();
         assertTrue(histRes.getResponse().getContentAsString().contains("đơn hàng của tôi"));
+    }
+
+    @Test
+    @DisplayName("DEF-15: Tài khoản Google OAuth2 (phone=null, passwordSet=false) cập nhật hồ sơ không cần SĐT và thiết lập mật khẩu lần đầu không cần oldPassword")
+    void testGoogleUserProfileWithoutPhoneAndInitialPasswordSetup() throws Exception {
+        String googleEmail = "google_qa_" + UUID.randomUUID().toString().substring(0, 8) + "@gmail.com";
+        AuthService.GoogleAuthResult authRes = authService.authenticateWithGoogleWithResult(
+                googleEmail, "Nguyễn Văn Google", "google-sub-qa", null);
+        User googleUser = authRes.user();
+        assertTrue(authRes.newlyRegistered());
+        assertNull(googleUser.getPhone());
+        assertFalse(Boolean.TRUE.equals(googleUser.getPasswordSet()));
+        assertTrue(googleUser.getPasswordHash().startsWith("$2"));
+
+        CustomUserDetails googleDetails = new CustomUserDetails(googleUser);
+
+        // 1. Update profile with blank phone -> succeeds and stores phone = null
+        mockMvc.perform(post("/account/profile")
+                        .with(user(googleDetails))
+                        .with(csrf())
+                        .param("fullName", "Nguyễn Văn Google Đã Sửa")
+                        .param("phone", ""))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/account/profile"))
+                .andExpect(flash().attributeExists("successMessage"));
+
+        User afterProfile = userRepository.findById(googleUser.getId()).orElseThrow();
+        assertEquals("Nguyễn Văn Google Đã Sửa", afterProfile.getFullName());
+        assertNull(afterProfile.getPhone());
+
+        // 2. Non-blank invalid phone still rejected by VN regex
+        mockMvc.perform(post("/account/profile")
+                        .with(user(googleDetails))
+                        .with(csrf())
+                        .param("fullName", "Nguyễn Văn Google")
+                        .param("phone", "12345"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("account/profile"))
+                .andExpect(model().attributeHasFieldErrors("profileRequest", "phone"));
+
+        // 3. GET /account/password hides oldPassword when passwordSet == false
+        mockMvc.perform(get("/account/password").with(user(googleDetails)))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("hasPassword", false))
+                .andExpect(content().string(not(containsString("id=\"oldPassword\""))));
+
+        // 4. POST /account/password without oldPassword sets initial password and flips passwordSet = true
+        mockMvc.perform(post("/account/password")
+                        .with(user(googleDetails))
+                        .with(csrf())
+                        .param("newPassword", "InitialPass123@")
+                        .param("confirmNewPassword", "InitialPass123@"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/account/password"))
+                .andExpect(flash().attributeExists("successMessage"));
+
+        User afterPass = userRepository.findById(googleUser.getId()).orElseThrow();
+        assertTrue(Boolean.TRUE.equals(afterPass.getPasswordSet()));
+        assertTrue(passwordEncoder.matches("InitialPass123@", afterPass.getPasswordHash()));
+
+        // 5. Subsequent GET/POST requires oldPassword as usual
+        mockMvc.perform(get("/account/password").with(user(googleDetails)))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("hasPassword", true))
+                .andExpect(content().string(containsString("id=\"oldPassword\"")));
+
+        mockMvc.perform(post("/account/password")
+                        .with(user(googleDetails))
+                        .with(csrf())
+                        .param("oldPassword", "WrongPass123@")
+                        .param("newPassword", "SecondPass123@")
+                        .param("confirmNewPassword", "SecondPass123@"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/account/password"))
+                .andExpect(flash().attributeExists("errorMessage"));
     }
 }

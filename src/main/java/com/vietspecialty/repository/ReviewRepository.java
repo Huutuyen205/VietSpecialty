@@ -34,6 +34,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId AND r.status = com.vietspecialty.domain.enums.ReviewStatus.VISIBLE")
     Integer countVisibleReviews(@Param("productId") Long productId);
 
+    @EntityGraph(attributePaths = {"user", "product"})
     Page<Review> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }
 

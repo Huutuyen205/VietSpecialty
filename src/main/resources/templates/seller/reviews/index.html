@@ -16,8 +16,8 @@
         replyContent: '',
         openReply(reviewId, productName, content, currentReply) {
             this.activeReviewId = reviewId;
-            this.activeProductName = productName;
-            this.activeCustomerReview = content;
+            this.activeProductName = productName || '';
+            this.activeCustomerReview = content || '';
             this.replyContent = currentReply || '';
             this.replyModalOpen = true;
         }
@@ -61,10 +61,15 @@
 
                 <!-- Số sao & Ngày -->
                 <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-1 text-accent-500">
-                        <template x-for="i in 5">
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                        </template>
+                    <div class="flex items-center gap-1">
+                        <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                 class="w-4 h-4"
+                                 th:classappend="${i <= rev.rating} ? 'text-amber-400 fill-amber-400' : 'text-line'"
+                                 aria-hidden="true">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </th:block>
                         <span class="text-xs font-bold text-ink ml-1" th:text="${rev.rating + '/5'}">5/5</span>
                     </div>
                     <span class="text-xs text-ink-muted">|</span>
@@ -95,7 +100,8 @@
             <!-- Nút hành động phản hồi -->
             <div class="flex justify-end pt-2 border-t border-line/60">
                 <button type="button"
-                        @click="openReply([[${rev.id}]], [[${rev.productName}]], [[${rev.content}]], [[${rev.sellerReply}]])"
+                        th:attr="data-id=${rev.id}, data-product-name=${rev.productName}, data-content=${rev.content}, data-reply=${rev.sellerReply}"
+                        @click="openReply(Number($el.dataset.id), $el.dataset.productName || '', $el.dataset.content || '', $el.dataset.reply || '')"
                         class="btn btn-outline py-1.5 px-3.5 text-xs font-semibold flex items-center gap-1.5">
                     <i data-lucide="reply" class="w-3.5 h-3.5"></i>
                     <span th:text="${rev.sellerReply != null ? 'Sửa phản hồi' : 'Gửi phản hồi'}">Gửi phản hồi</span>

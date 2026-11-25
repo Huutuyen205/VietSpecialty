@@ -4,6 +4,7 @@
 <body>
 <header th:fragment="header" class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-line shadow-xs transition-all duration-200"
         th:data-auth="${#authorization.expression('hasRole(''USER'')')}"
+        th:data-notif-auth="${#authorization.expression('isAuthenticated()')}"
         x-data="{
             mobileMenuOpen: false,
             unreadCount: 0,
@@ -15,20 +16,26 @@
         }"
         x-init="
             const isUserAuth = $el.dataset.auth === 'true';
+            const isNotifAuth = $el.dataset.notifAuth === 'true';
             const fetchCounts = async () => {
-                if (!isUserAuth) return;
-                try {
-                    const cartRes = await fetch('/api/cart/count');
-                    if (cartRes.ok) {
-                        const data = await cartRes.json();
-                        if (data.success) cartCount = data.data || 0;
-                    }
-                    const notifRes = await fetch('/api/notifications/unread-count');
-                    if (notifRes.ok) {
-                        const nData = await notifRes.json();
-                        if (nData.success) unreadCount = nData.data.unreadCount || 0;
-                    }
-                } catch(e) {}
+                if (isUserAuth) {
+                    try {
+                        const cartRes = await fetch('/api/cart/count');
+                        if (cartRes.ok) {
+                            const data = await cartRes.json();
+                            if (data.success) cartCount = data.data || 0;
+                        }
+                    } catch(e) {}
+                }
+                if (isNotifAuth) {
+                    try {
+                        const notifRes = await fetch('/api/notifications/unread-count');
+                        if (notifRes.ok) {
+                            const nData = await notifRes.json();
+                            if (nData.success) unreadCount = nData.data.unreadCount || 0;
+                        }
+                    } catch(e) {}
+                }
             };
             const updateWishlistBadge = () => {
                 try {

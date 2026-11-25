@@ -80,6 +80,46 @@
         </div>
     </div>
 
+    <!--/* Thông tin quà biếu & Thiệp chúc mừng (chú ý đóng gói cho người bán) */-->
+    <div th:if="${order.isGift}" class="bg-secondary-100/40 border-2 border-secondary-400 rounded-2xl p-5 shadow-sm space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-secondary-400/50">
+            <h3 class="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="gift" class="w-4 h-4 text-accent-600"></i>
+                <span>Thông tin quà biếu &amp; Thiệp chúc mừng</span>
+            </h3>
+            <span class="px-2.5 py-0.5 rounded-full bg-secondary-100 border border-secondary-400 text-[11px] font-bold text-ink">
+                Yêu cầu đóng gói quà
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="space-y-0.5">
+                <span class="text-ink-muted block">Hình thức gói quà:</span>
+                <span class="font-bold text-primary-700" th:text="${order.giftWrapTypeLabel != null ? order.giftWrapTypeLabel : order.giftWrapType}">Hộp tre đan cao cấp</span>
+            </div>
+            <div class="space-y-0.5">
+                <span class="text-ink-muted block">Dịp tặng quà:</span>
+                <span class="font-bold text-ink" th:text="${order.giftOccasionLabel != null ? order.giftOccasionLabel : order.giftOccasion}">Tết &amp; Lễ hội</span>
+            </div>
+            <div class="space-y-0.5">
+                <span class="text-ink-muted block">Phí gói quà:</span>
+                <span class="font-bold text-ink" th:text="${order.giftFee != null and order.giftFee.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? order.formattedGiftFee : '0₫'}">25.000₫</span>
+            </div>
+        </div>
+
+        <div class="bg-cream border border-secondary-400/50 rounded-xl p-4 font-serif space-y-1.5">
+            <div class="text-xs text-ink-muted">
+                Người nhận trên thiệp:
+                <span class="font-bold text-ink" th:text="${order.giftRecipientName != null ? order.giftRecipientName : 'Không ghi tên riêng'}">Ông bà nội</span>
+            </div>
+            <div class="text-xs text-ink-muted">
+                Nội dung lời chúc:
+                <p class="text-xs text-ink leading-relaxed whitespace-pre-line italic mt-1"
+                   th:text="${order.giftMessage != null ? order.giftMessage : 'Không có lời chúc kèm theo'}">Chúc mừng năm mới!</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Danh sách sản phẩm của đơn hàng -->
     <div class="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-4">
         <h3 class="text-xs font-bold text-ink uppercase tracking-wider">Danh sách đặc sản cần chuẩn bị</h3>
@@ -114,6 +154,10 @@
             <div class="flex justify-between">
                 <span class="text-ink-muted">Phí vận chuyển khách trả:</span>
                 <span class="font-semibold text-ink" th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT') + '₫'}">25.000₫</span>
+            </div>
+            <div class="flex justify-between" th:if="${order.isGift and order.giftFee != null and order.giftFee.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                <span class="text-ink-muted">Phí gói quà khách trả:</span>
+                <span class="font-semibold text-ink" th:text="${order.formattedGiftFee}">25.000₫</span>
             </div>
             <div class="flex justify-between text-danger" th:if="${order.shopDiscount != null and order.shopDiscount > 0}">
                 <span>Giảm giá từ shop (Voucher gian hàng):</span>

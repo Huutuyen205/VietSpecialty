@@ -1,21 +1,24 @@
 package com.vietspecialty.controller.web;
 
 import com.vietspecialty.domain.entity.Product;
-import com.vietspecialty.domain.enums.ProductStatus;
+import com.vietspecialty.domain.entity.Wishlist;
 import com.vietspecialty.dto.response.ProductCardResponse;
 import com.vietspecialty.mapper.ProductMapper;
 import com.vietspecialty.repository.ProductRepository;
+import com.vietspecialty.repository.UserRepository;
+import com.vietspecialty.repository.WishlistRepository;
 import com.vietspecialty.security.CurrentUser;
 import com.vietspecialty.security.CustomUserDetails;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -24,12 +27,13 @@ import java.util.stream.Collectors;
 public class WishlistController {
 
     private final ProductRepository productRepository;
+    private final WishlistRepository wishlistRepository;
+    private final UserRepository userRepository;
 
-    // Lưu wishlist theo userId trong bộ nhớ (đồng bộ cùng session cho khách/user)
-    private static final Map<Long, Set<Long>> USER_WISHLISTS = new ConcurrentHashMap<>();
     private static final String SESSION_WISHLIST_KEY = "VS_WISHLIST_IDS";
 
     @GetMapping({"/wishlist", "/account/wishlist"})
+    @Transactional
     public String wishlistPage(
             @CurrentUser CustomUserDetails userDetails,
             HttpSession session,
@@ -56,6 +60,7 @@ public class WishlistController {
 
     @PostMapping({"/wishlist/toggle", "/api/wishlist/toggle"})
     @ResponseBody
+    @Transactional
     public Map<String, Object> toggleWishlistBody(
             @RequestParam(required = false) Long productId,
             @RequestBody(required = false) Map<String, Object> body,
@@ -76,21 +81,44 @@ public class WishlistController {
 
     @PostMapping({"/wishlist/toggle/{productId}", "/account/wishlist/toggle/{productId}", "/api/wishlist/toggle/{productId}"})
     @ResponseBody
+    @Transactional
     public Map<String, Object> toggleWishlist(
             @PathVariable Long productId,
             @CurrentUser CustomUserDetails userDetails,
             HttpSession session
     ) {
-        Set<Long> ids = getWishlistIds(userDetails, session);
-        boolean added;
-        if (ids.contains(productId)) {
-            ids.remove(productId);
-            added = false;
-        } else {
-            ids.add(productId);
-            added = true;
+        if (!productRepository.existsById(productId)) {
+            return Map.of("success", false, "message", "Sản phẩm không tồn tại");
         }
-        saveWishlistIds(userDetails, session, ids);
+
+        Set<Long> ids;
+        boolean added;
+        if (userDetails != null) {
+            Long userId = userDetails.getId();
+            syncSessionToDb(userId, session);
+            if (wishlistRepository.existsByUserIdAndProductId(userId, productId)) {
+                wishlistRepository.deleteByUserIdAndProductId(userId, productId);
+                added = false;
+            } else {
+                wishlistRepository.save(Wishlist.builder()
+                        .user(userRepository.getReferenceById(userId))
+                        .product(productRepository.getReferenceById(productId))
+                        .build());
+                added = true;
+            }
+            ids = new LinkedHashSet<>(wishlistRepository.findProductIdsByUserId(userId));
+            session.setAttribute(SESSION_WISHLIST_KEY, new LinkedHashSet<>(ids));
+        } else {
+            ids = getSessionWishlistIds(session);
+            if (ids.contains(productId)) {
+                ids.remove(productId);
+                added = false;
+            } else {
+                ids.add(productId);
+                added = true;
+            }
+            session.setAttribute(SESSION_WISHLIST_KEY, new LinkedHashSet<>(ids));
+        }
 
         Map<String, Object> res = new LinkedHashMap<>();
         res.put("success", true);
@@ -101,50 +129,66 @@ public class WishlistController {
     }
 
     @PostMapping("/wishlist/clear")
+    @Transactional
     public String clearWishlist(
             @CurrentUser CustomUserDetails userDetails,
             HttpSession session
     ) {
-        Set<Long> ids = getWishlistIds(userDetails, session);
-        ids.clear();
-        saveWishlistIds(userDetails, session, ids);
+        if (userDetails != null) {
+            wishlistRepository.deleteAllByUserId(userDetails.getId());
+        }
+        session.setAttribute(SESSION_WISHLIST_KEY, new LinkedHashSet<Long>());
         return "redirect:/wishlist";
     }
 
     @SuppressWarnings("unchecked")
-    private Set<Long> getWishlistIds(CustomUserDetails userDetails, HttpSession session) {
+    private Set<Long> getSessionWishlistIds(HttpSession session) {
         Set<Long> sessionIds = (Set<Long>) session.getAttribute(SESSION_WISHLIST_KEY);
         if (sessionIds == null) {
             sessionIds = new LinkedHashSet<>();
             session.setAttribute(SESSION_WISHLIST_KEY, sessionIds);
         }
-
-        if (userDetails != null) {
-            Set<Long> userIds = USER_WISHLISTS.computeIfAbsent(userDetails.getId(), k -> ConcurrentHashMap.newKeySet());
-            userIds.addAll(sessionIds);
-            sessionIds.addAll(userIds);
-            return new LinkedHashSet<>(userIds);
-        }
-
         return sessionIds;
     }
 
-    private void saveWishlistIds(CustomUserDetails userDetails, HttpSession session, Set<Long> ids) {
-        session.setAttribute(SESSION_WISHLIST_KEY, new LinkedHashSet<>(ids));
-        if (userDetails != null) {
-            Set<Long> userIds = USER_WISHLISTS.computeIfAbsent(userDetails.getId(), k -> ConcurrentHashMap.newKeySet());
-            userIds.clear();
-            userIds.addAll(ids);
+    private void syncSessionToDb(Long userId, HttpSession session) {
+        Set<Long> sessionIds = getSessionWishlistIds(session);
+        if (sessionIds.isEmpty()) {
+            return;
         }
+        for (Long pid : sessionIds) {
+            if (pid != null
+                    && productRepository.existsById(pid)
+                    && !wishlistRepository.existsByUserIdAndProductId(userId, pid)) {
+                wishlistRepository.save(Wishlist.builder()
+                        .user(userRepository.getReferenceById(userId))
+                        .product(productRepository.getReferenceById(pid))
+                        .build());
+            }
+        }
+    }
+
+    private Set<Long> getWishlistIds(CustomUserDetails userDetails, HttpSession session) {
+        if (userDetails != null) {
+            Long userId = userDetails.getId();
+            syncSessionToDb(userId, session);
+            Set<Long> dbIds = new LinkedHashSet<>(wishlistRepository.findProductIdsByUserId(userId));
+            session.setAttribute(SESSION_WISHLIST_KEY, new LinkedHashSet<>(dbIds));
+            return dbIds;
+        }
+        return getSessionWishlistIds(session);
     }
 
     private List<ProductCardResponse> getProductsByIds(Set<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
-        List<Product> products = productRepository.findAllById(ids);
-        return products.stream()
-                .filter(p -> p.getStatus() == ProductStatus.ACTIVE)
+        List<Product> products = productRepository.findActiveWithDetailsByIds(ids);
+        Map<Long, Product> byId = products.stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity(), (a, b) -> a));
+        return ids.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
                 .map(ProductMapper::toCardResponse)
                 .collect(Collectors.toList());
     }

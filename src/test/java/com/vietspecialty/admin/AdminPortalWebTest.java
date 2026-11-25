@@ -566,7 +566,7 @@ class AdminPortalWebTest {
         assertNull(created.getShop());
         assertTrue(created.getIsActive());
 
-        // 2. Bean validation errors on /new -> 200 admin/vouchers/form
+        // 2. Bean validation errors on /new -> 200 admin/vouchers/form + rendered errors + preserved input
         mockMvc.perform(post("/admin/vouchers/new")
                         .with(user(adminDetails))
                         .with(csrf())
@@ -579,7 +579,20 @@ class AdminPortalWebTest {
                         .param("endAt", endStr))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/vouchers/form"))
-                .andExpect(model().attributeHasFieldErrors("voucherForm", "code", "discountValue"));
+                .andExpect(model().attributeHasFieldErrors("voucherForm", "code", "discountValue"))
+                .andExpect(content().string(containsString("Mã voucher không được để trống")))
+                .andExpect(content().string(containsString("Giá trị giảm phải lớn hơn 0")))
+                .andExpect(content().string(containsString("value=\"Lỗi validation\"")));
+
+        // 2b. GET /admin/vouchers/create và /new -> 200 OK with voucherForm defaults
+        for (String path : new String[]{"/admin/vouchers/create", "/admin/vouchers/new"}) {
+            mockMvc.perform(get(path).with(user(adminDetails)))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("admin/vouchers/form"))
+                    .andExpect(model().attributeExists("voucherForm"))
+                    .andExpect(content().string(containsString("name=\"code\"")))
+                    .andExpect(content().string(containsString("name=\"name\"")));
+        }
 
         // 3. Duplicate code -> 200 admin/vouchers/form + errorMessage
         mockMvc.perform(post("/admin/vouchers/create")
@@ -719,5 +732,35 @@ class AdminPortalWebTest {
         Product afterRestoreAll = productRepository.findById(product.getId()).orElseThrow();
         assertEquals(0, new BigDecimal("4.0").compareTo(afterRestoreAll.getAvgRating()));
         assertEquals(2, afterRestoreAll.getReviewCount());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("DEF-20: GET /admin/categories thoát an toàn dấu ngoặc kép và xuống dòng qua data-* thay vì inline [[${...}]]")
+    void testAdminCategoryPageEscapesQuotesAndNewlinesViaDataAttributes() throws Exception {
+        User admin = createUser("adm_cat_xss", Role.ADMIN);
+        CustomUserDetails adminDetails = new CustomUserDetails(admin);
+        String uid = UUID.randomUUID().toString().substring(0, 6);
+        String quotedName = "Đặc Sản \"Ngọc\" " + uid;
+        String multiLineDesc = "Mô tả có \"dấu ngoặc kép\"\nvà xuống dòng";
+
+        categoryRepository.save(Category.builder()
+                .name(quotedName)
+                .slug("dac-san-ngoc-" + uid)
+                .description(multiLineDesc)
+                .icon("tag")
+                .sortOrder(120)
+                .isActive(true)
+                .build());
+        entityManager.flush();
+        entityManager.clear();
+
+        mockMvc.perform(get("/admin/categories").with(user(adminDetails)))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/categories/index"))
+                .andExpect(content().string(containsString("openEdit(Number($el.dataset.id)")))
+                .andExpect(content().string(containsString("data-name=\"Đặc Sản &quot;Ngọc&quot; " + uid + "\"")))
+                .andExpect(content().string(containsString("data-description=\"Mô tả có &quot;dấu ngoặc kép&quot;\nvà xuống dòng\"")))
+                .andExpect(content().string(not(containsString("openEdit([["))));
     }
 }

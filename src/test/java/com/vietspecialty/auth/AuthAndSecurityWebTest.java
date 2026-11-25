@@ -8,6 +8,7 @@ import com.vietspecialty.exception.GlobalWebExceptionHandler;
 import com.vietspecialty.repository.ChatConversationRepository;
 import com.vietspecialty.repository.UserRepository;
 import com.vietspecialty.security.CustomUserDetails;
+import com.vietspecialty.security.SessionInvalidator;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,11 +17,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,6 +58,9 @@ class AuthAndSecurityWebTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private SessionInvalidator sessionInvalidator;
 
     @Autowired
     private EntityManager entityManager;
@@ -226,10 +232,10 @@ class AuthAndSecurityWebTest {
         mockMvc.perform(get("/non-existent-page-404"))
                 .andExpect(status().isNotFound());
 
-        // BusinessException on @Controller -> 400 error/500 with errorCode
+        // DEF-24: Storefront missing product -> 404 error/404 with errorCode PROD_001
         mockMvc.perform(get("/products/non-existent-slug-999"))
-                .andExpect(status().isBadRequest())
-                .andExpect(view().name("error/500"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"))
                 .andExpect(model().attribute("errorCode", "PROD_001"));
 
         // USER accessing /admin/dashboard -> 403
@@ -278,6 +284,90 @@ class AuthAndSecurityWebTest {
                         .with(csrf()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("DEF-11: ADMIN truy cập /api/notifications/** trả về 200 JSON trong khi vẫn bị chặn 403 trên /cart và /api/cart/count")
+    void testAdminNotificationsAllowedWhileCartRemainsForbidden() throws Exception {
+        CustomUserDetails admin = detailsOf("admin@vietspecialty.vn");
+
+        mockMvc.perform(get("/api/notifications").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        mockMvc.perform(get("/api/notifications/unread-count").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.unreadCount").exists());
+
+        mockMvc.perform(post("/api/notifications/read-all")
+                        .with(user(admin))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        // RoleHierarchy must keep SELLER -> USER only so ADMIN gets 403 on cart & seller endpoints
+        mockMvc.perform(get("/cart").with(user(admin)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/cart/count").with(user(admin)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false));
+
+        mockMvc.perform(get("/seller/dashboard").with(user(admin)))
+                .andExpect(status().isForbidden());
+
+        // Header fragment sets data-auth="false" (cart) and data-notif-auth="true" (notifications) for ADMIN
+        mockMvc.perform(get("/").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-auth=\"false\"")))
+                .andExpect(content().string(containsString("data-notif-auth=\"true\"")));
+    }
+
+    @Test
+    @DisplayName("DEF-22: Phiên đăng nhập bị vô hiệu hóa trả về 302 /login?expired cho web và 401 JSON cho /api/**")
+    void testExpiredSessionStrategyForWebAndApi() throws Exception {
+        User buyerUser = userRepository.findByEmailIgnoreCase("buyer@vietspecialty.vn").orElseThrow();
+
+        // 1. Web expired session -> 302 /login?expired
+        MvcResult webLoginRes = mockMvc.perform(post("/login")
+                        .with(csrf())
+                        .param("email", buyerUser.getEmail())
+                        .param("password", "Password123@"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"))
+                .andReturn();
+        MockHttpSession webSession = (MockHttpSession) webLoginRes.getRequest().getSession(false);
+        assertNotNull(webSession);
+
+        sessionInvalidator.invalidateUserSessions(buyerUser.getId());
+
+        mockMvc.perform(get("/account/profile").session(webSession))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?expired"));
+
+        // 2. API expired session -> 401 JSON
+        MvcResult apiLoginRes = mockMvc.perform(post("/login")
+                        .with(csrf())
+                        .param("email", buyerUser.getEmail())
+                        .param("password", "Password123@"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"))
+                .andReturn();
+        MockHttpSession apiSession = (MockHttpSession) apiLoginRes.getRequest().getSession(false);
+        assertNotNull(apiSession);
+
+        sessionInvalidator.invalidateUserSessions(buyerUser.getId());
+
+        mockMvc.perform(get("/api/cart/count").session(apiSession))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false));
+
+        // 3. GET /login?expired renders user-friendly expiration message
+        mockMvc.perform(get("/login").param("expired", ""))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("errorMessage"));
     }
 
     @Controller

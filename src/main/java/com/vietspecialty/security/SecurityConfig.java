@@ -1,8 +1,13 @@
 package com.vietspecialty.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vietspecialty.dto.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +25,8 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
+import java.nio.charset.StandardCharsets;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -30,6 +37,7 @@ public class SecurityConfig {
     private final LoginFailureHandler loginFailureHandler;
     private final ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
     private final ApiAccessDeniedHandler apiAccessDeniedHandler;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -109,6 +117,9 @@ public class SecurityConfig {
                         // Đăng ký gian hàng cho phép cả USER, SELLER và ADMIN để điều hướng thông minh theo vai trò
                         .requestMatchers("/account/shop-registration", "/account/shop-registration/**").hasAnyRole("USER", "SELLER", "ADMIN")
 
+                        // Thông báo cá nhân cho phép mọi vai trò đã đăng nhập (bao gồm ADMIN)
+                        .requestMatchers("/api/notifications/**").hasAnyRole("USER", "SELLER", "ADMIN")
+
                         // Khu vực Người mua / Thành viên
                         .requestMatchers(
                                 "/account/**",
@@ -118,8 +129,7 @@ public class SecurityConfig {
                                 "/api/cart/**",
                                 "/api/checkout/**",
                                 "/api/orders/**",
-                                "/api/reviews/**",
-                                "/api/notifications/**")
+                                "/api/reviews/**")
                         .hasRole("USER")
 
                         // Mọi yêu cầu còn lại (bao gồm các trang không tồn tại) cho phép hiển thị trang
@@ -144,7 +154,21 @@ public class SecurityConfig {
                 // Quản lý phiên làm việc & SessionRegistry
                 .sessionManagement(session -> session
                         .maximumSessions(10)
-                        .sessionRegistry(sessionRegistry()))
+                        .sessionRegistry(sessionRegistry())
+                        .expiredSessionStrategy(event -> {
+                            HttpServletRequest req = event.getRequest();
+                            HttpServletResponse res = event.getResponse();
+                            String uri = req.getRequestURI();
+                            if (uri != null && uri.startsWith("/api/")) {
+                                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                res.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                res.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                                ApiResponse<Void> body = ApiResponse.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
+                                res.getWriter().write(objectMapper.writeValueAsString(body));
+                            } else {
+                                res.sendRedirect(req.getContextPath() + "/login?expired");
+                            }
+                        }))
                 // Xử lý lỗi xác thực & phân quyền (401 JSON cho /api/**, 403 phân nhánh)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(apiAuthenticationEntryPoint)

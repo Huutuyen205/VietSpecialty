@@ -42,6 +42,10 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @Column(name = "password_set", nullable = false, columnDefinition = "TINYINT(1)")
+    @Builder.Default
+    private Boolean passwordSet = true;
+
     @Column(name = "phone", length = 15)
     private String phone;
 
@@ -66,6 +70,9 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
+        if (this.passwordSet == null) {
+            this.passwordSet = true;
+        }
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }

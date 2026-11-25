@@ -11,10 +11,10 @@ import java.util.Optional;
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
-    @EntityGraph(attributePaths = {"product", "product.shop", "product.images"})
+    @EntityGraph(attributePaths = {"product", "product.shop", "product.shop.owner", "product.images"})
     List<CartItem> findByUserIdOrderByCreatedAtDesc(Long userId);
 
-    @EntityGraph(attributePaths = {"product", "product.shop", "product.images"})
+    @EntityGraph(attributePaths = {"product", "product.shop", "product.shop.owner", "product.images"})
     List<CartItem> findByUserIdAndIdIn(Long userId, List<Long> ids);
 
     Optional<CartItem> findByIdAndUserId(Long id, Long userId);

@@ -90,12 +90,30 @@ class FullEndToEndScenarioTest {
                         .isDefault(true)
                         .build()));
 
-        // BƯỚC 2: Chọn sản phẩm từ 2 gian hàng khác nhau
-        List<Product> products = productRepository.findAll();
-        assertTrue(products.size() >= 2, "Cần có ít nhất 2 sản phẩm mẫu trong hệ thống");
+        // BƯỚC 2: Chọn sản phẩm từ 2 gian hàng khác nhau (lọc sản phẩm ACTIVE, còn hàng, shop APPROVED)
+        List<Product> activeProducts = productRepository.findAll().stream()
+                .filter(p -> p.getStatus() == ProductStatus.ACTIVE
+                        && p.getStock() != null && p.getStock() > 0
+                        && p.getShop() != null && p.getShop().getStatus() == ShopStatus.APPROVED
+                        && (p.getShop().getOwner() == null || !p.getShop().getOwner().getId().equals(buyer.getId())))
+                .toList();
+        assertTrue(activeProducts.size() >= 2, "Cần có ít nhất 2 sản phẩm ACTIVE còn hàng trong hệ thống");
 
-        Product product1 = products.get(0); // Thuộc 1 shop
-        Product product2 = products.get(products.size() - 1); // Thuộc shop khác (nếu có)
+        Product product1 = activeProducts.stream()
+                .filter(p -> p.getStock() >= 2)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Cần có ít nhất 1 sản phẩm ACTIVE có tồn kho >= 2")); // Thuộc 1 shop
+        Product product2 = activeProducts.stream()
+                .filter(p -> !p.getId().equals(product1.getId())
+                        && !p.getShop().getId().equals(product1.getShop().getId()))
+                .findFirst()
+                .orElseGet(() -> activeProducts.stream()
+                        .filter(p -> !p.getId().equals(product1.getId()))
+                        .findFirst()
+                        .orElseThrow()); // Thuộc shop khác (nếu có)
+
+        // Làm sạch giỏ hàng trong phạm vi transaction test để tránh xung đột dữ liệu có sẵn
+        cartService.clearCart(buyer.getId());
 
         // BƯỚC 3: Thêm vào giỏ hàng
         cartService.addToCart(buyer.getId(), new CartItemRequest(product1.getId(), 2));

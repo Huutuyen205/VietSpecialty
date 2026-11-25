@@ -7,6 +7,8 @@ import com.vietspecialty.domain.enums.ProductStatus;
 import com.vietspecialty.dto.request.ChatRequest;
 import com.vietspecialty.dto.response.ChatResponse;
 import com.vietspecialty.dto.response.ProductCardResponse;
+import com.vietspecialty.exception.BusinessException;
+import com.vietspecialty.exception.ErrorCode;
 import com.vietspecialty.mapper.ProductMapper;
 import com.vietspecialty.repository.*;
 import com.vietspecialty.service.ChatService;
@@ -65,7 +67,14 @@ public class ChatServiceImpl implements ChatService {
                     return chatConversationRepository.save(c);
                 });
 
-        if (user != null && conversation.getUser() == null) {
+        if (conversation.getUser() != null) {
+            if (userId == null) {
+                throw new BusinessException(ErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để tiếp tục cuộc trò chuyện này");
+            }
+            if (!conversation.getUser().getId().equals(userId)) {
+                throw new BusinessException(ErrorCode.ACCESS_DENIED, "Bạn không có quyền truy cập cuộc trò chuyện này");
+            }
+        } else if (user != null) {
             conversation.setUser(user);
         }
 
@@ -142,7 +151,7 @@ public class ChatServiceImpl implements ChatService {
                 // Lượt hỏi tìm món rẻ hơn
                 intent = ChatIntent.PRODUCT_ADVICE;
                 Product ref = !targetProducts.isEmpty() ? targetProducts.get(0) : null;
-                groundedReply = ragEngine.synthesizeCheaperAlternatives(ref, allActiveProducts, suggestedEntityProducts);
+                groundedReply = ragEngine.synthesizeCheaperAlternatives(msg, ref, allActiveProducts, suggestedEntityProducts);
             } else if (ragEngine.isVoucherInquiry(msg) && !isStrictPolicyOnlyQuestion(msg)) {
                 // Hỏi về mã giảm giá / voucher thực tế đang có trên sàn
                 intent = isPolicyDominantQuestion(msg) ? ChatIntent.POLICY : ChatIntent.PRODUCT_ADVICE;

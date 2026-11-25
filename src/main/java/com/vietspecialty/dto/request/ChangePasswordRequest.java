@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record ChangePasswordRequest(
-        @NotBlank(message = "Vui lòng nhập mật khẩu hiện tại")
         String oldPassword,
 
         @NotBlank(message = "Vui lòng nhập mật khẩu mới")

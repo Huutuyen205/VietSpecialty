@@ -46,6 +46,7 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentRepository paymentRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final VoucherUsageRepository voucherUsageRepository;
     private final VoucherService voucherService;
     private final NotificationService notificationService;
 
@@ -203,6 +204,12 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(ErrorCode.CART_EMPTY);
         }
 
+        // Trích xuất thông tin địa chỉ nhận hàng trước khi decrementStockAtomic xóa EntityManager cache
+        String receiverName = address.getReceiverName();
+        String receiverPhone = address.getReceiverPhone();
+        String shippingAddressStr = receiverName + " | " + receiverPhone + " | " +
+                address.getStreetAddress() + ", " + address.getWard() + ", " + address.getProvince().getName();
+
         PaymentMethod paymentMethod = "VNPAY".equalsIgnoreCase(req.paymentMethod())
                 ? PaymentMethod.VNPAY
                 : PaymentMethod.COD;
@@ -246,6 +253,10 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
+        // Tải lại managed User sau khi decrementStockAtomic xóa EntityManager
+        user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 3. Tính phí ship, voucher và tổng tiền theo từng shop
 
         BigDecimal baseShippingFee = (shippingMethod == ShippingMethod.EXPRESS)
@@ -256,6 +267,8 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal itemsSubtotal = BigDecimal.ZERO;
         BigDecimal shippingTotal = BigDecimal.ZERO;
         BigDecimal shopDiscountTotal = BigDecimal.ZERO;
+        Map<Long, Voucher> validatedShopVouchers = new HashMap<>();
+        Map<Long, BigDecimal> shopDiscounts = new HashMap<>();
 
         for (Map.Entry<Long, List<CartItem>> entry : itemsByShop.entrySet()) {
             BigDecimal shopGoodsTotal = BigDecimal.ZERO;
@@ -270,7 +283,7 @@ public class OrderServiceImpl implements OrderService {
             }
             shippingTotal = shippingTotal.add(shopShip);
 
-            // Kiểm tra voucher của shop
+            // Kiểm tra voucher của shop (chỉ validate 1 lần và cache lại cho Bước 5)
             if (req.shopVoucherCodes() != null && req.shopVoucherCodes().containsKey(entry.getKey())) {
                 String code = req.shopVoucherCodes().get(entry.getKey());
                 Voucher sv = voucherService.validateAndGetVoucher(code, entry.getKey(), shopGoodsTotal, userId);
@@ -278,6 +291,8 @@ public class OrderServiceImpl implements OrderService {
                     BigDecimal disc = voucherService.calculateDiscount(sv, shopGoodsTotal);
                     shopDiscountTotal = shopDiscountTotal.add(disc);
                     voucherService.useVoucher(sv.getId());
+                    validatedShopVouchers.put(entry.getKey(), sv);
+                    shopDiscounts.put(entry.getKey(), disc);
                 }
             }
         }
@@ -312,17 +327,24 @@ public class OrderServiceImpl implements OrderService {
                 .shopDiscountTotal(shopDiscountTotal)
                 .platformDiscountTotal(platformDiscountTotal)
                 .grandTotal(grandTotal)
-                .paymentStatus(paymentMethod == PaymentMethod.COD ? OrderGroupPaymentStatus.UNPAID : OrderGroupPaymentStatus.UNPAID)
+                .paymentStatus(OrderGroupPaymentStatus.UNPAID)
                 .paymentExpiresAt(paymentMethod == PaymentMethod.VNPAY ? LocalDateTime.now().plusMinutes(timeoutMinutes) : null)
                 .build();
 
         OrderGroup savedGroup = orderGroupRepository.save(orderGroup);
 
-        // 5. Tách N đơn hàng (Orders)
-        String datePrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String shippingAddressStr = address.getReceiverName() + " | " + address.getReceiverPhone() + " | " +
-                address.getStreetAddress() + ", " + address.getWard() + ", " + address.getProvince().getName();
+        if (systemVoucher != null) {
+            voucherUsageRepository.save(VoucherUsage.builder()
+                    .voucher(systemVoucher)
+                    .user(user)
+                    .orderGroup(savedGroup)
+                    .order(null)
+                    .discountAmount(platformDiscountTotal)
+                    .status(VoucherUsageStatus.APPLIED)
+                    .build());
+        }
 
+        // 5. Tách N đơn hàng (Orders)
         OrderStatus initialStatus = (paymentMethod == PaymentMethod.VNPAY)
                 ? OrderStatus.PENDING_PAYMENT
                 : OrderStatus.PENDING_CONFIRM;
@@ -342,14 +364,8 @@ public class OrderServiceImpl implements OrderService {
                 shopShip = BigDecimal.ZERO;
             }
 
-            BigDecimal shopDisc = BigDecimal.ZERO;
-            Voucher shopV = null;
-            if (req.shopVoucherCodes() != null && req.shopVoucherCodes().containsKey(shopId)) {
-                shopV = voucherService.validateAndGetVoucher(req.shopVoucherCodes().get(shopId), shopId, shopGoodsTotal, userId);
-                if (shopV != null) {
-                    shopDisc = voucherService.calculateDiscount(shopV, shopGoodsTotal);
-                }
-            }
+            Voucher shopV = validatedShopVouchers.get(shopId);
+            BigDecimal shopDisc = shopDiscounts.getOrDefault(shopId, BigDecimal.ZERO);
 
             // Phân bổ giảm giá sàn theo tỷ lệ tiền hàng của shop
             BigDecimal shopPlatformDisc = BigDecimal.ZERO;
@@ -373,8 +389,8 @@ public class OrderServiceImpl implements OrderService {
                     .orderGroup(savedGroup)
                     .user(user)
                     .shop(shop)
-                    .receiverName(address.getReceiverName())
-                    .receiverPhone(address.getReceiverPhone())
+                    .receiverName(receiverName)
+                    .receiverPhone(receiverPhone)
                     .shippingAddress(shippingAddressStr)
                     .shippingMethod(shippingMethod)
                     .itemsSubtotal(shopGoodsTotal)
@@ -396,6 +412,17 @@ public class OrderServiceImpl implements OrderService {
                     .build();
 
             Order savedOrder = orderRepository.save(order);
+
+            if (shopV != null) {
+                voucherUsageRepository.save(VoucherUsage.builder()
+                        .voucher(shopV)
+                        .user(user)
+                        .orderGroup(savedGroup)
+                        .order(savedOrder)
+                        .discountAmount(shopDisc)
+                        .status(VoucherUsageStatus.APPLIED)
+                        .build());
+            }
 
             // Tạo các OrderItem
             for (CartItem ci : groupItems) {
@@ -430,10 +457,11 @@ public class OrderServiceImpl implements OrderService {
                     .build();
             orderStatusHistoryRepository.save(history);
 
-            // Gửi thông báo cho Chủ gian hàng
+            // Gửi thông báo cho Chủ gian hàng (dùng managed reference để tránh detached proxy)
             if (shop.getOwner() != null) {
+                User managedOwner = userRepository.getReferenceById(shop.getOwner().getId());
                 notificationService.createNotification(
-                        shop.getOwner(),
+                        managedOwner,
                         "ORDER_NEW",
                         "Đơn hàng mới #" + savedOrder.getCode(),
                         "Khách hàng " + user.getFullName() + " vừa đặt đơn hàng với tổng trị giá " + MoneyUtils.formatVnd(savedOrder.getTotalAmount()),
@@ -442,15 +470,17 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // 6. Tạo bản ghi Payment
-        Payment payment = Payment.builder()
-                .orderGroup(savedGroup)
-                .method(PaymentMethod.VNPAY)
-                .txnRef(savedGroup.getCode())
-                .amount(savedGroup.getGrandTotal())
-                .status(PaymentStatus.PENDING)
-                .build();
-        paymentRepository.save(payment);
+        // 6. Tạo bản ghi Payment (chỉ tạo khi thanh toán qua VNPay)
+        if (paymentMethod == PaymentMethod.VNPAY) {
+            Payment payment = Payment.builder()
+                    .orderGroup(savedGroup)
+                    .method(PaymentMethod.VNPAY)
+                    .txnRef(savedGroup.getCode())
+                    .amount(savedGroup.getGrandTotal())
+                    .status(PaymentStatus.PENDING)
+                    .build();
+            paymentRepository.save(payment);
+        }
 
         // 7. Xóa sạch giỏ hàng của user
         cartItemRepository.deleteAllByUserId(userId);
@@ -654,6 +684,7 @@ public class OrderServiceImpl implements OrderService {
                     .map(item -> Map.entry(item.getProduct().getId(), item.getQuantity()))
                     .toList();
             Long shopVoucherId = order.getShopVoucher() != null ? order.getShopVoucher().getId() : null;
+            Long orderGroupId = order.getOrderGroup() != null ? order.getOrderGroup().getId() : null;
             Long platformVoucherId = (order.getOrderGroup() != null && order.getOrderGroup().getPlatformVoucher() != null)
                     ? order.getOrderGroup().getPlatformVoucher().getId()
                     : null;
@@ -664,12 +695,41 @@ public class OrderServiceImpl implements OrderService {
                 productRepository.incrementStockAtomic(entry.getKey(), entry.getValue());
             }
 
-            // Hoàn lại voucher nếu có
+            // Hoàn lại voucher của shop nếu có
             if (shopVoucherId != null) {
-                voucherService.releaseVoucher(shopVoucherId);
+                List<VoucherUsage> orderUsages = voucherUsageRepository.findByOrderId(orderId);
+                boolean releasedShopUsage = false;
+                for (VoucherUsage vu : orderUsages) {
+                    if (vu.getStatus() == VoucherUsageStatus.APPLIED) {
+                        vu.setStatus(VoucherUsageStatus.RELEASED);
+                        voucherUsageRepository.save(vu);
+                        releasedShopUsage = true;
+                    }
+                }
+                if (releasedShopUsage || orderUsages.isEmpty()) {
+                    voucherService.releaseVoucher(shopVoucherId);
+                }
             }
-            if (platformVoucherId != null) {
-                voucherService.releaseVoucher(platformVoucherId);
+            // Chỉ hoàn lại voucher sàn khi toàn bộ đơn con trong OrderGroup đã bị hủy
+            if (platformVoucherId != null && orderGroupId != null) {
+                boolean allOrdersCancelled = orderRepository.findByOrderGroupId(orderGroupId).stream()
+                        .allMatch(o -> o.getStatus() == OrderStatus.CANCELLED);
+                if (allOrdersCancelled) {
+                    List<VoucherUsage> groupPlatformUsages = voucherUsageRepository.findByOrderGroupId(orderGroupId).stream()
+                            .filter(vu -> vu.getOrder() == null)
+                            .toList();
+                    boolean releasedPlatformUsage = false;
+                    for (VoucherUsage vu : groupPlatformUsages) {
+                        if (vu.getStatus() == VoucherUsageStatus.APPLIED) {
+                            vu.setStatus(VoucherUsageStatus.RELEASED);
+                            voucherUsageRepository.save(vu);
+                            releasedPlatformUsage = true;
+                        }
+                    }
+                    if (releasedPlatformUsage || groupPlatformUsages.isEmpty()) {
+                        voucherService.releaseVoucher(platformVoucherId);
+                    }
+                }
             }
             order = orderRepository.findById(orderId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
@@ -792,44 +852,88 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public void expireUnpaidOrderGroups() {
         LocalDateTime now = LocalDateTime.now();
-        List<OrderGroup> expiredGroups = orderGroupRepository.findExpiredVnpayGroups(now);
+        List<Long> expiredGroupIds = orderGroupRepository.findExpiredVnpayGroups(now).stream()
+                .map(OrderGroup::getId)
+                .toList();
 
-        for (OrderGroup group : expiredGroups) {
+        for (Long groupId : expiredGroupIds) {
+            OrderGroup group = orderGroupRepository.findById(groupId).orElse(null);
+            if (group == null) {
+                continue;
+            }
             log.info("Expiring unpaid OrderGroup: {}", group.getCode());
+            Long platformVoucherId = group.getPlatformVoucher() != null ? group.getPlatformVoucher().getId() : null;
             group.setPaymentStatus(OrderGroupPaymentStatus.EXPIRED);
-            orderGroupRepository.save(group);
+            orderGroupRepository.saveAndFlush(group);
 
-            List<Order> orders = orderRepository.findByOrderGroupId(group.getId());
-            for (Order order : orders) {
-                if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
-                    order.setStatus(OrderStatus.CANCELLED);
-                    order.setCancelledAt(now);
-                    order.setCancelledBy(ActorType.SYSTEM);
-                    order.setCancelReason("Đã hết hạn thời gian thanh toán VNPay (15 phút)");
-                    orderRepository.save(order);
-
-                    // Hoàn trả kho nguyên tử
-                    for (OrderItem item : order.getItems()) {
-                        productRepository.incrementStockAtomic(item.getProduct().getId(), item.getQuantity());
-                    }
-
-                    if (order.getShopVoucher() != null) {
-                        voucherService.releaseVoucher(order.getShopVoucher().getId());
-                    }
-
-                    OrderStatusHistory history = OrderStatusHistory.builder()
-                            .order(order)
-                            .fromStatus(OrderStatus.PENDING_PAYMENT)
-                            .toStatus(OrderStatus.CANCELLED)
-                            .actorType(ActorType.SYSTEM)
-                            .note("Hệ thống tự động hủy do hết hạn thanh toán VNPay")
-                            .build();
-                    orderStatusHistoryRepository.save(history);
+            List<Long> orderIds = orderRepository.findByOrderGroupId(groupId).stream()
+                    .map(Order::getId)
+                    .toList();
+            boolean anyOrderExpired = false;
+            for (Long orderId : orderIds) {
+                Order order = orderRepository.findById(orderId).orElse(null);
+                if (order == null || order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+                    continue;
                 }
+                anyOrderExpired = true;
+                Long shopVoucherId = order.getShopVoucher() != null ? order.getShopVoucher().getId() : null;
+                List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+                List<Map.Entry<Long, Integer>> stockRestores = orderItems.stream()
+                        .map(item -> Map.entry(item.getProduct().getId(), item.getQuantity()))
+                        .toList();
+
+                order.setStatus(OrderStatus.CANCELLED);
+                order.setCancelledAt(now);
+                order.setCancelledBy(ActorType.SYSTEM);
+                order.setCancelReason("Đã hết hạn thời gian thanh toán VNPay (15 phút)");
+                orderRepository.saveAndFlush(order);
+
+                // Hoàn trả kho nguyên tử (clearAutomatically = true sẽ xóa PersistenceContext)
+                for (Map.Entry<Long, Integer> entry : stockRestores) {
+                    productRepository.incrementStockAtomic(entry.getKey(), entry.getValue());
+                }
+
+                if (shopVoucherId != null) {
+                    List<VoucherUsage> orderUsages = voucherUsageRepository.findByOrderId(orderId);
+                    boolean releasedShopUsage = false;
+                    for (VoucherUsage vu : orderUsages) {
+                        if (vu.getStatus() == VoucherUsageStatus.APPLIED) {
+                            vu.setStatus(VoucherUsageStatus.RELEASED);
+                            voucherUsageRepository.saveAndFlush(vu);
+                            releasedShopUsage = true;
+                        }
+                    }
+                    if (releasedShopUsage || orderUsages.isEmpty()) {
+                        voucherService.releaseVoucher(shopVoucherId);
+                    }
+                }
+
+                Order managedOrder = orderRepository.getReferenceById(orderId);
+                OrderStatusHistory history = OrderStatusHistory.builder()
+                        .order(managedOrder)
+                        .fromStatus(OrderStatus.PENDING_PAYMENT)
+                        .toStatus(OrderStatus.CANCELLED)
+                        .actorType(ActorType.SYSTEM)
+                        .note("Hệ thống tự động hủy do hết hạn thanh toán VNPay")
+                        .build();
+                orderStatusHistoryRepository.saveAndFlush(history);
             }
 
-            if (group.getPlatformVoucher() != null) {
-                voucherService.releaseVoucher(group.getPlatformVoucher().getId());
+            if (platformVoucherId != null && anyOrderExpired) {
+                List<VoucherUsage> groupPlatformUsages = voucherUsageRepository.findByOrderGroupId(groupId).stream()
+                        .filter(vu -> vu.getOrder() == null)
+                        .toList();
+                boolean releasedPlatformUsage = false;
+                for (VoucherUsage vu : groupPlatformUsages) {
+                    if (vu.getStatus() == VoucherUsageStatus.APPLIED) {
+                        vu.setStatus(VoucherUsageStatus.RELEASED);
+                        voucherUsageRepository.saveAndFlush(vu);
+                        releasedPlatformUsage = true;
+                    }
+                }
+                if (releasedPlatformUsage || groupPlatformUsages.isEmpty()) {
+                    voucherService.releaseVoucher(platformVoucherId);
+                }
             }
         }
     }
@@ -876,13 +980,17 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        String recipientName = entry.getGiftRecipientName() != null ? entry.getGiftRecipientName().trim() : "";
+        String recipientName = entry.getGiftRecipientName() != null
+                ? entry.getGiftRecipientName().replace("\r\n", " ").replace("\r", " ").replace("\n", " ").trim()
+                : "";
         if (recipientName.length() > 100) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Tên người nhận quà tối đa 100 ký tự");
         }
         String normalizedRecipient = recipientName.isEmpty() ? null : recipientName;
 
-        String message = entry.getGiftMessage() != null ? entry.getGiftMessage().trim() : "";
+        String message = entry.getGiftMessage() != null
+                ? entry.getGiftMessage().replace("\r\n", "\n").replace("\r", "\n").trim()
+                : "";
         if (message.length() > 300) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Lời chúc trên thiệp tối đa 300 ký tự");
         }

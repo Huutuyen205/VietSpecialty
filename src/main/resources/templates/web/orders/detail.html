@@ -198,6 +198,41 @@
         </div>
     </div>
 
+    <!--/* Thông tin quà biếu & Thiệp chúc mừng */-->
+    <div th:if="${order.isGift}" class="bg-secondary-100/40 border border-secondary-400 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-secondary-400/50">
+            <h3 class="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="gift" class="w-4 h-4 text-accent-600"></i>
+                <span>Thông tin quà biếu &amp; Thiệp chúc mừng</span>
+            </h3>
+            <span class="px-2.5 py-0.5 rounded-full bg-secondary-100 border border-secondary-400 text-[11px] font-bold text-ink"
+                  th:text="${order.giftFee != null and order.giftFee.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? '+' + order.formattedGiftFee : 'Miễn phí (0₫)'}">
+                +25.000₫
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="flex items-center justify-between sm:block space-y-0.5">
+                <span class="text-ink-muted block">Dịp tặng quà:</span>
+                <span class="font-bold text-ink" th:text="${order.giftOccasionLabel != null ? order.giftOccasionLabel : order.giftOccasion}">Tết &amp; Lễ hội</span>
+            </div>
+            <div class="flex items-center justify-between sm:block space-y-0.5">
+                <span class="text-ink-muted block">Hình thức gói quà:</span>
+                <span class="font-bold text-primary-700" th:text="${order.giftWrapTypeLabel != null ? order.giftWrapTypeLabel : order.giftWrapType}">Hộp tre đan cao cấp</span>
+            </div>
+        </div>
+
+        <div class="bg-cream border border-secondary-400/50 rounded-xl p-4 font-serif space-y-1.5">
+            <div class="text-xs text-ink-muted">
+                Thân gửi:
+                <span class="font-bold text-ink" th:text="${order.giftRecipientName != null ? order.giftRecipientName : 'Người thương mến'}">Ông bà nội</span>
+            </div>
+            <p th:if="${order.giftMessage != null and !order.giftMessage.isEmpty()}"
+               class="text-xs text-ink leading-relaxed whitespace-pre-line italic"
+               th:text="${order.giftMessage}">Kính chúc ông bà sức khỏe dồi dào!</p>
+        </div>
+    </div>
+
     <!-- Danh sách sản phẩm của đơn hàng -->
     <div class="bg-surface rounded-2xl border border-line p-5 shadow-sm space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-line">
@@ -253,6 +288,10 @@
             <div class="flex justify-between">
                 <span class="text-ink-muted">Phí vận chuyển:</span>
                 <span class="font-semibold text-ink" th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT') + '₫'}">25.000₫</span>
+            </div>
+            <div class="flex justify-between" th:if="${order.isGift and order.giftFee != null and order.giftFee.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                <span class="text-ink-muted">Phí gói quà:</span>
+                <span class="font-semibold text-ink" th:text="${order.formattedGiftFee}">25.000₫</span>
             </div>
             <div class="flex justify-between text-success" th:if="${order.shopDiscount != null and order.shopDiscount > 0}">
                 <span>Giảm giá từ gian hàng:</span>
@@ -397,8 +436,12 @@
                 <div class="flex items-center justify-center gap-2">
                     <template x-for="star in 5">
                         <button type="button" @click="reviewRating = star" class="p-1 focus:outline-none transition-transform hover:scale-125">
-                            <i data-lucide="star" class="w-8 h-8"
-                               :class="star <= reviewRating ? 'text-accent-500 fill-accent-500' : 'text-line'"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                 class="w-8 h-8"
+                                 :class="star <= reviewRating ? 'text-accent-500 fill-accent-500' : 'text-line'"
+                                 aria-hidden="true">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
                         </button>
                     </template>
                 </div>

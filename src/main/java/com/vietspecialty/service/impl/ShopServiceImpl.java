@@ -94,6 +94,17 @@ public class ShopServiceImpl implements ShopService {
             if (logoFile != null && !logoFile.isEmpty()) {
                 existingShop.setLogoUrl(storageService.uploadImage(logoFile, "shops"));
             }
+            if (!existingShop.getName().equalsIgnoreCase(shopName)) {
+                String baseSlug = SlugUtils.toSlug(shopName);
+                String slug = baseSlug;
+                int counter = 1;
+                while (shopRepository.findBySlug(slug)
+                        .filter(s -> !s.getId().equals(existingShop.getId()))
+                        .isPresent()) {
+                    slug = baseSlug + "-" + counter++;
+                }
+                existingShop.setSlug(slug);
+            }
             existingShop.setName(shopName);
             existingShop.setDescription(request.description() != null ? request.description().trim() : null);
             existingShop.setAddressDetail(request.pickupAddress().trim());

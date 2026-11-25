@@ -21,7 +21,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Slf4j
 @Controller
@@ -45,9 +47,26 @@ public class AdminVoucherController {
 
     @GetMapping({"/create", "/new"})
     public String createForm(Model model) {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        if (!model.containsAttribute("voucherForm")) {
+            model.addAttribute("voucherForm", new VoucherCreateRequest(
+                    "",
+                    "",
+                    DiscountType.PERCENT,
+                    null,
+                    null,
+                    BigDecimal.ZERO,
+                    null,
+                    1,
+                    now,
+                    now.plusMonths(1),
+                    VoucherScope.PLATFORM
+            ));
+        }
+
         model.addAttribute("activeNav", "vouchers");
         model.addAttribute("discountTypes", DiscountType.values());
-        model.addAttribute("now", LocalDateTime.now());
+        model.addAttribute("now", now);
         return "admin/vouchers/form";
     }
 
@@ -62,7 +81,7 @@ public class AdminVoucherController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("activeNav", "vouchers");
             model.addAttribute("discountTypes", DiscountType.values());
-            model.addAttribute("now", LocalDateTime.now());
+            model.addAttribute("now", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
             return "admin/vouchers/form";
         }
 
@@ -74,7 +93,7 @@ public class AdminVoucherController {
             model.addAttribute("errorMessage", ex.getMessage());
             model.addAttribute("activeNav", "vouchers");
             model.addAttribute("discountTypes", DiscountType.values());
-            model.addAttribute("now", LocalDateTime.now());
+            model.addAttribute("now", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
             return "admin/vouchers/form";
         }
     }
